@@ -1048,6 +1048,7 @@
     <script src="components/tab-bar.js"></script>
     <script src="components/floating-menu.js"></script>
     <script src="components/profile-menu.js"></script>
+    <script src="components/input.js"></script>
     <script src="components/modal.js"></script>
     <script src="components/alert.js"></script>
     <script src="components/toast.js"></script>
@@ -1081,12 +1082,7 @@
                         renderAvailableStages();
                     }
                     
-                    // Mostrar confirmación con toast UBITS
-                    if (typeof showToast === 'function') {
-                        showToast('success', 'Etapa creada exitosamente!');
-                    } else {
-                        alert('Etapa creada exitosamente!');
-                    }
+                    // Etapa creada exitosamente
                 } else {
                     alert('Error: No se pudo crear la etapa');
                 }
@@ -1095,7 +1091,6 @@
             // Mostrar modal UBITS oficial
             showFormModal({
                 title: 'Crear nueva etapa',
-                message: 'Completa los datos para crear una nueva etapa del proceso de selección',
                 fields: [
                     {
                         id: 'stageName',
@@ -1110,7 +1105,7 @@
                         label: 'Categoría',
                         type: 'select',
                         required: true,
-                        options: [
+                        selectOptions: [
                             {value: 'evaluacion-inicial', text: 'Evaluación inicial'},
                             {value: 'entrevistas', text: 'Entrevistas'},
                             {value: 'evaluacion-psicometrica', text: 'Evaluación psicométrica'},

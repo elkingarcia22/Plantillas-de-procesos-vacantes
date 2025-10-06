@@ -296,36 +296,22 @@ function showFormModal(options = {}) {
         onCancel = null
     } = options;
 
-    // Generar HTML del formulario
+    const modalId = 'modal-' + Date.now();
+    
+    // Crear contenido del modal con inputs UBITS oficiales
     let formHTML = '';
     if (message) {
         formHTML += `<p class="modal-message">${message}</p>`;
     }
     
-    formHTML += '<form class="modal-form">';
+    formHTML += '<div class="modal-form">';
     fields.forEach(field => {
-        const { id, label, type, placeholder, required, maxLength, options } = field;
+        const { id, label, type, placeholder, required, maxLength, size = 'md', selectOptions } = field;
         
-        formHTML += `<div class="form-field">`;
-        formHTML += `<label for="${id}">${label}${required ? ' *' : ''}</label>`;
-        
-        if (type === 'select') {
-            formHTML += `<select id="${id}" name="${id}" ${required ? 'required' : ''}>`;
-            formHTML += `<option value="">Selecciona una opción...</option>`;
-            options.forEach(option => {
-                formHTML += `<option value="${option.value}">${option.text}</option>`;
-            });
-            formHTML += `</select>`;
-        } else {
-            formHTML += `<input type="${type}" id="${id}" name="${id}" placeholder="${placeholder || ''}" ${required ? 'required' : ''} ${maxLength ? `maxlength="${maxLength}"` : ''}>`;
-        }
-        
-        formHTML += `</div>`;
+        formHTML += `<div class="form-field" id="field-${id}"></div>`;
     });
-    formHTML += '</form>';
+    formHTML += '</div>';
 
-    const modalId = 'modal-' + Date.now();
-    
     const modal = UBITSModalManager.create({
         id: modalId,
         title,
@@ -346,6 +332,37 @@ function showFormModal(options = {}) {
     });
 
     modal.open();
+    
+    // Crear inputs UBITS oficiales después de que el modal esté abierto
+    setTimeout(() => {
+        fields.forEach(field => {
+            const { id, label, type, placeholder, required, maxLength, size = 'md', selectOptions } = field;
+            
+            const inputOptions = {
+                containerId: `field-${id}`,
+                label: label,
+                placeholder: placeholder || '',
+                type: type,
+                size: size,
+                mandatory: required,
+                mandatoryType: 'obligatorio',
+                maxLength: maxLength || 50
+            };
+            
+            // Agregar opciones específicas según el tipo
+            if (type === 'select' && selectOptions) {
+                inputOptions.selectOptions = selectOptions;
+            }
+            
+            // Crear el input UBITS oficial
+            if (typeof createInput === 'function') {
+                createInput(inputOptions);
+            } else {
+                console.error('createInput function not available');
+            }
+        });
+    }, 100);
+
     return modal;
 }
 
@@ -356,9 +373,11 @@ function submitFormModal(modalId, fields, hasCallback) {
     
     const formData = {};
     fields.forEach(field => {
-        const input = modal.querySelector(`#${field.id}`);
+        const { id } = field;
+        // Buscar el input dentro del contenedor UBITS
+        const input = modal.querySelector(`#field-${id} .ubits-input`);
         if (input) {
-            formData[field.id] = input.value;
+            formData[id] = input.value;
         }
     });
     

@@ -336,7 +336,6 @@ function handleStageTemplateDrop(data) {
     // Verificar que la etapa no esté ya en uso
     const existingStage = currentTemplate.realContent.stages.find(stage => stage.templateId === id);
     if (existingStage) {
-        showToast('error', 'Esta etapa ya está en uso en la plantilla');
         return;
     }
     
@@ -358,9 +357,6 @@ function handleStageTemplateDrop(data) {
     
     // Re-renderizar todo
     renderEditor();
-    
-    // Mostrar mensaje de éxito
-    showToast('success', `Etapa "${name}" agregada al proceso`);
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -388,7 +384,6 @@ function handleAgentDrop(data) {
     });
     
     if (!targetStage) {
-        showToast('error', 'No se encontró una etapa válida para agregar el agente');
         return;
     }
     
@@ -396,13 +391,11 @@ function handleAgentDrop(data) {
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     
     if (!stage) {
-        showToast('error', 'Etapa no encontrada');
         return;
     }
     
     // Verificar que la etapa no tenga ya un agente
     if (stage.agents && stage.agents.length > 0) {
-        showToast('error', 'Esta etapa ya tiene un agente asignado');
         return;
     }
     
@@ -414,9 +407,6 @@ function handleAgentDrop(data) {
     
     // Re-renderizar todo
     renderEditor();
-    
-    // Mostrar mensaje de éxito
-    showToast('success', `Agente "${name}" agregado a la etapa "${stage.name}"`);
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -569,7 +559,6 @@ function editStageName(stageId) {
                 stage.name = newName.trim();
                 markAsUnsaved();
                 renderEditor();
-                showToast('success', 'Nombre de etapa actualizado');
             }
         },
         onCancel: () => {
@@ -594,7 +583,6 @@ function removeAgentFromStage(stageId) {
             stage.agents = [];
             updateAvailableAgents();
             renderEditor();
-            showToast('success', 'Agente removido de la etapa');
             markAsUnsaved();
         },
         onCancel: () => {
@@ -638,9 +626,6 @@ function deleteStage(stageId) {
             
             // Re-renderizar todo
             renderEditor();
-            
-            // Mostrar mensaje de éxito
-            showToast('success', 'Etapa eliminada exitosamente');
             
             // Marcar como cambios sin guardar
             markAsUnsaved();
@@ -734,7 +719,6 @@ function createStageTemplate(formData) {
     
     // Validar que el nombre no esté vacío
     if (!stageName || !stageName.trim()) {
-        showToast('error', 'El nombre de la etapa es obligatorio');
         return;
     }
     
@@ -744,7 +728,6 @@ function createStageTemplate(formData) {
     );
     
     if (existingStage) {
-        showToast('error', 'Ya existe una etapa con ese nombre');
         return;
     }
     
@@ -764,9 +747,6 @@ function createStageTemplate(formData) {
     
     // Re-renderizar la lista de etapas
     renderAvailableStages();
-    
-    // Mostrar mensaje de éxito
-    showToast('success', 'Etapa creada exitosamente');
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -820,7 +800,6 @@ function updateStageTemplate(stageId, formData) {
     
     // Validar que el nombre no esté vacío
     if (!stageName || !stageName.trim()) {
-        showToast('error', 'El nombre de la etapa es obligatorio');
         return;
     }
     
@@ -831,7 +810,6 @@ function updateStageTemplate(stageId, formData) {
     );
     
     if (existingStage) {
-        showToast('error', 'Ya existe una etapa con ese nombre');
         return;
     }
     
@@ -851,9 +829,6 @@ function updateStageTemplate(stageId, formData) {
     
     // Re-renderizar la lista de etapas
     renderAvailableStages();
-    
-    // Mostrar mensaje de éxito
-    showToast('success', 'Etapa actualizada exitosamente');
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -887,9 +862,6 @@ function confirmDeleteStageTemplate(stageId) {
     
     // Re-renderizar la lista de etapas
     renderAvailableStages();
-    
-    // Mostrar mensaje de éxito
-    showToast('success', 'Etapa eliminada exitosamente');
     
     // Marcar como cambios sin guardar
     markAsUnsaved();

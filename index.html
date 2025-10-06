@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="components/button.css">
     <link rel="stylesheet" href="components/input.css">
     <link rel="stylesheet" href="components/modal.css">
+    <link rel="stylesheet" href="components/toast.css">
     <link rel="stylesheet" href="components/card-content.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="profile.css">
@@ -412,7 +413,7 @@
                     <!-- Header del dashboard -->
                     <div class="dashboard-header">
                         <h1 class="dashboard-title">Plantillas de flujos</h1>
-                        <button class="ubits-button ubits-button--primary ubits-button--md" onclick="createNewTemplate()">
+                        <button class="ubits-button ubits-button--primary ubits-button--md" onclick="openCreateTemplateModal()">
                             <i class="far fa-plus"></i>
                             <span>Crear plantilla</span>
                         </button>
@@ -457,6 +458,9 @@
     
     <!-- Profile Menu Container -->
     <div id="profile-menu-container"></div>
+    
+    <!-- Toast Container -->
+    <div id="ubits-toast-container"></div>
 
     <!-- Scripts UBITS -->
     <script src="components/sidebar.js"></script>
@@ -466,12 +470,102 @@
     <script src="components/profile-menu.js"></script>
     <script src="components/input.js"></script>
     <script src="components/modal.js"></script>
+    <script src="components/toast.js"></script>
     <script src="script.js"></script>
 
     <!-- Scripts del dashboard de plantillas -->
     <script src="dashboard-plantillas.js"></script>
     
     <script>
+        // Función para abrir modal de creación de plantilla
+        function openCreateTemplateModal() {
+            // Configurar callback global
+            window.modalFormCallback = function(formData) {
+                const { templateName, templateCategory } = formData;
+                
+                // Crear la plantilla
+                const nuevaPlantilla = {
+                    id: 'template-' + Date.now(),
+                    name: templateName.trim(),
+                    category: templateCategory,
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    modifiedAt: new Date().toISOString(),
+                    author: 'José Fernando Hernández Castillo',
+                    authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face&auto=format',
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Agregar a la lista (esto debería integrarse con el sistema existente)
+                if (typeof templates !== 'undefined') {
+                    templates.push(nuevaPlantilla);
+                    localStorage.setItem('templates', JSON.stringify(templates));
+                    
+                    // Recargar el dashboard
+                    if (typeof renderTemplates === 'function') {
+                        renderTemplates();
+                    }
+                    
+                    // Mostrar confirmación con toast UBITS
+                    if (typeof showToast === 'function') {
+                        showToast('success', 'Plantilla creada exitosamente!');
+                    } else {
+                        alert('Plantilla creada exitosamente!');
+                    }
+                } else {
+                    alert('Error: No se pudo crear la plantilla');
+                }
+            };
+            
+            // Mostrar modal UBITS oficial con inputs oficiales
+            showFormModal({
+                title: 'Crear nueva plantilla',
+                message: 'Completa los datos para crear una nueva plantilla de flujo de selección',
+                fields: [
+                    {
+                        id: 'templateName',
+                        label: 'Nombre de la plantilla',
+                        type: 'text',
+                        placeholder: 'Ej: flujo de contratación general',
+                        required: true,
+                        maxLength: 100,
+                        size: 'md'
+                    },
+                    {
+                        id: 'templateCategory',
+                        label: 'Categoría',
+                        type: 'select',
+                        required: true,
+                        size: 'md',
+                        selectOptions: [
+                            {value: 'administracion', text: 'Administración'},
+                            {value: 'atencion-cliente', text: 'Atención al cliente'},
+                            {value: 'contratacion-general', text: 'Contratación general'},
+                            {value: 'diseno-creatividad', text: 'Diseño y creatividad'},
+                            {value: 'finanzas-contabilidad', text: 'Finanzas y contabilidad'},
+                            {value: 'ingenieria', text: 'Ingeniería'},
+                            {value: 'operaciones', text: 'Operaciones'},
+                            {value: 'recursos-humanos', text: 'Recursos humanos'},
+                            {value: 'tecnologia-desarrollo', text: 'Tecnología / Desarrollo'},
+                            {value: 'ventas-marketing', text: 'Ventas y marketing'}
+                        ]
+                    }
+                ],
+                submitText: 'Crear plantilla',
+                cancelText: 'Cancelar',
+                onSubmit: function(formData) {
+                    window.modalFormCallback(formData);
+                },
+                onCancel: function() {
+                    // No hacer nada
+                }
+            });
+        }
+        
         // Cargar componentes UBITS dinámicamente
         document.addEventListener('DOMContentLoaded', function() {
             loadSidebar();

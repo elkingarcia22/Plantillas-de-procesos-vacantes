@@ -253,7 +253,7 @@
     border: 1px solid var(--ubits-border-1);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 10000; /* Aumentado para aparecer sobre modales UBITS */
     max-height: 200px;
     overflow-y: auto;
     display: none;
@@ -294,7 +294,7 @@
     border: 1px solid var(--ubits-border-1);
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 10000; /* Aumentado para aparecer sobre modales UBITS */
     display: none;
     margin-top: 4px;
     width: 280px;
@@ -443,12 +443,22 @@
     border: 1px solid var(--ubits-border-1);
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 10000; /* Aumentado para aparecer sobre modales UBITS */
     max-height: 160px;
     overflow-y: auto;
     display: none;
     margin-top: 4px;
     width: 100%;
+}
+
+/* Dropdown flotante para modales */
+.ubits-select-dropdown--floating {
+    position: fixed !important;
+    z-index: 999999 !important; /* Máximo z-index para flotar sobre todo, incluyendo modales */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important; /* Sombra más pronunciada */
+    background: var(--ubits-bg-1) !important; /* Asegurar fondo sólido */
+    border: 1px solid var(--ubits-border-1) !important; /* Asegurar borde */
+    border-radius: 6px !important; /* Asegurar bordes redondeados */
 }
 
 .ubits-select-option {

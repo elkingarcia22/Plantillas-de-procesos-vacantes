@@ -952,10 +952,11 @@ function createAutocompleteDropdown(container, inputElement, autocompleteOptions
 function createSelectDropdown(container, inputElement, selectOptions, value, placeholder, onChange) {
     console.log('createSelectDropdown called with:', { container, inputElement, selectOptions, value, placeholder, onChange });
     
-    // Crear dropdown (vacío inicialmente para lazy loading)
+    // Crear dropdown como elemento flotante independiente
     const dropdown = document.createElement('div');
-    dropdown.className = 'ubits-select-dropdown';
+    dropdown.className = 'ubits-select-dropdown ubits-select-dropdown--floating';
     dropdown.style.display = 'none';
+    dropdown.style.position = 'fixed'; // Cambiar a fixed para que flote sobre todo
     
     // Variables para paginación
     const itemsPerPage = 10;
@@ -1070,18 +1071,23 @@ function createSelectDropdown(container, inputElement, selectOptions, value, pla
         dropdown.scrollObserver.observe(observerEl);
     }
     
-    // Agregar dropdown al container
-    container.appendChild(dropdown);
-    
-    // Asegurar que el contenedor tenga position: relative
-    if (getComputedStyle(container).position === 'static') {
-        container.style.position = 'relative';
+    // Función para posicionar el dropdown flotante
+    function positionDropdown() {
+        const inputRect = inputElement.getBoundingClientRect();
+        dropdown.style.left = inputRect.left + 'px';
+        dropdown.style.top = (inputRect.bottom + 4) + 'px';
+        dropdown.style.width = inputRect.width + 'px';
     }
+    
+    // Agregar dropdown al body para que flote sobre todo
+    document.body.appendChild(dropdown);
     
     // Click handler para abrir/cerrar dropdown
     inputElement.addEventListener('click', function(e) {
         e.preventDefault();
         if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            // Posicionar el dropdown antes de mostrarlo
+            positionDropdown();
             // Lazy loading: cargar primera página solo cuando se abre
             currentPage = 0;
             loadOptions(0, false);
@@ -1093,8 +1099,21 @@ function createSelectDropdown(container, inputElement, selectOptions, value, pla
     
     // Cerrar dropdown al hacer click fuera
     document.addEventListener('click', function(e) {
-        if (!container.contains(e.target)) {
+        if (!container.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.style.display = 'none';
+        }
+    });
+    
+    // Reposicionar dropdown en scroll y resize
+    window.addEventListener('scroll', function() {
+        if (dropdown.style.display === 'block') {
+            positionDropdown();
+        }
+    });
+    
+    window.addEventListener('resize', function() {
+        if (dropdown.style.display === 'block') {
+            positionDropdown();
         }
     });
 }
