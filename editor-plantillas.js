@@ -414,8 +414,32 @@ function handleAgentDrop(data) {
 
 function updateTemplateInfo() {
     const templateName = document.getElementById('templateName');
-    if (templateName && currentTemplate) {
-        templateName.textContent = currentTemplate.name;
+    const templateCategoryName = document.getElementById('templateCategoryName');
+    
+    if (currentTemplate) {
+        // Actualizar nombre
+        if (templateName) {
+            templateName.value = currentTemplate.name;
+        }
+        
+        // Actualizar categoría
+        if (templateCategoryName && currentTemplate.category) {
+            // Mapear el valor de la categoría al texto mostrado
+            const categoryMap = {
+                'administracion': 'Administración',
+                'atencion-cliente': 'Atención al cliente',
+                'contratacion-general': 'Contratación general',
+                'diseno-creatividad': 'Diseño y creatividad',
+                'finanzas-contabilidad': 'Finanzas y contabilidad',
+                'ingenieria': 'Ingeniería',
+                'operaciones': 'Operaciones',
+                'recursos-humanos': 'Recursos humanos',
+                'tecnologia-desarrollo': 'Tecnología / Desarrollo',
+                'ventas-marketing': 'Ventas y marketing'
+            };
+            
+            templateCategoryName.textContent = categoryMap[currentTemplate.category] || currentTemplate.category;
+        }
     }
 }
 

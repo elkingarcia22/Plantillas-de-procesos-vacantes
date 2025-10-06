@@ -500,25 +500,20 @@
                     }
                 };
                 
-                // Agregar a la lista (esto debería integrarse con el sistema existente)
-                if (typeof templates !== 'undefined') {
-                    templates.push(nuevaPlantilla);
-                    localStorage.setItem('templates', JSON.stringify(templates));
-                    
-                    // Recargar el dashboard
-                    if (typeof renderTemplates === 'function') {
-                        renderTemplates();
-                    }
-                    
-                    // Mostrar confirmación con toast UBITS
-                    if (typeof showToast === 'function') {
-                        showToast('success', 'Plantilla creada exitosamente!');
-                    } else {
-                        alert('Plantilla creada exitosamente!');
-                    }
-                } else {
-                    alert('Error: No se pudo crear la plantilla');
+                // Guardar en localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                templates.push(nuevaPlantilla);
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Mostrar confirmación con toast UBITS
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Plantilla creada exitosamente!');
                 }
+                
+                // Redirigir al editor de plantillas con el ID de la nueva plantilla
+                setTimeout(() => {
+                    window.location.href = `editor-plantillas.html?id=${nuevaPlantilla.id}`;
+                }, 1000);
             };
             
             // Mostrar modal UBITS oficial con inputs oficiales
