@@ -189,18 +189,22 @@ function renderAvailableStages() {
     const stagesList = document.getElementById('stagesList');
     if (!stagesList) return;
     
-    if (availableStages.length === 0) {
+    // Filtrar etapas que ya están en uso en esta plantilla
+    const usedStageIds = currentTemplate.realContent.stages.map(stage => stage.templateId);
+    const availableStagesForThisTemplate = availableStages.filter(stage => !usedStageIds.includes(stage.id));
+    
+    if (availableStagesForThisTemplate.length === 0) {
         stagesList.innerHTML = `
             <div class="empty-stages-message">
                 <i class="far fa-sitemap"></i>
-                <p>No hay etapas creadas</p>
-                <small>Crea tu primera etapa para comenzar</small>
+                <p>No hay etapas disponibles</p>
+                <small>Todas las etapas ya están en uso o crea una nueva</small>
             </div>
         `;
         return;
     }
     
-    stagesList.innerHTML = availableStages.map(stage => {
+    stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
             <div class="stage-item" 
@@ -369,15 +373,8 @@ function handleStageTemplateDrop(data) {
     // Agregar a la plantilla actual
     currentTemplate.realContent.stages.push(newStage);
     
-    // Re-renderizar todo PRIMERO
+    // Re-renderizar todo
     renderEditor();
-    
-    // DESPUÉS remover de las etapas disponibles
-    availableStages = availableStages.filter(stage => stage.id !== id);
-    saveAvailableStages();
-    
-    // Re-renderizar solo las etapas disponibles
-    renderAvailableStages();
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
