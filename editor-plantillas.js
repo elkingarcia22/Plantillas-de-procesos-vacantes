@@ -183,15 +183,10 @@ function renderAgents() {
 }
 
 function renderAvailableStages() {
-    console.log('renderAvailableStages called, availableStages:', availableStages);
     const stagesList = document.getElementById('stagesList');
-    if (!stagesList) {
-        console.log('stagesList not found');
-        return;
-    }
+    if (!stagesList) return;
     
     if (availableStages.length === 0) {
-        console.log('No available stages, showing empty message');
         stagesList.innerHTML = `
             <div class="empty-stages-message">
                 <i class="far fa-sitemap"></i>
@@ -202,7 +197,6 @@ function renderAvailableStages() {
         return;
     }
     
-    console.log('Rendering', availableStages.length, 'available stages');
     stagesList.innerHTML = availableStages.map(stage => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
@@ -231,9 +225,7 @@ function renderAvailableStages() {
     }).join('');
     
     // Agregar event listeners para drag and drop
-    const stageItems = stagesList.querySelectorAll('.stage-item');
-    console.log('Adding drag listeners to', stageItems.length, 'stage items');
-    stageItems.forEach(item => {
+    stagesList.querySelectorAll('.stage-item').forEach(item => {
         item.addEventListener('dragstart', handleStageTemplateDragStart);
         item.addEventListener('dragend', handleStageTemplateDragEnd);
     });
@@ -302,14 +294,8 @@ function renderStages() {
 }
 
 function makeBoardDroppable() {
-    console.log('makeBoardDroppable called');
     const stagesContainer = document.getElementById('stagesContainer');
-    if (!stagesContainer) {
-        console.log('stagesContainer not found');
-        return;
-    }
-    
-    console.log('Setting up drop zone for stagesContainer');
+    if (!stagesContainer) return;
     
     stagesContainer.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -327,19 +313,15 @@ function makeBoardDroppable() {
     });
     
     stagesContainer.addEventListener('drop', (e) => {
-        console.log('Drop event triggered');
         e.preventDefault();
         stagesContainer.classList.remove('drag-over');
         
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            console.log('Drop data:', data);
             
             if (data.type === 'stage-template') {
-                console.log('Handling stage template drop');
                 handleStageTemplateDrop(data);
             } else if (data.type === 'agent') {
-                console.log('Handling agent drop');
                 handleAgentDrop(data);
             }
         } catch (error) {
@@ -349,13 +331,11 @@ function makeBoardDroppable() {
 }
 
 function handleStageTemplateDrop(data) {
-    console.log('handleStageTemplateDrop called with:', data);
     const { id, name, category } = data;
     
     // Verificar que la etapa no esté ya en uso
     const existingStage = currentTemplate.realContent.stages.find(stage => stage.templateId === id);
     if (existingStage) {
-        console.log('Stage already exists, skipping');
         return;
     }
     
@@ -368,21 +348,18 @@ function handleStageTemplateDrop(data) {
         agents: []
     };
     
-    console.log('Creating new stage:', newStage);
-    
     // Agregar a la plantilla actual
     currentTemplate.realContent.stages.push(newStage);
     
-    console.log('Current template stages:', currentTemplate.realContent.stages);
+    // Re-renderizar todo PRIMERO
+    renderEditor();
     
-    // Remover de las etapas disponibles
+    // DESPUÉS remover de las etapas disponibles
     availableStages = availableStages.filter(stage => stage.id !== id);
     saveAvailableStages();
     
-    console.log('Available stages after removal:', availableStages);
-    
-    // Re-renderizar todo
-    renderEditor();
+    // Re-renderizar solo las etapas disponibles
+    renderAvailableStages();
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -738,7 +715,6 @@ function loadAvailableStages() {
     const stored = localStorage.getItem('availableStages');
     if (stored) {
         availableStages = JSON.parse(stored);
-        console.log('Loaded available stages from localStorage:', availableStages);
     } else {
         // Crear etapas de ejemplo si no hay ninguna
         availableStages = [
@@ -762,7 +738,6 @@ function loadAvailableStages() {
             }
         ];
         saveAvailableStages();
-        console.log('Created example stages:', availableStages);
     }
 }
 
