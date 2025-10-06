@@ -61,8 +61,8 @@ function createNewTemplate() {
         id: 'template-' + Date.now(),
         name: 'Nueva plantilla',
         category: 'Personalizada',
-        author: 'Usuario Actual',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face&auto=format',
+        author: 'María Alexandra Patiño Castillo',
+        avatar: 'images/Profile-image.jpg',
         version: 1,
         stages: [],
         agents: 0,
@@ -415,6 +415,8 @@ function handleAgentDrop(data) {
 function updateTemplateInfo() {
     const templateName = document.getElementById('templateName');
     const templateCategoryName = document.getElementById('templateCategoryName');
+    const templateLastModified = document.getElementById('templateLastModified');
+    const templateVersion = document.getElementById('templateVersion');
     
     if (currentTemplate) {
         // Actualizar nombre
@@ -439,6 +441,16 @@ function updateTemplateInfo() {
             };
             
             templateCategoryName.textContent = categoryMap[currentTemplate.category] || currentTemplate.category;
+        }
+        
+        // Actualizar fecha de modificación
+        if (templateLastModified && currentTemplate.lastModified) {
+            templateLastModified.textContent = `Modificado ${formatDate(currentTemplate.lastModified)}`;
+        }
+        
+        // Actualizar versión
+        if (templateVersion && currentTemplate.version) {
+            templateVersion.textContent = `Versión ${currentTemplate.version}`;
         }
     }
 }
@@ -1198,5 +1210,28 @@ function goBackToDashboard() {
             console.log('Salida cancelada');
         }
     });
+}
+
+// Función para formatear fechas (copiada del dashboard)
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return 'ayer';
+    } else if (diffDays < 7) {
+        return `hace ${diffDays} días`;
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7);
+        return `hace ${weeks} semana${weeks > 1 ? 's' : ''}`;
+    } else {
+        return date.toLocaleDateString('es-ES', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
 }
 

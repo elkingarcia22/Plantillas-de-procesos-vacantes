@@ -377,7 +377,7 @@
                 align-items: stretch;
                 gap: 12px;
             }
-
+            
             .dashboard-header .ubits-button {
                 width: 100%;
             }
@@ -458,7 +458,7 @@
     
     <!-- Profile Menu Container -->
     <div id="profile-menu-container"></div>
-    
+
     <!-- Toast Container -->
     <div id="ubits-toast-container"></div>
 
@@ -490,9 +490,10 @@
                     category: templateCategory,
                     status: 'draft',
                     createdAt: new Date().toISOString(),
-                    modifiedAt: new Date().toISOString(),
-                    author: 'José Fernando Hernández Castillo',
-                    authorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face&auto=format',
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'María Alexandra Patiño Castillo',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
                     stages: 0,
                     agents: 0,
                     realContent: {
