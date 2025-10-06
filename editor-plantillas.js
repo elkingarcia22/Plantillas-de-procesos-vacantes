@@ -649,31 +649,14 @@ function deleteStage(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
-            // Remover de la plantilla actual usando splice para asegurar eliminación
-            const stageIndex = currentTemplate.realContent.stages.findIndex(s => s.id === stageId);
-            if (stageIndex !== -1) {
-                currentTemplate.realContent.stages.splice(stageIndex, 1);
-            }
-            
-            // Si la etapa tenía templateId, devolverla a availableStages
-            if (stage.templateId) {
-                const originalStage = availableStages.find(s => s.id === stage.templateId);
-                if (!originalStage) {
-                    availableStages.push({
-                        id: stage.templateId,
-                        name: stage.name,
-                        category: stage.category,
-                        createdAt: new Date().toISOString()
-                    });
-                    saveAvailableStages();
-                }
-            }
+            // ELIMINAR DIRECTAMENTE - SIN COMPLICACIONES
+            currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
             
             // Actualizar agentes disponibles
             updateAvailableAgents();
             
-            // Re-renderizar todo
-            renderEditor();
+            // Re-renderizar SOLO las etapas del board
+            renderStages();
             
             // Marcar como cambios sin guardar
             markAsUnsaved();
