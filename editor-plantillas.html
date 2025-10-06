@@ -632,6 +632,12 @@
             gap: 12px;
             min-height: 200px;
         }
+        
+        .stages-container:empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .stage-item {
             display: flex;
@@ -1012,16 +1018,16 @@
                             <div class="board-container">
                                 <div class="stages-container" id="stagesContainer">
                                     <!-- Las etapas se cargarán dinámicamente -->
-                                </div>
-                                
-                                <!-- Empty state cuando no hay etapas -->
-                                <div class="empty-state" id="emptyState" style="display: none;">
-                                    <div class="empty-state-content">
-                                        <div class="empty-state-icon-circle">
-                                            <i class="far fa-sitemap"></i>
+                                    
+                                    <!-- Empty state cuando no hay etapas -->
+                                    <div class="empty-state" id="emptyState" style="display: none;">
+                                        <div class="empty-state-content">
+                                            <div class="empty-state-icon-circle">
+                                                <i class="far fa-sitemap"></i>
+                                            </div>
+                                            <h3 class="empty-state-title">Construye tu proceso de selección</h3>
+                                            <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
                                         </div>
-                                        <h3 class="empty-state-title">Construye tu proceso de selección</h3>
-                                        <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
                                     </div>
                                 </div>
                             </div>

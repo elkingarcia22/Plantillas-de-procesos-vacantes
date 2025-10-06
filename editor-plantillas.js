@@ -246,22 +246,16 @@ function renderStages() {
     // Mostrar empty state si no hay etapas
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
         emptyState.style.display = 'flex';
-        stagesContainer.style.display = 'flex'; // Cambiar a flex para centrar el empty state
-        stagesContainer.style.alignItems = 'center';
-        stagesContainer.style.justifyContent = 'center';
-        stagesContainer.style.minHeight = '200px'; // Altura mínima razonable
-        stagesContainer.innerHTML = ''; // Limpiar contenido pero mantener el contenedor
+        stagesContainer.innerHTML = ''; // Limpiar contenido
+        stagesContainer.appendChild(emptyState); // Mover empty state dentro
         return;
     }
     
     // Ocultar empty state y mostrar etapas
     emptyState.style.display = 'none';
-    stagesContainer.style.display = 'block';
-    stagesContainer.style.alignItems = 'unset';
-    stagesContainer.style.justifyContent = 'unset';
-    stagesContainer.style.minHeight = 'unset';
     
-    stagesContainer.innerHTML = currentTemplate.realContent.stages.map((stage, index) => {
+    // Crear HTML de las etapas
+    const stagesHTML = currentTemplate.realContent.stages.map((stage, index) => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
             <div class="stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}">
@@ -295,16 +289,15 @@ function renderStages() {
         `;
     }).join('');
     
-    // Agregar event listeners para drag and drop
+    // Mostrar las etapas
+    stagesContainer.innerHTML = stagesHTML;
+    
+    // Configurar drag and drop para las etapas del board
     stagesContainer.querySelectorAll('.stage-item').forEach(item => {
-        item.addEventListener('dragstart', handleStageDragStart);
         item.addEventListener('dragover', handleStageDragOver);
         item.addEventListener('drop', handleStageDrop);
         item.addEventListener('dragend', handleStageDragEnd);
     });
-    
-    // Hacer el contenedor droppable para agentes
-    // makeBoardDroppable(); // Movido a renderEditor()
 }
 
 function makeBoardDroppable() {
