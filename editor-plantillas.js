@@ -639,8 +639,16 @@ function removeAgentFromStage(stageId) {
 }
 
 function deleteStage(stageId) {
+    console.log('deleteStage called with stageId:', stageId);
+    console.log('currentTemplate.realContent.stages:', currentTemplate.realContent.stages);
+    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
-    if (!stage) return;
+    console.log('found stage:', stage);
+    
+    if (!stage) {
+        console.log('Stage not found, returning');
+        return;
+    }
     
     showConfirmModal({
         title: 'Eliminar etapa',
@@ -649,8 +657,15 @@ function deleteStage(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
+            console.log('Confirming deletion of stage:', stageId);
+            
             // Remover de la plantilla actual
+            const beforeCount = currentTemplate.realContent.stages.length;
             currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
+            const afterCount = currentTemplate.realContent.stages.length;
+            
+            console.log('Stages before:', beforeCount, 'after:', afterCount);
+            console.log('Remaining stages:', currentTemplate.realContent.stages);
             
             // Actualizar agentes disponibles
             updateAvailableAgents();
