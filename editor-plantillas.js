@@ -313,15 +313,19 @@ function makeBoardDroppable() {
     });
     
     stagesContainer.addEventListener('drop', (e) => {
+        console.log('Drop event triggered');
         e.preventDefault();
         stagesContainer.classList.remove('drag-over');
         
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            console.log('Drop data:', data);
             
             if (data.type === 'stage-template') {
+                console.log('Handling stage template drop');
                 handleStageTemplateDrop(data);
             } else if (data.type === 'agent') {
+                console.log('Handling agent drop');
                 handleAgentDrop(data);
             }
         } catch (error) {
@@ -331,11 +335,13 @@ function makeBoardDroppable() {
 }
 
 function handleStageTemplateDrop(data) {
+    console.log('handleStageTemplateDrop called with:', data);
     const { id, name, category } = data;
     
     // Verificar que la etapa no esté ya en uso
     const existingStage = currentTemplate.realContent.stages.find(stage => stage.templateId === id);
     if (existingStage) {
+        console.log('Stage already exists, skipping');
         return;
     }
     
@@ -348,12 +354,18 @@ function handleStageTemplateDrop(data) {
         agents: []
     };
     
+    console.log('Creating new stage:', newStage);
+    
     // Agregar a la plantilla actual
     currentTemplate.realContent.stages.push(newStage);
+    
+    console.log('Current template stages:', currentTemplate.realContent.stages);
     
     // Remover de las etapas disponibles
     availableStages = availableStages.filter(stage => stage.id !== id);
     saveAvailableStages();
+    
+    console.log('Available stages after removal:', availableStages);
     
     // Re-renderizar todo
     renderEditor();
@@ -713,7 +725,28 @@ function loadAvailableStages() {
     if (stored) {
         availableStages = JSON.parse(stored);
     } else {
-        availableStages = [];
+        // Crear etapas de ejemplo si no hay ninguna
+        availableStages = [
+            {
+                id: 'stage-ejemplo-1',
+                name: 'Entrevista inicial',
+                category: 'entrevistas',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'stage-ejemplo-2',
+                name: 'Evaluación técnica',
+                category: 'pruebas-tecnicas',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'stage-ejemplo-3',
+                name: 'Verificación de referencias',
+                category: 'verificacion',
+                createdAt: new Date().toISOString()
+            }
+        ];
+        saveAvailableStages();
     }
 }
 
@@ -904,12 +937,18 @@ function confirmDeleteStageTemplate(stageId) {
 }
 
 function handleStageTemplateDragStart(event) {
+    console.log('handleStageTemplateDragStart called');
     const stageItem = event.target.closest('.stage-item');
-    if (!stageItem) return;
+    if (!stageItem) {
+        console.log('No stage item found');
+        return;
+    }
     
     const stageId = stageItem.getAttribute('data-stage-id');
     const stageName = stageItem.getAttribute('data-stage-name');
     const stageCategory = stageItem.getAttribute('data-stage-category');
+    
+    console.log('Dragging stage:', { stageId, stageName, stageCategory });
     
     // Guardar datos del elemento arrastrado
     draggedElement = {
