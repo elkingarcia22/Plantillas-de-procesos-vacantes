@@ -236,18 +236,23 @@ function renderStages() {
     const emptyState = document.getElementById('emptyState');
     if (!stagesContainer || !emptyState) return;
     
-    // Siempre mantener el stagesContainer visible para drag and drop
-    stagesContainer.style.display = 'block';
-    
     // Mostrar empty state si no hay etapas
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
         emptyState.style.display = 'flex';
+        stagesContainer.style.display = 'flex'; // Cambiar a flex para centrar el empty state
+        stagesContainer.style.alignItems = 'center';
+        stagesContainer.style.justifyContent = 'center';
+        stagesContainer.style.minHeight = '200px'; // Altura mínima razonable
         stagesContainer.innerHTML = ''; // Limpiar contenido pero mantener el contenedor
         return;
     }
     
     // Ocultar empty state y mostrar etapas
     emptyState.style.display = 'none';
+    stagesContainer.style.display = 'block';
+    stagesContainer.style.alignItems = 'unset';
+    stagesContainer.style.justifyContent = 'unset';
+    stagesContainer.style.minHeight = 'unset';
     
     stagesContainer.innerHTML = currentTemplate.realContent.stages.map((stage, index) => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
@@ -297,24 +302,25 @@ function renderStages() {
 
 function makeBoardDroppable() {
     const stagesContainer = document.getElementById('stagesContainer');
+    const emptyState = document.getElementById('emptyState');
     if (!stagesContainer) return;
     
-    stagesContainer.addEventListener('dragover', (e) => {
+    // Función para manejar drag over
+    function handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
-        // Agregar clase visual para indicar drop zone
         stagesContainer.classList.add('drag-over');
-    });
+    }
     
-    stagesContainer.addEventListener('dragleave', (e) => {
-        // Solo remover la clase si realmente salimos del contenedor
+    // Función para manejar drag leave
+    function handleDragLeave(e) {
         if (!stagesContainer.contains(e.relatedTarget)) {
             stagesContainer.classList.remove('drag-over');
         }
-    });
+    }
     
-    stagesContainer.addEventListener('drop', (e) => {
+    // Función para manejar drop
+    function handleDrop(e) {
         e.preventDefault();
         stagesContainer.classList.remove('drag-over');
         
@@ -329,7 +335,19 @@ function makeBoardDroppable() {
         } catch (error) {
             console.error('Error al procesar drop:', error);
         }
-    });
+    }
+    
+    // Agregar event listeners al contenedor principal
+    stagesContainer.addEventListener('dragover', handleDragOver);
+    stagesContainer.addEventListener('dragleave', handleDragLeave);
+    stagesContainer.addEventListener('drop', handleDrop);
+    
+    // También agregar al empty state si existe
+    if (emptyState) {
+        emptyState.addEventListener('dragover', handleDragOver);
+        emptyState.addEventListener('dragleave', handleDragLeave);
+        emptyState.addEventListener('drop', handleDrop);
+    }
 }
 
 function handleStageTemplateDrop(data) {
