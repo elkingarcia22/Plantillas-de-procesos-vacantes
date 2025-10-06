@@ -183,10 +183,15 @@ function renderAgents() {
 }
 
 function renderAvailableStages() {
+    console.log('renderAvailableStages called, availableStages:', availableStages);
     const stagesList = document.getElementById('stagesList');
-    if (!stagesList) return;
+    if (!stagesList) {
+        console.log('stagesList not found');
+        return;
+    }
     
     if (availableStages.length === 0) {
+        console.log('No available stages, showing empty message');
         stagesList.innerHTML = `
             <div class="empty-stages-message">
                 <i class="far fa-sitemap"></i>
@@ -197,6 +202,7 @@ function renderAvailableStages() {
         return;
     }
     
+    console.log('Rendering', availableStages.length, 'available stages');
     stagesList.innerHTML = availableStages.map(stage => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
@@ -225,7 +231,9 @@ function renderAvailableStages() {
     }).join('');
     
     // Agregar event listeners para drag and drop
-    stagesList.querySelectorAll('.stage-item').forEach(item => {
+    const stageItems = stagesList.querySelectorAll('.stage-item');
+    console.log('Adding drag listeners to', stageItems.length, 'stage items');
+    stageItems.forEach(item => {
         item.addEventListener('dragstart', handleStageTemplateDragStart);
         item.addEventListener('dragend', handleStageTemplateDragEnd);
     });
@@ -294,8 +302,14 @@ function renderStages() {
 }
 
 function makeBoardDroppable() {
+    console.log('makeBoardDroppable called');
     const stagesContainer = document.getElementById('stagesContainer');
-    if (!stagesContainer) return;
+    if (!stagesContainer) {
+        console.log('stagesContainer not found');
+        return;
+    }
+    
+    console.log('Setting up drop zone for stagesContainer');
     
     stagesContainer.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -724,6 +738,7 @@ function loadAvailableStages() {
     const stored = localStorage.getItem('availableStages');
     if (stored) {
         availableStages = JSON.parse(stored);
+        console.log('Loaded available stages from localStorage:', availableStages);
     } else {
         // Crear etapas de ejemplo si no hay ninguna
         availableStages = [
@@ -747,6 +762,7 @@ function loadAvailableStages() {
             }
         ];
         saveAvailableStages();
+        console.log('Created example stages:', availableStages);
     }
 }
 
