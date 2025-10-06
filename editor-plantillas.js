@@ -240,19 +240,12 @@ function renderAvailableStages() {
 
 function renderStages() {
     const stagesContainer = document.getElementById('stagesContainer');
-    const emptyState = document.getElementById('emptyState');
-    if (!stagesContainer || !emptyState) return;
+    if (!stagesContainer) return;
     
     // Mostrar empty state si no hay etapas
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
-        // Crear empty state dinámicamente si no existe
-        let emptyState = document.getElementById('emptyState');
-        if (!emptyState) {
-            emptyState = document.createElement('div');
-            emptyState.id = 'emptyState';
-            emptyState.className = 'empty-state';
-            emptyState.style.display = 'flex';
-            emptyState.innerHTML = `
+        stagesContainer.innerHTML = `
+            <div class="empty-state" style="display: flex;">
                 <div class="empty-state-content">
                     <div class="empty-state-icon-circle">
                         <i class="far fa-sitemap"></i>
@@ -260,18 +253,10 @@ function renderStages() {
                     <h3 class="empty-state-title">Construye tu proceso de selección</h3>
                     <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
                 </div>
-            `;
-        } else {
-            emptyState.style.display = 'flex';
-        }
-        
-        stagesContainer.innerHTML = ''; // Limpiar contenido
-        stagesContainer.appendChild(emptyState); // Agregar empty state
+            </div>
+        `;
         return;
     }
-    
-    // Ocultar empty state y mostrar etapas
-    emptyState.style.display = 'none';
     
     // Crear HTML de las etapas
     const stagesHTML = currentTemplate.realContent.stages.map((stage, index) => {
