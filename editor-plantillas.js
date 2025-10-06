@@ -155,6 +155,9 @@ function renderEditor() {
     renderStages();
     renderAvailableStages();
     updateTemplateInfo();
+    
+    // Configurar drag and drop DESPUÉS de renderizar
+    makeBoardDroppable();
 }
 
 function renderAgents() {
@@ -297,29 +300,18 @@ function renderStages() {
     });
     
     // Hacer el contenedor droppable para agentes
-    makeBoardDroppable();
+    // makeBoardDroppable(); // Movido a renderEditor()
 }
 
 function makeBoardDroppable() {
-    console.log('🔧 makeBoardDroppable called');
     const stagesContainer = document.getElementById('stagesContainer');
     const emptyState = document.getElementById('emptyState');
     const boardContainer = document.querySelector('.board-container');
     
-    console.log('🔍 Elements found:', {
-        stagesContainer: !!stagesContainer,
-        emptyState: !!emptyState,
-        boardContainer: !!boardContainer
-    });
-    
-    if (!stagesContainer || !boardContainer) {
-        console.log('❌ Missing required elements');
-        return;
-    }
+    if (!stagesContainer || !boardContainer) return;
     
     // Función para manejar drag over
     function handleDragOver(e) {
-        console.log('🎯 Drag over detected on board');
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         boardContainer.classList.add('drag-over');
@@ -327,7 +319,6 @@ function makeBoardDroppable() {
     
     // Función para manejar drag leave
     function handleDragLeave(e) {
-        console.log('👋 Drag leave detected');
         if (!boardContainer.contains(e.relatedTarget)) {
             boardContainer.classList.remove('drag-over');
         }
@@ -335,23 +326,19 @@ function makeBoardDroppable() {
     
     // Función para manejar drop
     function handleDrop(e) {
-        console.log('🎉 DROP DETECTED!', e);
         e.preventDefault();
         boardContainer.classList.remove('drag-over');
         
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            console.log('📦 Drop data:', data);
             
             if (data.type === 'stage-template') {
-                console.log('✅ Handling stage template drop');
                 handleStageTemplateDrop(data);
             } else if (data.type === 'agent') {
-                console.log('✅ Handling agent drop');
                 handleAgentDrop(data);
             }
         } catch (error) {
-            console.error('❌ Error al procesar drop:', error);
+            console.error('Error al procesar drop:', error);
         }
     }
     
@@ -359,8 +346,6 @@ function makeBoardDroppable() {
     boardContainer.addEventListener('dragover', handleDragOver);
     boardContainer.addEventListener('dragleave', handleDragLeave);
     boardContainer.addEventListener('drop', handleDrop);
-    
-    console.log('✅ Event listeners added to board-container');
 }
 
 function handleStageTemplateDrop(data) {
