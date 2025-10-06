@@ -649,22 +649,6 @@ function deleteStage(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
-            // Si la etapa tiene templateId, devolverla a la lista de disponibles
-            if (stage.templateId) {
-                const originalStage = availableStages.find(s => s.id === stage.templateId);
-                if (!originalStage) {
-                    // Si no existe en la lista de disponibles, recrearla
-                    const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
-                    availableStages.push({
-                        id: stage.templateId,
-                        name: stage.name,
-                        category: stage.category,
-                        createdAt: new Date().toISOString()
-                    });
-                }
-                saveAvailableStages();
-            }
-            
             // Remover de la plantilla actual
             currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
             
