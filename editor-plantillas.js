@@ -247,7 +247,11 @@ function renderStages() {
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
         emptyState.style.display = 'flex';
         stagesContainer.innerHTML = ''; // Limpiar contenido
-        stagesContainer.appendChild(emptyState); // Mover empty state dentro
+        
+        // Asegurar que el empty state esté en el DOM
+        if (!stagesContainer.contains(emptyState)) {
+            stagesContainer.appendChild(emptyState);
+        }
         return;
     }
     
