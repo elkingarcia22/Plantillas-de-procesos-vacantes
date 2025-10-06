@@ -658,6 +658,7 @@ function deleteStage(stageId) {
         variant: 'error',
         onConfirm: () => {
             console.log('Confirming deletion of stage:', stageId);
+            console.log('Stage to delete:', stage);
             
             // Remover de la plantilla actual
             const beforeCount = currentTemplate.realContent.stages.length;
@@ -666,6 +667,22 @@ function deleteStage(stageId) {
             
             console.log('Stages before:', beforeCount, 'after:', afterCount);
             console.log('Remaining stages:', currentTemplate.realContent.stages);
+            
+            // Si la etapa tenía templateId, devolverla a availableStages
+            if (stage.templateId) {
+                const originalStage = availableStages.find(s => s.id === stage.templateId);
+                if (!originalStage) {
+                    // Si no existe en la lista de disponibles, recrearla
+                    availableStages.push({
+                        id: stage.templateId,
+                        name: stage.name,
+                        category: stage.category,
+                        createdAt: new Date().toISOString()
+                    });
+                    saveAvailableStages();
+                    console.log('Stage returned to availableStages:', stage.templateId);
+                }
+            }
             
             // Actualizar agentes disponibles
             updateAvailableAgents();
