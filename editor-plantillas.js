@@ -236,16 +236,18 @@ function renderStages() {
     const emptyState = document.getElementById('emptyState');
     if (!stagesContainer || !emptyState) return;
     
+    // Siempre mantener el stagesContainer visible para drag and drop
+    stagesContainer.style.display = 'block';
+    
     // Mostrar empty state si no hay etapas
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
-        stagesContainer.style.display = 'none';
         emptyState.style.display = 'flex';
+        stagesContainer.innerHTML = ''; // Limpiar contenido pero mantener el contenedor
         return;
     }
     
     // Ocultar empty state y mostrar etapas
     emptyState.style.display = 'none';
-    stagesContainer.style.display = 'block';
     
     stagesContainer.innerHTML = currentTemplate.realContent.stages.map((stage, index) => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
