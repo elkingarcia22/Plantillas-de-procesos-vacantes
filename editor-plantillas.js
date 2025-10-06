@@ -639,16 +639,8 @@ function removeAgentFromStage(stageId) {
 }
 
 function deleteStage(stageId) {
-    console.log('deleteStage called with stageId:', stageId);
-    console.log('currentTemplate.realContent.stages:', currentTemplate.realContent.stages);
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
-    console.log('found stage:', stage);
-    
-    if (!stage) {
-        console.log('Stage not found, returning');
-        return;
-    }
+    if (!stage) return;
     
     showConfirmModal({
         title: 'Eliminar etapa',
@@ -657,22 +649,16 @@ function deleteStage(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
-            console.log('Confirming deletion of stage:', stageId);
-            console.log('Stage to delete:', stage);
-            
-            // Remover de la plantilla actual
-            const beforeCount = currentTemplate.realContent.stages.length;
-            currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
-            const afterCount = currentTemplate.realContent.stages.length;
-            
-            console.log('Stages before:', beforeCount, 'after:', afterCount);
-            console.log('Remaining stages:', currentTemplate.realContent.stages);
+            // Remover de la plantilla actual usando splice para asegurar eliminación
+            const stageIndex = currentTemplate.realContent.stages.findIndex(s => s.id === stageId);
+            if (stageIndex !== -1) {
+                currentTemplate.realContent.stages.splice(stageIndex, 1);
+            }
             
             // Si la etapa tenía templateId, devolverla a availableStages
             if (stage.templateId) {
                 const originalStage = availableStages.find(s => s.id === stage.templateId);
                 if (!originalStage) {
-                    // Si no existe en la lista de disponibles, recrearla
                     availableStages.push({
                         id: stage.templateId,
                         name: stage.name,
@@ -680,7 +666,6 @@ function deleteStage(stageId) {
                         createdAt: new Date().toISOString()
                     });
                     saveAvailableStages();
-                    console.log('Stage returned to availableStages:', stage.templateId);
                 }
             }
             
