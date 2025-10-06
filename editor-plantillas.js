@@ -245,13 +245,28 @@ function renderStages() {
     
     // Mostrar empty state si no hay etapas
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
-        emptyState.style.display = 'flex';
-        stagesContainer.innerHTML = ''; // Limpiar contenido
-        
-        // Asegurar que el empty state esté en el DOM
-        if (!stagesContainer.contains(emptyState)) {
-            stagesContainer.appendChild(emptyState);
+        // Crear empty state dinámicamente si no existe
+        let emptyState = document.getElementById('emptyState');
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'emptyState';
+            emptyState.className = 'empty-state';
+            emptyState.style.display = 'flex';
+            emptyState.innerHTML = `
+                <div class="empty-state-content">
+                    <div class="empty-state-icon-circle">
+                        <i class="far fa-sitemap"></i>
+                    </div>
+                    <h3 class="empty-state-title">Construye tu proceso de selección</h3>
+                    <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
+                </div>
+            `;
+        } else {
+            emptyState.style.display = 'flex';
         }
+        
+        stagesContainer.innerHTML = ''; // Limpiar contenido
+        stagesContainer.appendChild(emptyState); // Agregar empty state
         return;
     }
     
