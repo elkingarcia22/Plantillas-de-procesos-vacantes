@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBITS Modal Component - Documentación</title>
+    
+    <!-- UBITS Base Styles -->
+    <link rel="stylesheet" href="ubits-colors.css">
+    <link rel="stylesheet" href="ubits-typography.css">
+    <link rel="stylesheet" href="components/button.css">
+    <link rel="stylesheet" href="components/modal.css">
+    <link rel="stylesheet" href="fontawesome-icons.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--ubits-bg-1);
+            font-family: var(--ubits-font-family);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: var(--ubits-fg-2-medium);
+            margin: 0;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: var(--ubits-bg-2);
+            border-radius: 12px;
+            border: 1px solid var(--ubits-border-1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 16px 0;
+        }
+        
+        .section-content {
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--ubits-fg-2-medium);
+            margin-bottom: 16px;
+        }
+        
+        .code-block {
+            background: var(--ubits-bg-3);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 18px;
+            color: var(--ubits-fg-1-high);
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        
+        .example {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--ubits-bg-1);
+            border-radius: 8px;
+            border: 1px solid var(--ubits-border-1);
+        }
+        
+        .example-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+        }
+        
+        .example-description {
+            font-size: 14px;
+            color: var(--ubits-fg-2-medium);
+            margin: 0 0 12px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">UBITS Modal Component</h1>
+            <p class="subtitle">Componente modal oficial del sistema de diseño UBITS</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Descripción</h2>
+            <p class="section-content">
+                El componente Modal de UBITS es un diálogo modal que aparece sobre el contenido principal para mostrar información importante, formularios o solicitar confirmación del usuario. Está diseñado siguiendo los principios del sistema de diseño UBITS con tokens de color, tipografía y espaciado oficiales.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Características</h2>
+            <ul class="section-content">
+                <li>✅ Diseño basado en tokens UBITS oficiales</li>
+                <li>✅ Responsive y adaptable a móviles</li>
+                <li>✅ Animaciones suaves de entrada y salida</li>
+                <li>✅ Soporte para backdrop blur</li>
+                <li>✅ Cierre con ESC y click en backdrop</li>
+                <li>✅ Botones UBITS integrados</li>
+                <li>✅ Formularios y validación</li>
+                <li>✅ Scroll interno cuando es necesario</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Implementación Básica</h2>
+            <p class="section-content">
+                Para usar el componente Modal, incluye los archivos CSS y JS necesarios:
+            </p>
+            <div class="code-block">
+&lt;!-- CSS requerido --&gt;
+&lt;link rel="stylesheet" href="ubits-colors.css"&gt;
+&lt;link rel="stylesheet" href="ubits-typography.css"&gt;
+&lt;link rel="stylesheet" href="components/button.css"&gt;
+&lt;link rel="stylesheet" href="components/modal.css"&gt;
+&lt;link rel="stylesheet" href="fontawesome-icons.css"&gt;
+
+&lt;!-- JavaScript requerido --&gt;
+&lt;script src="components/modal.js"&gt;&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Ejemplos de Uso</h2>
+            
+            <div class="demo-buttons">
+                <button class="ubits-button ubits-button--primary ubits-button--md" onclick="showBasicModal()">
+                    <span>Modal Básico</span>
+                </button>
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="showConfirmModal()">
+                    <span>Modal de Confirmación</span>
+                </button>
+                <button class="ubits-button ubits-button--tertiary ubits-button--md" onclick="showFormModal()">
+                    <span>Modal de Formulario</span>
+                </button>
+                <button class="ubits-button ubits-button--primary ubits-button--md" onclick="showAlertModal()">
+                    <span>Modal de Alerta</span>
+                </button>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Modal Básico</h3>
+                <p class="example-description">Modal simple con título, contenido y botones personalizados.</p>
+                <div class="code-block">
+const modal = UBITSModalManager.create({
+    title: 'Mi Modal',
+    content: '&lt;p&gt;Contenido del modal&lt;/p&gt;',
+    footerRight: [
+        {
+            text: 'Cancelar',
+            variant: 'secondary',
+            onclick: 'UBITSModalManager.close("' + modal.id + '")'
+        },
+        {
+            text: 'Aceptar',
+            variant: 'primary',
+            onclick: 'UBITSModalManager.close("' + modal.id + '")'
+        }
+    ]
+});
+
+modal.open();
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Modal de Confirmación</h3>
+                <p class="example-description">Modal para confirmar acciones importantes.</p>
+                <div class="code-block">
+showConfirmModal({
+    title: 'Eliminar plantilla',
+    message: '¿Estás seguro de que quieres eliminar esta plantilla? Esta acción no se puede deshacer.',
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    variant: 'primary',
+    onConfirm: () => {
+        console.log('Acción confirmada');
+        // Lógica de eliminación
+    },
+    onCancel: () => {
+        console.log('Acción cancelada');
+    }
+});
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Modal de Formulario</h3>
+                <p class="example-description">Modal con formulario para crear o editar datos.</p>
+                <div class="code-block">
+const formHTML = `
+    &lt;div class="ubits-modal__form-group"&gt;
+        &lt;label class="ubits-modal__label"&gt;Nombre de la plantilla&lt;/label&gt;
+        &lt;input type="text" class="ubits-modal__input" placeholder="Ej: Flujo de contratación"&gt;
+    &lt;/div&gt;
+    &lt;div class="ubits-modal__form-group"&gt;
+        &lt;label class="ubits-modal__label"&gt;Categoría&lt;/label&gt;
+        &lt;select class="ubits-modal__select"&gt;
+            &lt;option value=""&gt;Selecciona una categoría&lt;/option&gt;
+            &lt;option value="contratacion"&gt;Contratación&lt;/option&gt;
+            &lt;option value="evaluacion"&gt;Evaluación&lt;/option&gt;
+        &lt;/select&gt;
+    &lt;/div&gt;
+`;
+
+showFormModal({
+    title: 'Crear nueva plantilla',
+    formHTML: formHTML,
+    submitText: 'Crear',
+    cancelText: 'Cancelar',
+    onSubmit: () => {
+        console.log('Formulario enviado');
+        // Lógica de creación
+    }
+});
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Modal de Alerta</h3>
+                <p class="example-description">Modal para mostrar información importante.</p>
+                <div class="code-block">
+showAlertModal({
+    title: 'Información',
+    message: 'La plantilla se ha guardado correctamente.',
+    buttonText: 'Entendido',
+    onClose: () => {
+        console.log('Modal cerrado');
+    }
+});
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">API Reference</h2>
+            
+            <div class="example">
+                <h3 class="example-title">UBITSModal Constructor</h3>
+                <div class="code-block">
+new UBITSModal({
+    id: 'modal-id',                    // ID único del modal
+    title: 'Título del modal',         // Título en el header
+    content: 'Contenido HTML',         // Contenido del body
+    footerLeft: [...],                 // Botones del lado izquierdo
+    footerRight: [...],                // Botones del lado derecho
+    onClose: function() {...},         // Callback al cerrar
+    onConfirm: function() {...},       // Callback de confirmación
+    showCloseButton: true,             // Mostrar botón X
+    closeOnBackdrop: true,             // Cerrar al hacer click fuera
+    closeOnEscape: true,               // Cerrar con tecla ESC
+    maxWidth: '440px'                  // Ancho máximo del modal
+});
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Configuración de Botones</h3>
+                <div class="code-block">
+{
+    text: 'Texto del botón',           // Texto del botón
+    variant: 'primary',                // primary, secondary, tertiary
+    size: 'md',                        // sm, md, lg
+    icon: 'far fa-save',               // Icono FontAwesome
+    onclick: 'miFuncion()',            // Función onclick
+    id: 'boton-id',                    // ID del botón
+    disabled: false,                   // Botón deshabilitado
+    type: 'button'                     // Tipo del botón
+}
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">Métodos del Modal</h3>
+                <div class="code-block">
+modal.open();                         // Abrir el modal
+modal.close();                         // Cerrar el modal
+modal.destroy();                       // Destruir el modal
+modal.updateContent('Nuevo contenido'); // Actualizar contenido
+modal.updateTitle('Nuevo título');     // Actualizar título
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">UBITSModalManager</h3>
+                <div class="code-block">
+UBITSModalManager.create(options);     // Crear nuevo modal
+UBITSModalManager.open(id);             // Abrir modal por ID
+UBITSModalManager.close(id);             // Cerrar modal por ID
+UBITSModalManager.destroy(id);           // Destruir modal por ID
+UBITSModalManager.closeAll();            // Cerrar todos los modales
+UBITSModalManager.destroyAll();          // Destruir todos los modales
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Funciones Helper</h2>
+            
+            <div class="example">
+                <h3 class="example-title">showConfirmModal()</h3>
+                <p class="example-description">Función helper para crear modales de confirmación rápidamente.</p>
+                <div class="code-block">
+showConfirmModal({
+    title: 'Confirmar acción',
+    message: '¿Estás seguro?',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    onConfirm: function() {...},
+    onCancel: function() {...},
+    variant: 'primary'
+});
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">showAlertModal()</h3>
+                <p class="example-description">Función helper para crear modales de alerta/información.</p>
+                <div class="code-block">
+showAlertModal({
+    title: 'Información',
+    message: 'Mensaje de información',
+    buttonText: 'Aceptar',
+    onClose: function() {...}
+});
+                </div>
+            </div>
+
+            <div class="example">
+                <h3 class="example-title">showFormModal()</h3>
+                <p class="example-description">Función helper para crear modales con formularios.</p>
+                <div class="code-block">
+showFormModal({
+    title: 'Formulario',
+    formHTML: 'HTML del formulario',
+    submitText: 'Guardar',
+    cancelText: 'Cancelar',
+    onSubmit: function() {...},
+    onCancel: function() {...}
+});
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="components/modal.js"></script>
+    
+    <script>
+        function showBasicModal() {
+            const modal = UBITSModalManager.create({
+                title: 'Modal Básico',
+                content: `
+                    <p class="ubits-modal__content">
+                        Este es un modal básico creado con el componente UBITS Modal.
+                        Puedes incluir cualquier contenido HTML aquí.
+                    </p>
+                `,
+                footerRight: [
+                    {
+                        text: 'Cancelar',
+                        variant: 'secondary',
+                        onclick: `UBITSModalManager.close('${modal.id}')`
+                    },
+                    {
+                        text: 'Aceptar',
+                        variant: 'primary',
+                        onclick: `UBITSModalManager.close('${modal.id}')`
+                    }
+                ]
+            });
+            modal.open();
+        }
+
+        function showConfirmModal() {
+            showConfirmModal({
+                title: 'Eliminar plantilla',
+                message: '¿Estás seguro de que quieres eliminar esta plantilla? Esta acción no se puede deshacer.',
+                confirmText: 'Eliminar',
+                cancelText: 'Cancelar',
+                variant: 'primary',
+                onConfirm: () => {
+                    console.log('Plantilla eliminada');
+                },
+                onCancel: () => {
+                    console.log('Eliminación cancelada');
+                }
+            });
+        }
+
+        function showFormModal() {
+            const formHTML = `
+                <div class="ubits-modal__form-group">
+                    <label class="ubits-modal__label">Nombre de la plantilla</label>
+                    <input type="text" class="ubits-modal__input" placeholder="Ej: Flujo de contratación">
+                </div>
+                <div class="ubits-modal__form-group">
+                    <label class="ubits-modal__label">Categoría</label>
+                    <select class="ubits-modal__select">
+                        <option value="">Selecciona una categoría</option>
+                        <option value="contratacion">Contratación</option>
+                        <option value="evaluacion">Evaluación</option>
+                        <option value="entrevista">Entrevista</option>
+                    </select>
+                </div>
+            `;
+
+            showFormModal({
+                title: 'Crear nueva plantilla',
+                formHTML: formHTML,
+                submitText: 'Crear',
+                cancelText: 'Cancelar',
+                onSubmit: () => {
+                    console.log('Plantilla creada');
+                }
+            });
+        }
+
+        function showAlertModal() {
+            showAlertModal({
+                title: 'Información',
+                message: 'La plantilla se ha guardado correctamente.',
+                buttonText: 'Entendido',
+                onClose: () => {
+                    console.log('Modal cerrado');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
