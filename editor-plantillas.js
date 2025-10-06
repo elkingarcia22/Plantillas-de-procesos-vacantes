@@ -303,26 +303,28 @@ function renderStages() {
 function makeBoardDroppable() {
     const stagesContainer = document.getElementById('stagesContainer');
     const emptyState = document.getElementById('emptyState');
-    if (!stagesContainer) return;
+    const boardContainer = document.querySelector('.board-container');
+    
+    if (!stagesContainer || !boardContainer) return;
     
     // Función para manejar drag over
     function handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        stagesContainer.classList.add('drag-over');
+        boardContainer.classList.add('drag-over');
     }
     
     // Función para manejar drag leave
     function handleDragLeave(e) {
-        if (!stagesContainer.contains(e.relatedTarget)) {
-            stagesContainer.classList.remove('drag-over');
+        if (!boardContainer.contains(e.relatedTarget)) {
+            boardContainer.classList.remove('drag-over');
         }
     }
     
     // Función para manejar drop
     function handleDrop(e) {
         e.preventDefault();
-        stagesContainer.classList.remove('drag-over');
+        boardContainer.classList.remove('drag-over');
         
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -337,17 +339,10 @@ function makeBoardDroppable() {
         }
     }
     
-    // Agregar event listeners al contenedor principal
-    stagesContainer.addEventListener('dragover', handleDragOver);
-    stagesContainer.addEventListener('dragleave', handleDragLeave);
-    stagesContainer.addEventListener('drop', handleDrop);
-    
-    // También agregar al empty state si existe
-    if (emptyState) {
-        emptyState.addEventListener('dragover', handleDragOver);
-        emptyState.addEventListener('dragleave', handleDragLeave);
-        emptyState.addEventListener('drop', handleDrop);
-    }
+    // Agregar event listeners al board-container (que contiene todo)
+    boardContainer.addEventListener('dragover', handleDragOver);
+    boardContainer.addEventListener('dragleave', handleDragLeave);
+    boardContainer.addEventListener('drop', handleDrop);
 }
 
 function handleStageTemplateDrop(data) {
