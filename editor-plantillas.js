@@ -669,8 +669,15 @@ function deleteStage(stageId) {
             // Actualizar agentes disponibles
             updateAvailableAgents();
             
-            // FORZAR RE-RENDERIZADO COMPLETO
+            // LIMPIAR COMPLETAMENTE EL DOM Y RE-RENDERIZAR
             setTimeout(() => {
+                // Limpiar completamente el stages container
+                const stagesContainer = document.getElementById('stagesContainer');
+                if (stagesContainer) {
+                    stagesContainer.innerHTML = '';
+                }
+                
+                // Re-renderizar todo desde cero
                 renderEditor();
             }, 100);
             
