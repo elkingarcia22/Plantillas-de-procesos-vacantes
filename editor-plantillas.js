@@ -649,14 +649,30 @@ function deleteStage(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
-            // ELIMINAR DIRECTAMENTE - SIN COMPLICACIONES
+            // ELIMINAR DIRECTAMENTE
             currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
+            
+            // Si la etapa tenía templateId, devolverla a availableStages
+            if (stage.templateId) {
+                const originalStage = availableStages.find(s => s.id === stage.templateId);
+                if (!originalStage) {
+                    availableStages.push({
+                        id: stage.templateId,
+                        name: stage.name,
+                        category: stage.category,
+                        createdAt: new Date().toISOString()
+                    });
+                    saveAvailableStages();
+                }
+            }
             
             // Actualizar agentes disponibles
             updateAvailableAgents();
             
-            // Re-renderizar SOLO las etapas del board
-            renderStages();
+            // FORZAR RE-RENDERIZADO COMPLETO
+            setTimeout(() => {
+                renderEditor();
+            }, 100);
             
             // Marcar como cambios sin guardar
             markAsUnsaved();
