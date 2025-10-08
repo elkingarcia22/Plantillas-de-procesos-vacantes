@@ -1105,9 +1105,25 @@ function createSelectDropdown(container, inputElement, selectOptions, value, pla
     // Función para posicionar el dropdown flotante
     function positionDropdown() {
         const inputRect = inputElement.getBoundingClientRect();
+        const dropdownMaxHeight = 300; // Altura máxima del dropdown
+        const spaceBelow = window.innerHeight - inputRect.bottom;
+        const spaceAbove = inputRect.top;
+        
         dropdown.style.left = inputRect.left + 'px';
-        dropdown.style.top = (inputRect.bottom + 4) + 'px';
         dropdown.style.width = inputRect.width + 'px';
+        
+        // Si no hay suficiente espacio abajo pero sí arriba, mostrar hacia arriba
+        if (spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow) {
+            // Posicionar justo arriba del input
+            dropdown.style.bottom = (window.innerHeight - inputRect.top + 4) + 'px';
+            dropdown.style.top = 'auto';
+            dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceAbove - 4) + 'px';
+        } else {
+            // Posicionar justo debajo del input
+            dropdown.style.top = (inputRect.bottom + 4) + 'px';
+            dropdown.style.bottom = 'auto';
+            dropdown.style.maxHeight = Math.min(dropdownMaxHeight, spaceBelow - 4) + 'px';
+        }
     }
     
     // Agregar dropdown al body para que flote sobre todo
