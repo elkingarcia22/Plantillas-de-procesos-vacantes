@@ -393,7 +393,7 @@ function renderStages() {
     const stagesHTML = currentTemplate.realContent.stages.map((stage, index) => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         
-        // Renderizar agente como card si existe
+        // Renderizar agente como card si existe, o mostrar estado empty
         let agentHTML = '';
         if (stage.agents && stage.agents.length > 0) {
             const agent = stage.agents[0];
@@ -461,6 +461,14 @@ function renderStages() {
                     </div>
                 `;
             }
+        } else {
+            // Estado empty: mostrar selector de agentes con componente UBITS
+            agentHTML = `
+                <div class="stage-empty-state" id="empty-state-${stage.id}">
+                    <p class="empty-state-text">Puedes dejar la etapa vacía o agregar un agente:</p>
+                    <div id="agent-selector-${stage.id}"></div>
+                </div>
+            `;
         }
         
         return `
@@ -513,6 +521,34 @@ function renderStages() {
         item.addEventListener('drop', handleBoardStageDrop);
         item.addEventListener('dragend', handleBoardStageDragEnd);
         item.addEventListener('dragleave', handleBoardStageDragLeave);
+    });
+    
+    // Crear selectores UBITS para etapas sin agentes
+    currentTemplate.realContent.stages.forEach((stage, index) => {
+        if (!stage.agents || stage.agents.length === 0) {
+            const containerId = `agent-selector-${stage.id}`;
+            const container = document.getElementById(containerId);
+            
+            if (container && typeof createInput === 'function') {
+                const agentOptions = availableAgents.map(agent => ({
+                    value: agent.id,
+                    text: agent.name
+                }));
+                
+                createInput({
+                    containerId: containerId,
+                    type: 'select',
+                    placeholder: 'Seleccionar agente...',
+                    size: 'md',
+                    selectOptions: agentOptions,
+                    onChange: (value) => {
+                        if (value) {
+                            addAgentFromSelector(stage.id, value);
+                        }
+                    }
+                });
+            }
+        }
     });
 }
 
@@ -1004,6 +1040,41 @@ function editStageName(stageId) {
             // No hacer nada
         }
     });
+}
+
+window.addAgentFromSelector = function(stageId, agentId) {
+    if (!agentId) return; // Si no seleccionó nada
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    if (!stage) return;
+    
+    const agentData = AGENTS.find(a => a.id === agentId);
+    if (!agentData) return;
+    
+    // Obtener configuración por defecto del agente
+    const defaultConfig = {};
+    if (agentData.hasConfig) {
+        Object.entries(agentData.config).forEach(([key, field]) => {
+            defaultConfig[key] = field.default;
+        });
+    }
+    
+    // Agregar agente a la etapa
+    stage.agents = [{ 
+        id: agentId,
+        name: agentData.name, 
+        icon: agentData.icon,
+        config: defaultConfig
+    }];
+    
+    // Actualizar agentes disponibles
+    updateAvailableAgents();
+    
+    // Re-renderizar
+    renderEditor();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
 }
 
 function removeAgentFromStage(stageId) {
