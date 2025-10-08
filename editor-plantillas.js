@@ -336,9 +336,14 @@ function renderStages() {
                                 <i class="far ${agent.icon || 'fa-user'}"></i>
                                 <span>${agent.name}</span>
                             </div>
-                               <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
-                                   <i class="far fa-trash"></i>
-                               </button>
+                            <div class="agent-card-actions">
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="showAgentInfo('${agent.id}')" title="Más información">
+                                    <i class="far fa-circle-info"></i>
+                                </button>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
+                                    <i class="far fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                         ${agentData.hasConfig ? `
                             <div class="agent-card-config">
