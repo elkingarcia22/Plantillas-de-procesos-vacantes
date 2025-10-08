@@ -524,7 +524,7 @@
             pointer-events: none;
         }
 
-        /* Search input wrapper */
+        /* Search input wrapper para etapas */
         .search-input-wrapper {
             position: relative;
             display: flex;
@@ -1124,7 +1124,6 @@
                             
                             <!-- Tab Etapas -->
                             <div class="tab-content active" id="stages-tab">
-                                <h3 class="agents-title">Etapas</h3>
                                 <p class="agents-description">Crea y gestiona las etapas del proceso de selección</p>
                                 
                                 <!-- Botón crear etapa -->
@@ -1132,6 +1131,21 @@
                                     <i class="far fa-plus"></i>
                                     <span>Crear etapa</span>
                                 </button>
+                                
+                                <!-- Buscador de etapas (solo visible cuando hay más de 6) -->
+                                <div class="search-input-wrapper" id="stageSearchWrapper" style="display: none;">
+                                    <i class="far fa-search search-icon"></i>
+                                    <input 
+                                        type="text" 
+                                        id="stageSearch" 
+                                        placeholder="Buscar etapas" 
+                                        class="search-input"
+                                        aria-label="Buscar etapas"
+                                    >
+                                    <button type="button" id="clearStageSearch" class="clear-search-icon" style="display: none;">
+                                        <i class="far fa-times"></i>
+                                    </button>
+                                </div>
                                 
                                 <!-- Lista de etapas -->
                                 <div class="stages-list" id="stagesList">
@@ -1141,23 +1155,7 @@
                             
                             <!-- Tab Agentes -->
                             <div class="tab-content" id="agents-tab">
-                                <h3 class="agents-title">Agentes IA</h3>
                                 <p class="agents-description">Arrastra y suelta los agentes en las etapas que consideres</p>
-                                
-                                <!-- Buscador de agentes -->
-                                <div class="search-input-wrapper">
-                                    <i class="far fa-search search-icon"></i>
-                                    <input 
-                                        type="text" 
-                                        id="agentSearch" 
-                                        placeholder="Buscar agentes" 
-                                        class="search-input"
-                                        aria-label="Buscar agentes"
-                                    >
-                                    <button type="button" id="clearAgentSearch" class="clear-search-icon" style="display: none;">
-                                        <i class="far fa-times"></i>
-                                    </button>
-                                </div>
                                 
                                 <div class="agents-list" id="agentsList">
                                     <!-- Los agentes se cargarán dinámicamente -->

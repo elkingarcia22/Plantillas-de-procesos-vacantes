@@ -180,6 +180,9 @@ function setupEventListeners() {
     
     // Funcionalidad de tabs
     setupTabs();
+    
+    // Funcionalidad del buscador de etapas
+    setupStageSearch();
 }
 
 function setupAgentDragAndDrop() {
@@ -209,6 +212,49 @@ function setupTabs() {
                 targetContent.classList.add('active');
             }
         });
+    });
+}
+
+function setupStageSearch() {
+    const searchInput = document.getElementById('stageSearch');
+    const clearButton = document.getElementById('clearStageSearch');
+    const stagesList = document.getElementById('stagesList');
+    
+    if (!searchInput || !clearButton || !stagesList) return;
+    
+    // Función de búsqueda
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const stageItems = stagesList.querySelectorAll('.stage-item');
+        
+        // Mostrar/ocultar botón de limpiar
+        clearButton.style.display = searchTerm ? 'block' : 'none';
+        
+        // Filtrar etapas
+        stageItems.forEach(item => {
+            const stageName = item.getAttribute('data-stage-name').toLowerCase();
+            const stageCategory = item.getAttribute('data-stage-category').toLowerCase();
+            
+            if (stageName.includes(searchTerm) || stageCategory.includes(searchTerm)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // Botón limpiar búsqueda
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        this.style.display = 'none';
+        
+        // Mostrar todas las etapas
+        const stageItems = stagesList.querySelectorAll('.stage-item');
+        stageItems.forEach(item => {
+            item.style.display = 'flex';
+        });
+        
+        searchInput.focus();
     });
 }
 
@@ -263,6 +309,12 @@ function renderAvailableStages() {
     // Filtrar etapas que ya están en uso en esta plantilla
     const usedStageIds = currentTemplate.realContent.stages.map(stage => stage.templateId);
     const availableStagesForThisTemplate = availableStages.filter(stage => !usedStageIds.includes(stage.id));
+    
+    // Mostrar/ocultar buscador según cantidad de etapas
+    const searchWrapper = document.getElementById('stageSearchWrapper');
+    if (searchWrapper) {
+        searchWrapper.style.display = availableStagesForThisTemplate.length > 6 ? 'flex' : 'none';
+    }
     
     if (availableStagesForThisTemplate.length === 0) {
         stagesList.innerHTML = `
