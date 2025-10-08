@@ -165,16 +165,30 @@ function setupEventListeners() {
     // Edición inline del nombre de plantilla
     const templateName = document.getElementById('templateName');
     if (templateName) {
+        // Función para ajustar el ancho del input según el contenido
+        function adjustInputWidth() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = '600 24px "Noto Sans"';
+            const textWidth = context.measureText(templateName.value).width;
+            templateName.style.width = Math.min(600, textWidth + 20) + 'px';
+        }
+        
+        // Ajustar ancho inicial
+        adjustInputWidth();
+        
         templateName.addEventListener('input', function() {
             if (currentTemplate) {
                 currentTemplate.name = this.value.trim();
                 markAsUnsaved();
             }
+            adjustInputWidth();
         });
         
         templateName.addEventListener('blur', function() {
             if (currentTemplate && this.value.trim() === '') {
                 this.value = currentTemplate.name || 'Nueva plantilla';
+                adjustInputWidth();
             }
         });
     }
@@ -760,11 +774,27 @@ function updateTemplateInfo() {
     const templateCategoryName = document.getElementById('templateCategoryName');
     const templateLastModified = document.getElementById('templateLastModified');
     const templateVersion = document.getElementById('templateVersion');
+    const templateStatusBadge = document.getElementById('templateStatusBadge');
     
     if (currentTemplate) {
         // Actualizar nombre
         if (templateName) {
             templateName.value = currentTemplate.name;
+            
+            // Ajustar ancho del input
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = '600 24px "Noto Sans"';
+            const textWidth = context.measureText(templateName.value).width;
+            templateName.style.width = Math.min(600, textWidth + 20) + 'px';
+        }
+        
+        // Actualizar estado
+        if (templateStatusBadge) {
+            const status = currentTemplate.status || 'draft';
+            const statusText = status === 'active' ? 'Activa' : 'Borrador';
+            templateStatusBadge.innerHTML = `<div class="status-dot"></div><span>${statusText}</span>`;
+            templateStatusBadge.className = 'template-status-badge ' + (status === 'active' ? 'active' : 'draft');
         }
         
         // Actualizar categoría

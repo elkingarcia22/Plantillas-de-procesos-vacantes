@@ -59,8 +59,8 @@
             outline: none;
             padding: 0;
             margin: 0;
-            width: 100%;
-            min-width: 200px;
+            width: auto;
+            max-width: 600px;
         }
 
         .editor-title-input:focus {
@@ -68,6 +68,36 @@
             border: 1px solid var(--ubits-accent-brand);
             border-radius: 4px;
             padding: 4px 8px;
+        }
+
+        .template-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .template-status-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: var(--ubits-fg-info-subtle-static-default);
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+
+        .template-status-badge.active {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
         }
 
         /* Info bar */
@@ -1091,6 +1121,10 @@
                                 <i class="far fa-arrow-left"></i>
                             </button>
                             <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" maxlength="100">
+                            <span class="template-status-badge draft" id="templateStatusBadge">
+                                <div class="status-dot"></div>
+                                <span>Borrador</span>
+                            </span>
                         </div>
                         <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
                             <i class="far fa-save"></i>
