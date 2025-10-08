@@ -161,10 +161,21 @@ function setupEventListeners() {
     // Drag and drop para etapas
     setupStageDragAndDrop();
     
-    // Click en nombre de plantilla para editar
+    // Edición inline del nombre de plantilla
     const templateName = document.getElementById('templateName');
     if (templateName) {
-        templateName.addEventListener('click', editTemplateName);
+        templateName.addEventListener('input', function() {
+            if (currentTemplate) {
+                currentTemplate.name = this.value.trim();
+                markAsUnsaved();
+            }
+        });
+        
+        templateName.addEventListener('blur', function() {
+            if (currentTemplate && this.value.trim() === '') {
+                this.value = currentTemplate.name || 'Nueva plantilla';
+            }
+        });
     }
     
     // Funcionalidad de tabs
@@ -406,8 +417,13 @@ function renderStages() {
                 <div class="stage-content">
                     <div class="stage-header">
                         <div class="stage-title-section">
-                            <h4 class="stage-name">${stage.name}</h4>
-                            ${category ? `<span class="stage-category-badge">Categoría de etapa: ${category.name}</span>` : ''}
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="stage-number">${index + 1}</div>
+                                <div>
+                                    <h4 class="stage-name">${stage.name}</h4>
+                                    ${category ? `<span class="stage-category-badge">Categoría de etapa: ${category.name}</span>` : ''}
+                                </div>
+                            </div>
                         </div>
                         <div class="stage-actions">
                             <div class="stage-menu">
@@ -869,6 +885,9 @@ function updateStageOrder() {
     markAsUnsaved();
     
     console.log('Orden de etapas actualizado:', newOrder);
+    
+    // Re-renderizar para actualizar los números
+    renderStages();
 }
 
 // ========================================
@@ -1352,15 +1371,7 @@ function handleStageTemplateDragEnd(event) {
 // ACCIONES DE PLANTILLA
 // ========================================
 
-function editTemplateName() {
-    if (currentTemplate) {
-        const newName = prompt('Nuevo nombre de la plantilla:', currentTemplate.name);
-        if (newName && newName.trim()) {
-            currentTemplate.name = newName.trim();
-            updateTemplateInfo();
-        }
-    }
-}
+// Función editTemplateName eliminada - ahora la edición es inline en el input
 
 function saveTemplate() {
     console.log('saveTemplate() called');
