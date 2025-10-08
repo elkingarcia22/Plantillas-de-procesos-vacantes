@@ -411,13 +411,18 @@ function renderStages() {
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="showAgentInfo('${agent.id}')" title="Más información">
                                     <i class="far fa-circle-info"></i>
                                 </button>
+                                ${agentData.hasConfig ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="toggleAgentConfig('${stage.id}')" title="Expandir/Contraer configuración">
+                                        <i class="far fa-chevron-up" id="chevron-${stage.id}"></i>
+                                    </button>
+                                ` : ''}
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
                                     <i class="far fa-trash"></i>
                                 </button>
                             </div>
                         </div>
                         ${agentData.hasConfig ? `
-                            <div class="agent-card-config">
+                            <div class="agent-card-config" id="agent-config-${stage.id}">
                                 ${Object.entries(agentData.config).map(([key, field]) => {
                                     const value = agent.config?.[key] ?? field.default;
                                     
@@ -1201,6 +1206,37 @@ function updateAgentConfig(stageId, configKey, value) {
     markAsUnsaved();
     
     console.log('Configuración actualizada:', { stageId, configKey, value, agentConfig: agent.config });
+}
+
+window.toggleAgentConfig = function(stageId) {
+    const configDiv = document.getElementById(`agent-config-${stageId}`);
+    const chevron = document.getElementById(`chevron-${stageId}`);
+    const header = configDiv?.previousElementSibling;
+    
+    if (!configDiv || !chevron) return;
+    
+    // Toggle visibility
+    if (configDiv.style.display === 'none') {
+        // Expandir
+        configDiv.style.display = 'flex';
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-up');
+        // Mostrar divider
+        if (header) {
+            header.style.borderBottom = '1px solid var(--ubits-border-1)';
+            header.style.paddingBottom = '8px';
+        }
+    } else {
+        // Contraer
+        configDiv.style.display = 'none';
+        chevron.classList.remove('fa-chevron-up');
+        chevron.classList.add('fa-chevron-down');
+        // Ocultar divider
+        if (header) {
+            header.style.borderBottom = 'none';
+            header.style.paddingBottom = '0';
+        }
+    }
 }
 
 // ========================================
