@@ -502,6 +502,11 @@ function cloneTemplate(templateId) {
         saveTemplatesToStorage();
         renderTemplates();
         updateTemplatesCount();
+        
+        // Mostrar toast de éxito
+        if (typeof showToast === 'function') {
+            showToast('success', `Plantilla "${template.name}" clonada exitosamente`);
+        }
     }
 }
 
@@ -516,11 +521,17 @@ function deleteTemplate(templateId) {
         cancelText: 'Cancelar',
         variant: 'primary',
         onConfirm: () => {
+            const templateName = template.name;
             currentTemplates = currentTemplates.filter(t => t.id !== templateId);
             filteredTemplates = filteredTemplates.filter(t => t.id !== templateId);
             saveTemplatesToStorage();
             renderTemplates();
             updateTemplatesCount();
+            
+            // Mostrar toast de éxito
+            if (typeof showToast === 'function') {
+                showToast('success', `Plantilla "${templateName}" eliminada exitosamente`);
+            }
         },
         onCancel: () => {
             console.log('Eliminación de plantilla cancelada');
