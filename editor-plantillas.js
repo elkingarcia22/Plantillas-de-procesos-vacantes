@@ -1592,6 +1592,35 @@ function deleteStageTemplate(stageId) {
     const stage = availableStages.find(s => s.id === stageId);
     if (!stage) return;
     
+    // Verificar si la etapa está siendo usada en una plantilla activa
+    const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+    const activeTemplates = templates.filter(t => t.status === 'active');
+    
+    // Buscar si alguna plantilla activa usa esta etapa
+    const isUsedInActiveTemplate = activeTemplates.some(template => {
+        if (template.realContent && template.realContent.stages) {
+            return template.realContent.stages.some(s => s.templateId === stageId);
+        }
+        return false;
+    });
+    
+    if (isUsedInActiveTemplate) {
+        // Mostrar modal de advertencia
+        showConfirmModal({
+            title: 'No se puede eliminar',
+            message: `Esta etapa no se puede borrar porque se está usando en una vacante activa.`,
+            confirmText: 'Entendido',
+            cancelText: null,
+            variant: 'primary',
+            singleButton: true,
+            onConfirm: () => {
+                // Solo cerrar el modal
+            }
+        });
+        return;
+    }
+    
+    // Si no está en uso, proceder con la confirmación normal
     showConfirmModal({
         title: 'Eliminar etapa',
         message: `¿Estás seguro de que quieres eliminar la etapa "${stage.name}"? Esta acción no se puede deshacer.`,
