@@ -193,20 +193,20 @@
             align-items: center;
             gap: 8px;
             padding: 12px 16px;
-            background: #f3f2ff;
-            border: 1px solid #97A5FD;
+            background: var(--ubits-feedback-bg-info-subtle);
+            border: 1px solid var(--ubits-feedback-border-info);
             border-radius: 8px;
         }
 
         .board-info i {
-            color: #20335F;
+            color: var(--ubits-feedback-fg-info-subtle);
             font-size: 12px;
         }
 
         .board-description {
             font-family: 'Noto Sans', sans-serif;
             font-size: 12px;
-            color: #20335F;
+            color: var(--ubits-feedback-fg-info-subtle);
             line-height: 1.4;
         }
 
@@ -387,8 +387,15 @@
         .stage-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex: 1;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--ubits-border-1);
+        }
+        
+        .stage-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .stage-icon {
@@ -426,36 +433,9 @@
         .stage-actions {
             display: flex;
             gap: 4px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .stage-item:hover .stage-actions {
             opacity: 1;
         }
 
-        .stage-action-btn {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: none;
-            border-radius: 4px;
-            color: var(--ubits-fg-1-medium);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .stage-action-btn:hover {
-            background: var(--ubits-bg-3);
-            color: var(--ubits-fg-1-high);
-        }
-
-        .stage-action-btn i {
-            font-size: 10px;
-        }
 
         /* Estados de arrastre */
         .stage-item.dragging {
@@ -578,6 +558,13 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            justify-content: space-between;
+        }
+        
+        .agent-title-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .agent-icon {
@@ -694,51 +681,131 @@
 
         .stage-agents {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
         }
 
-        .stage-agent {
+        /* Agent Card Styles */
+        .agent-card {
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .agent-card-header {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            background: var(--ubits-accent-brand);
-            color: white;
-            border-radius: 12px;
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--ubits-border-1);
         }
 
-        .stage-agent i {
-            font-size: 10px;
+        .agent-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+        .agent-card-title i {
+            font-size: 14px;
+            color: var(--ubits-accent-brand);
+        }
+
+
+        .agent-card-config {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-field {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .config-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+            white-space: nowrap;
+            width: 180px;
+            text-align: left;
+        }
+
+        .config-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .config-input {
+            width: 100px;
+            padding: 6px 10px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            background: var(--ubits-bg-2);
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .config-input:focus {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .config-input:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .config-suffix {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            white-space: nowrap;
+        }
+
+        .config-select {
+            min-width: 120px;
+            padding: 6px 10px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            background: var(--ubits-bg-2);
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .config-select:focus {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .config-select:hover {
+            border-color: var(--ubits-accent-brand);
         }
 
         .stage-actions {
             display: flex;
             gap: 4px;
+            opacity: 1;
         }
 
-        .stage-action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border: none;
-            border-radius: 4px;
-            background: transparent;
-            color: var(--ubits-fg-1-medium);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 12px;
-        }
-
-        .stage-action-btn:hover {
-            background: var(--ubits-bg-3);
-            color: var(--ubits-fg-1-high);
-        }
 
         /* Botón agregar etapa - ELIMINADO */
 
@@ -1095,6 +1162,43 @@
                     alert('Error: No se pudo crear la etapa');
                 }
             };
+            
+            // Verificar que createInput esté disponible
+            if (typeof createInput === 'undefined') {
+                alert('Error: El componente UBITS Input no está cargado');
+                return;
+            }
+            
+            // Verificar que showFormModal esté disponible
+            if (typeof showFormModal === 'undefined') {
+                alert('Error: El componente UBITS Modal no está cargado');
+                return;
+            }
+            
+            console.log('Creando modal con campos:', [
+                {
+                    id: 'stageName',
+                    label: 'Nombre de la etapa',
+                    type: 'text',
+                    placeholder: 'Ej: Entrevista técnica',
+                    required: true,
+                    maxLength: 50
+                },
+                {
+                    id: 'stageCategory',
+                    label: 'Categoría',
+                    type: 'select',
+                    required: true,
+                    selectOptions: [
+                        {value: 'evaluacion-inicial', text: 'Evaluación inicial'},
+                        {value: 'entrevistas', text: 'Entrevistas'},
+                        {value: 'evaluacion-psicometrica', text: 'Evaluación psicométrica'},
+                        {value: 'pruebas-tecnicas', text: 'Pruebas técnicas'},
+                        {value: 'verificacion', text: 'Verificación'},
+                        {value: 'decision-final', text: 'Decisión final'}
+                    ]
+                }
+            ]);
             
             // Mostrar modal UBITS oficial
             showFormModal({

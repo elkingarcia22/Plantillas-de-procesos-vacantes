@@ -522,16 +522,27 @@ function showConfirmModal(options = {}) {
         cancelText = 'Cancelar',
         onConfirm = null,
         onCancel = null,
-        variant = 'primary'
+        variant = 'primary',
+        singleButton = false
     } = options;
 
     const modalId = `confirm-modal-${Date.now()}`;
     
-    const modal = UBITSModalManager.create({
-        id: modalId,
-        title,
-        content: `<p class="ubits-modal__content">${message}</p>`,
-        footerRight: [
+    // Crear array de botones según la configuración
+    let footerButtons = [];
+    
+    if (singleButton) {
+        // Solo botón de confirmar
+        footerButtons = [
+            {
+                text: confirmText,
+                variant: variant,
+                onclick: `UBITSModalManager.close('${modalId}'); if (window.modalConfirmCallback) window.modalConfirmCallback();`
+            }
+        ];
+    } else {
+        // Botones de cancelar y confirmar
+        footerButtons = [
             {
                 text: cancelText,
                 variant: 'secondary',
@@ -542,7 +553,14 @@ function showConfirmModal(options = {}) {
                 variant: variant,
                 onclick: `UBITSModalManager.close('${modalId}'); if (window.modalConfirmCallback) window.modalConfirmCallback();`
             }
-        ],
+        ];
+    }
+    
+    const modal = UBITSModalManager.create({
+        id: modalId,
+        title,
+        content: `<p class="ubits-modal__content">${message}</p>`,
+        footerRight: footerButtons,
         onClose: onCancel
     });
 

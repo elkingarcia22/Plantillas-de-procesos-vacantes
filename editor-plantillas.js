@@ -5,12 +5,67 @@
 
 // Agentes disponibles
 const AGENTS = [
-    { id: 'cv-analyzer', name: 'Analizador CV', icon: 'fa-file-alt', description: 'Analiza CV y asigna puntaje' },
-    { id: 'interview-ia', name: 'Entrevista Serena', icon: 'fa-comments', description: 'Genera preguntas y analiza respuestas' },
-    { id: 'tech-test', name: 'Prueba técnica', icon: 'fa-code', description: 'Evalúa habilidades técnicas' },
-    { id: 'auto-filter', name: 'Analista psicométrico', icon: 'fa-filter', description: 'Descarta por pruebas psicométricas' },
-    { id: 'ref-check', name: 'Verificación referencias', icon: 'fa-phone', description: 'Valida referencias' },
-    { id: 'salary-analyst', name: 'Analista de salario', icon: 'fa-dollar-sign', description: 'Analiza y valida expectativas salariales' }
+    { 
+        id: 'cv-analyzer', 
+        name: 'Analizador CV', 
+        icon: 'fa-file-alt', 
+        description: 'Analiza CV y asigna puntaje',
+        hasConfig: true,
+        config: {
+            salaryPercentage: { label: 'Porcentaje sobre el rango salarial', type: 'number', default: 0, suffix: '%' },
+            minScore: { label: 'Puntaje mínimo de evaluación', type: 'number', default: 0, suffix: 'pts' }
+        }
+    },
+    { 
+        id: 'interview-ia', 
+        name: 'Entrevista Serena', 
+        icon: 'fa-comments', 
+        description: 'Genera preguntas y analiza respuestas',
+        hasConfig: true,
+        config: {
+            expirationDays: { label: 'Días para que expire la entrevista', type: 'number', default: 0, suffix: 'días' },
+            minScore: { label: 'Puntaje mínimo de la entrevista', type: 'number', default: 0, suffix: 'pts' }
+        }
+    },
+    { 
+        id: 'psychometric-analyst', 
+        name: 'Analista psicométrico', 
+        icon: 'fa-brain', 
+        description: 'Evalúa mediante pruebas psicométricas',
+        hasConfig: true,
+        config: {
+            minIQ: { label: 'Puntaje CI mínimo', type: 'number', default: 0, suffix: 'pts' },
+            testType: { 
+                label: 'Tipo de prueba', 
+                type: 'select', 
+                default: 'ci-ca',
+                options: [
+                    { value: 'ci-ca', text: 'CI/CA' },
+                    { value: '16pf', text: '16PF' },
+                    { value: 'disc', text: 'DISC' },
+                    { value: 'mbti', text: 'MBTI' },
+                    { value: 'cleaver', text: 'Cleaver' }
+                ]
+            },
+            testLanguage: { 
+                label: 'Idioma de la prueba', 
+                type: 'select', 
+                default: 'es',
+                options: [
+                    { value: 'es', text: 'Español' },
+                    { value: 'en', text: 'Inglés' },
+                    { value: 'pt', text: 'Portugués' }
+                ]
+            }
+        }
+    },
+    { 
+        id: 'background-check', 
+        name: 'Antecedentes judiciales', 
+        icon: 'fa-shield-check', 
+        description: 'Verifica certificado de antecedentes judiciales',
+        hasConfig: false
+    }
 ];
 
 // Categorías fijas de etapas
@@ -171,8 +226,13 @@ function renderAgents() {
              data-agent-name="${agent.name}"
              data-agent-icon="${agent.icon}">
             <div class="agent-header">
-                <div class="agent-icon"><i class="far ${agent.icon}"></i></div>
-                <div class="agent-name">${agent.name}</div>
+                <div class="agent-title-section">
+                    <div class="agent-icon"><i class="far ${agent.icon}"></i></div>
+                    <div class="agent-name">${agent.name}</div>
+                </div>
+                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="event.stopPropagation(); showAgentInfo('${agent.id}')" title="Más información">
+                    <i class="far fa-circle-info"></i>
+                </button>
             </div>
             <div class="agent-help">${agent.description}</div>
         </div>
@@ -261,33 +321,93 @@ function renderStages() {
     // Crear HTML de las etapas
     const stagesHTML = currentTemplate.realContent.stages.map((stage, index) => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
+        
+        // Renderizar agente como card si existe
+        let agentHTML = '';
+        if (stage.agents && stage.agents.length > 0) {
+            const agent = stage.agents[0];
+            const agentData = AGENTS.find(a => a.id === agent.id);
+            
+            if (agentData) {
+                agentHTML = `
+                    <div class="agent-card">
+                        <div class="agent-card-header">
+                            <div class="agent-card-title">
+                                <i class="far ${agent.icon || 'fa-user'}"></i>
+                                <span>${agent.name}</span>
+                            </div>
+                               <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
+                                   <i class="far fa-trash"></i>
+                               </button>
+                        </div>
+                        ${agentData.hasConfig ? `
+                            <div class="agent-card-config">
+                                ${Object.entries(agentData.config).map(([key, field]) => {
+                                    const value = agent.config?.[key] ?? field.default;
+                                    
+                                    if (field.type === 'number') {
+                                        return `
+                                            <div class="config-field">
+                                                <label class="config-label">${field.label}</label>
+                                                <div class="config-input-group">
+                                                    <input 
+                                                        type="number" 
+                                                        class="config-input" 
+                                                        value="${value}"
+                                                        min="0"
+                                                        onchange="updateAgentConfig('${stage.id}', '${key}', this.value)"
+                                                    >
+                                                    ${field.suffix ? `<span class="config-suffix">${field.suffix}</span>` : ''}
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else if (field.type === 'select') {
+                                        return `
+                                            <div class="config-field">
+                                                <label class="config-label">${field.label}</label>
+                                                <select 
+                                                    class="config-select" 
+                                                    onchange="updateAgentConfig('${stage.id}', '${key}', this.value)"
+                                                >
+                                                    ${field.options.map(opt => `
+                                                        <option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>
+                                                            ${opt.text}
+                                                        </option>
+                                                    `).join('')}
+                                                </select>
+                                            </div>
+                                        `;
+                                    }
+                                    return '';
+                                }).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+        
         return `
             <div class="stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}">
                 <i class="far fa-grip-vertical stage-drag-handle"></i>
                 <div class="stage-content">
                     <div class="stage-header">
-                        <h4 class="stage-name">${stage.name}</h4>
-                        ${category ? `<span class="stage-category-badge">${category.name}</span>` : ''}
+                        <div class="stage-title-section">
+                            <h4 class="stage-name">${stage.name}</h4>
+                            ${category ? `<span class="stage-category-badge">${category.name}</span>` : ''}
+                        </div>
+                        <div class="stage-actions">
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="editStageName('${stage.id}')" title="Editar nombre">
+                                <i class="far fa-edit"></i>
+                            </button>
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteStage('${stage.id}')" title="Eliminar etapa">
+                                <i class="far fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="stage-agents">
-                        ${stage.agents ? stage.agents.map(agent => `
-                            <div class="stage-agent">
-                                <i class="far ${agent.icon || 'fa-user'}"></i>
-                                <span>${agent.name}</span>
-                            </div>
-                        `).join('') : ''}
+                        ${agentHTML}
                     </div>
-                </div>
-                <div class="stage-actions">
-                    <button class="stage-action-btn" onclick="editStageName('${stage.id}')" title="Editar nombre">
-                        <i class="far fa-edit"></i>
-                    </button>
-                    <button class="stage-action-btn" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
-                        <i class="far fa-times"></i>
-                    </button>
-                    <button class="stage-action-btn" onclick="deleteStage('${stage.id}')" title="Eliminar etapa">
-                        <i class="far fa-trash"></i>
-                    </button>
                 </div>
             </div>
         `;
@@ -296,11 +416,13 @@ function renderStages() {
     // Mostrar las etapas
     stagesContainer.innerHTML = stagesHTML;
     
-    // Configurar drag and drop para las etapas del board
+    // Configurar drag and drop para las etapas del board (REORDENAR)
     stagesContainer.querySelectorAll('.stage-item').forEach(item => {
-        item.addEventListener('dragover', handleStageDragOver);
-        item.addEventListener('drop', handleStageDrop);
-        item.addEventListener('dragend', handleStageDragEnd);
+        item.addEventListener('dragstart', handleBoardStageDragStart);
+        item.addEventListener('dragover', handleBoardStageDragOver);
+        item.addEventListener('drop', handleBoardStageDrop);
+        item.addEventListener('dragend', handleBoardStageDragEnd);
+        item.addEventListener('dragleave', handleBoardStageDragLeave);
     });
 }
 
@@ -534,34 +656,197 @@ function handleAgentDragEnd(e) {
     console.log('Finalizando arrastre de agente');
 }
 
-function handleStageDragStart(e) {
-    draggedElement = e.target;
-    e.target.classList.add('dragging');
+// ========================================
+// DRAG AND DROP PARA REORDENAR ETAPAS EN EL BOARD
+// ========================================
+
+let draggedBoardStage = null;
+let currentDropTarget = null;
+
+function handleBoardStageDragStart(e) {
+    const stageItem = e.target.closest('.stage-item');
+    if (!stageItem) return;
+    
+    draggedBoardStage = stageItem;
+    stageItem.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.dataTransfer.setData('text/plain', 'board-stage-reorder');
+    
+    console.log('Iniciando arrastre de etapa del board para reordenar');
 }
 
-function handleStageDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-}
-
-function handleStageDrop(e) {
+function handleBoardStageDragOver(e) {
     e.preventDefault();
     
-    if (draggedElement && draggedElement.classList.contains('stage-item')) {
-        const draggedStageId = draggedElement.dataset.stageId;
-        const targetStageId = e.target.closest('.stage-item')?.dataset.stageId;
-        
-        if (targetStageId && draggedStageId !== targetStageId) {
-            reorderStages(draggedStageId, targetStageId);
-        }
+    const targetItem = e.target.closest('.stage-item');
+    if (!targetItem) return;
+    
+    // Si estamos arrastrando un agente, mostrar feedback visual
+    if (draggedElement && draggedElement.type === 'agent') {
+        e.dataTransfer.dropEffect = 'copy';
+        targetItem.style.background = 'var(--ubits-feedback-bg-info-subtle)';
+        targetItem.style.borderColor = 'var(--ubits-feedback-accent-info)';
+        currentDropTarget = targetItem;
+        return;
+    }
+    
+    // Si estamos arrastrando una etapa del board, reordenar
+    if (!draggedBoardStage) return;
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    // No hacer nada si es el mismo elemento
+    if (targetItem === draggedBoardStage) return;
+    
+    // Obtener el contenedor de etapas
+    const container = document.getElementById('stagesContainer');
+    if (!container) return;
+    
+    // Obtener todos los elementos de etapa
+    const allStages = [...container.querySelectorAll('.stage-item')];
+    const draggedIndex = allStages.indexOf(draggedBoardStage);
+    const targetIndex = allStages.indexOf(targetItem);
+    
+    // Insertar el elemento arrastrado antes o después del objetivo
+    if (draggedIndex < targetIndex) {
+        targetItem.parentNode.insertBefore(draggedBoardStage, targetItem.nextSibling);
+    } else {
+        targetItem.parentNode.insertBefore(draggedBoardStage, targetItem);
     }
 }
 
-function handleStageDragEnd(e) {
-    e.target.classList.remove('dragging');
-    draggedElement = null;
+function handleBoardStageDragLeave(e) {
+    const targetItem = e.target.closest('.stage-item');
+    if (!targetItem) return;
+    
+    // Restaurar estilos originales
+    targetItem.style.background = '';
+    targetItem.style.borderColor = '';
+    
+    if (currentDropTarget === targetItem) {
+        currentDropTarget = null;
+    }
+}
+
+function handleBoardStageDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const targetItem = e.target.closest('.stage-item');
+    if (!targetItem) return;
+    
+    // Restaurar estilos
+    targetItem.style.background = '';
+    targetItem.style.borderColor = '';
+    
+    // Si estamos soltando un agente
+    try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        
+        if (data.type === 'agent') {
+            const stageId = targetItem.getAttribute('data-stage-id');
+            const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+            
+            if (!stage) {
+                console.log('No se encontró la etapa');
+                return;
+            }
+            
+            // Verificar que la etapa no tenga ya un agente
+            if (stage.agents && stage.agents.length > 0) {
+                console.log('La etapa ya tiene un agente');
+                
+                // Mostrar toast de error
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Esta etapa ya tiene un agente asignado. Solo se permite un agente por etapa.', {
+                        duration: 5000
+                    });
+                }
+                
+                return;
+            }
+            
+            // Obtener configuración por defecto del agente
+            const agentData = AGENTS.find(a => a.id === data.id);
+            const defaultConfig = {};
+            
+            if (agentData && agentData.hasConfig) {
+                Object.entries(agentData.config).forEach(([key, field]) => {
+                    defaultConfig[key] = field.default;
+                });
+            }
+            
+            // Agregar agente a la etapa con su configuración inicial
+            stage.agents = [{ 
+                id: data.id, 
+                name: data.name, 
+                icon: data.icon,
+                config: defaultConfig
+            }];
+            
+            console.log('Agente agregado a la etapa:', data.name);
+            
+            // Actualizar agentes disponibles
+            updateAvailableAgents();
+            
+            // Re-renderizar todo
+            renderEditor();
+            
+            // Marcar como cambios sin guardar
+            markAsUnsaved();
+        }
+    } catch (error) {
+        console.log('No es un agente, es reordenamiento de etapas');
+    }
+    
+    currentDropTarget = null;
+}
+
+function handleBoardStageDragEnd(e) {
+    const stageItem = e.target.closest('.stage-item');
+    if (stageItem) {
+        stageItem.classList.remove('dragging');
+        stageItem.style.background = '';
+        stageItem.style.borderColor = '';
+    }
+    
+    // Limpiar todos los estilos de feedback
+    const allStages = document.querySelectorAll('.stage-item');
+    allStages.forEach(stage => {
+        stage.style.background = '';
+        stage.style.borderColor = '';
+    });
+    
+    // Actualizar el orden en el modelo de datos si estamos reordenando
+    if (draggedBoardStage) {
+        updateStageOrder();
+    }
+    
+    draggedBoardStage = null;
+    currentDropTarget = null;
+    console.log('Finalizando arrastre');
+}
+
+function updateStageOrder() {
+    const container = document.getElementById('stagesContainer');
+    if (!container) return;
+    
+    const stageElements = [...container.querySelectorAll('.stage-item')];
+    const newOrder = stageElements.map(el => el.getAttribute('data-stage-id'));
+    
+    // Reordenar el array de etapas según el nuevo orden visual
+    const reorderedStages = [];
+    newOrder.forEach(stageId => {
+        const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+        if (stage) {
+            reorderedStages.push(stage);
+        }
+    });
+    
+    currentTemplate.realContent.stages = reorderedStages;
+    markAsUnsaved();
+    
+    console.log('Orden de etapas actualizado:', newOrder);
 }
 
 // ========================================
@@ -694,18 +979,6 @@ function deleteStage(stageId) {
     });
 }
 
-function reorderStages(draggedStageId, targetStageId) {
-    const stages = currentTemplate.realContent.stages;
-    const draggedIndex = stages.findIndex(s => s.id === draggedStageId);
-    const targetIndex = stages.findIndex(s => s.id === targetStageId);
-    
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-        const draggedStage = stages[draggedIndex];
-        stages.splice(draggedIndex, 1);
-        stages.splice(targetIndex, 0, draggedStage);
-        renderEditor();
-    }
-}
 
 // ========================================
 // ACCIONES DE AGENTES
@@ -724,6 +997,36 @@ function addAgentToStage(stageId, agentId) {
             renderEditor();
         }
     }
+}
+
+function updateAgentConfig(stageId, configKey, value) {
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    
+    if (!stage || !stage.agents || stage.agents.length === 0) {
+        return;
+    }
+    
+    const agent = stage.agents[0];
+    
+    // Inicializar config si no existe
+    if (!agent.config) {
+        agent.config = {};
+    }
+    
+    // Actualizar el valor de configuración
+    // Convertir a número si es un campo numérico
+    const agentData = AGENTS.find(a => a.id === agent.id);
+    if (agentData && agentData.config && agentData.config[configKey]) {
+        const field = agentData.config[configKey];
+        agent.config[configKey] = field.type === 'number' ? parseFloat(value) || 0 : value;
+    } else {
+        agent.config[configKey] = value;
+    }
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    console.log('Configuración actualizada:', { stageId, configKey, value, agentConfig: agent.config });
 }
 
 // ========================================
@@ -837,9 +1140,13 @@ function editStageTemplate(stageId) {
     
     const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
     
+    // Configurar callback global para establecer valores después de crear el modal
+    window.modalFormCallback = function(formData) {
+        updateStageTemplate(stageId, formData);
+    };
+    
     showFormModal({
         title: 'Editar etapa',
-        message: 'Modifica los datos de la etapa',
         fields: [
             {
                 id: 'stageName',
@@ -855,20 +1162,19 @@ function editStageTemplate(stageId) {
                 label: 'Categoría',
                 type: 'select',
                 required: true,
-                options: STAGE_CATEGORIES.map(cat => ({
+                selectOptions: STAGE_CATEGORIES.map(cat => ({
                     value: cat.id,
                     text: cat.name
                 })),
                 value: stage.category
             }
         ],
-        confirmText: 'Guardar cambios',
+        submitText: 'Guardar cambios',
         cancelText: 'Cancelar',
-        variant: 'primary',
-        onConfirm: (formData) => {
-            updateStageTemplate(stageId, formData);
+        onSubmit: function(formData) {
+            window.modalFormCallback(formData);
         },
-        onCancel: () => {
+        onCancel: function() {
             // No hacer nada
         }
     });
@@ -1120,6 +1426,40 @@ function getAgentById(agentId) {
 
 function goToDashboard() {
     window.location.href = 'index.html';
+}
+
+// ========================================
+// INFORMACIÓN DE AGENTES
+// ========================================
+
+window.showAgentInfo = function(agentId) {
+    console.log('showAgentInfo called with:', agentId);
+    const agent = AGENTS.find(a => a.id === agentId);
+    if (!agent) {
+        console.log('Agent not found:', agentId);
+        return;
+    }
+    
+    const descriptions = {
+        'cv-analyzer': 'Permite analizar automáticamente la hoja de vida del candidato para identificar su experiencia y formación.',
+        'interview-ia': 'Permite realizar entrevistas virtuales asistidas por Serena para profundizar en la experiencia y habilidades del candidato.',
+        'psychometric-analyst': 'Permite evaluar las competencias y el perfil psicológico del candidato mediante una prueba estructurada.',
+        'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
+    };
+    
+    const description = descriptions[agentId] || agent.description;
+    
+    // Usar showConfirmModal con un solo botón
+    showConfirmModal({
+        title: agent.name,
+        message: description,
+        confirmText: 'Cerrar',
+        variant: 'primary',
+        singleButton: true,
+        onConfirm: function() {
+            // Solo cerrar el modal
+        }
+    });
 }
 
 function editCategory() {
