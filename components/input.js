@@ -950,13 +950,25 @@ function createAutocompleteDropdown(container, inputElement, autocompleteOptions
 
 // Función para crear dropdown personalizado para SELECT
 function createSelectDropdown(container, inputElement, selectOptions, value, placeholder, onChange) {
-    console.log('createSelectDropdown called with:', { container, inputElement, selectOptions, value, placeholder, onChange });
+    // Limpiar dropdowns anteriores del mismo input si existen
+    const existingDropdown = inputElement.dataset.dropdownId;
+    if (existingDropdown) {
+        const oldDropdown = document.getElementById(existingDropdown);
+        if (oldDropdown) {
+            oldDropdown.remove();
+        }
+    }
     
     // Crear dropdown como elemento flotante independiente
+    const dropdownId = 'dropdown-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     const dropdown = document.createElement('div');
+    dropdown.id = dropdownId;
     dropdown.className = 'ubits-select-dropdown ubits-select-dropdown--floating';
     dropdown.style.display = 'none';
     dropdown.style.position = 'fixed'; // Cambiar a fixed para que flote sobre todo
+    
+    // Guardar referencia del dropdown en el input
+    inputElement.dataset.dropdownId = dropdownId;
     
     // Variables para paginación
     const itemsPerPage = 10;
@@ -1006,13 +1018,32 @@ function createSelectDropdown(container, inputElement, selectOptions, value, pla
                 optionElement.textContent = option.text;
                 optionElement.dataset.value = option.value;
                 
+                // Marcar como seleccionada si coincide con el valor inicial
+                if (value && option.value === value) {
+                    optionElement.classList.add('ubits-select-option--selected');
+                    optionElement.style.backgroundColor = 'var(--ubits-bg-2)';
+                }
+                
                 // Click handler
                 optionElement.addEventListener('click', function() {
                     const selectedValue = this.dataset.value;
                     const selectedText = this.textContent;
                     
-                    // Actualizar input
+                    // Remover selección anterior
+                    dropdown.querySelectorAll('.ubits-select-option--selected').forEach(el => {
+                        el.classList.remove('ubits-select-option--selected');
+                        el.style.backgroundColor = 'transparent';
+                    });
+                    
+                    // Marcar nueva selección
+                    this.classList.add('ubits-select-option--selected');
+                    this.style.backgroundColor = 'var(--ubits-bg-2)';
+                    
+                    // Actualizar input (texto visible)
                     inputElement.value = selectedText;
+                    
+                    // Guardar valor real en dataset para recuperarlo después
+                    inputElement.dataset.selectedValue = selectedValue;
                     
                     // Cerrar dropdown
                     dropdown.style.display = 'none';
@@ -1200,10 +1231,8 @@ function createInput(options = {}) {
     let finalHasLeftIcon = hasLeftIcon;
     
     // Renderizar input, select, textarea o search según el tipo
-    console.log('Rendering type:', type, 'isSelect:', type === 'select', 'isTextarea:', type === 'textarea', 'isSearch:', type === 'search');
     
     if (type === 'select') {
-        console.log('Rendering SELECT with options:', selectOptions);
         // SELECT - usar input normal pero readonly y con rightIcon de chevron
         const selectValue = value ? selectOptions.find(opt => opt.value === value)?.text || placeholder : placeholder;
         inputHTML += `<input type="text" class="${inputClasses.join(' ')}" style="${inputStyle}" value="${selectValue}" readonly>`;
@@ -1353,6 +1382,10 @@ function createInput(options = {}) {
     if (isSelect) {
         console.log('SELECT detected, options:', selectOptions);
         inputElement.style.cursor = 'pointer';
+        // Guardar valor inicial en dataset si existe
+        if (value) {
+            inputElement.dataset.selectedValue = value;
+        }
         // Crear dropdown personalizado
         createSelectDropdown(container, inputElement, selectOptions, value, placeholder, onChange);
     }

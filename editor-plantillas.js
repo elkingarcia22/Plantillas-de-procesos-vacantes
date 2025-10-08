@@ -402,12 +402,21 @@ function renderStages() {
                             ${category ? `<span class="stage-category-badge">${category.name}</span>` : ''}
                         </div>
                         <div class="stage-actions">
-                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="editStageName('${stage.id}')" title="Editar nombre">
-                                <i class="far fa-edit"></i>
-                            </button>
-                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteStage('${stage.id}')" title="Eliminar etapa">
-                                <i class="far fa-trash"></i>
-                            </button>
+                            <div class="stage-menu">
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only stage-menu-trigger" onclick="toggleStageMenu(event, '${stage.id}')" title="Opciones">
+                                    <i class="far fa-ellipsis-vertical"></i>
+                                </button>
+                                <div class="stage-menu-dropdown" id="stage-menu-${stage.id}">
+                                    <button class="stage-menu-item" onclick="editStageName('${stage.id}')">
+                                        <i class="far fa-edit"></i>
+                                        <span>Editar</span>
+                                    </button>
+                                    <button class="stage-menu-item stage-menu-item--danger" onclick="deleteStage('${stage.id}')">
+                                        <i class="far fa-trash"></i>
+                                        <span>Eliminar etapa</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="stage-agents">
@@ -763,7 +772,7 @@ function handleBoardStageDrop(e) {
                 
                 // Mostrar toast de error
                 if (typeof showToast === 'function') {
-                    showToast('error', 'Esta etapa ya tiene un agente asignado. Solo se permite un agente por etapa.', {
+                    showToast('error', 'Solo se permite un agente por etapa.', {
                         duration: 5000
                     });
                 }
@@ -878,8 +887,7 @@ function editStageName(stageId) {
     if (!stage) return;
     
     showFormModal({
-        title: 'Editar nombre de etapa',
-        message: 'Modifica el nombre de la etapa en el área de trabajo',
+        title: 'Editar etapa',
         fields: [
             {
                 id: 'stageName',
@@ -889,20 +897,31 @@ function editStageName(stageId) {
                 required: true,
                 maxLength: 50,
                 value: stage.name
+            },
+            {
+                id: 'stageCategory',
+                label: 'Categoría',
+                type: 'select',
+                required: true,
+                selectOptions: STAGE_CATEGORIES.map(cat => ({
+                    value: cat.id,
+                    text: cat.name
+                })),
+                value: stage.category
             }
         ],
-        confirmText: 'Guardar cambios',
+        submitText: 'Guardar cambios',
         cancelText: 'Cancelar',
-        variant: 'primary',
-        onConfirm: (formData) => {
-            const newName = formData.stageName;
-            if (newName && newName.trim()) {
-                stage.name = newName.trim();
+        onSubmit: function(formData) {
+            const { stageName, stageCategory } = formData;
+            if (stageName && stageName.trim()) {
+                stage.name = stageName.trim();
+                stage.category = stageCategory;
                 markAsUnsaved();
                 renderEditor();
             }
         },
-        onCancel: () => {
+        onCancel: function() {
             // No hacer nada
         }
     });
@@ -1077,25 +1096,37 @@ function generateStageId() {
 }
 
 function openCreateStageModal() {
-    console.log('openCreateStageModal llamada');
-    
-    // Verificar que showAlertModal esté disponible
-    if (typeof showAlertModal !== 'function') {
-        console.error('showAlertModal no está disponible');
-        alert('Error: showAlertModal no está disponible');
-        return;
-    }
-    
-    console.log('showAlertModal está disponible, creando modal...');
-    
-    // Usar modal simple para probar
-    showAlertModal({
+    showFormModal({
         title: 'Crear nueva etapa',
-        message: 'Esta es una prueba del modal. ¿Funciona?',
-        variant: 'info'
+        fields: [
+            {
+                id: 'stageName',
+                label: 'Nombre de la etapa',
+                type: 'text',
+                placeholder: 'Ej: Entrevista técnica',
+                required: true,
+                maxLength: 50
+            },
+            {
+                id: 'stageCategory',
+                label: 'Categoría',
+                type: 'select',
+                required: true,
+                selectOptions: STAGE_CATEGORIES.map(cat => ({
+                    value: cat.id,
+                    text: cat.name
+                }))
+            }
+        ],
+        submitText: 'Crear etapa',
+        cancelText: 'Cancelar',
+        onSubmit: function(formData) {
+            createStageTemplate(formData);
+        },
+        onCancel: function() {
+            // No hacer nada
+        }
     });
-    
-    console.log('Modal creado');
 }
 
 // Exportar función al objeto window
@@ -1431,6 +1462,41 @@ function getAgentById(agentId) {
 
 function goToDashboard() {
     window.location.href = 'index.html';
+}
+
+// ========================================
+// MENÚ DESPLEGABLE DE ETAPAS
+// ========================================
+
+window.toggleStageMenu = function(event, stageId) {
+    event.stopPropagation();
+    
+    const menu = document.getElementById(`stage-menu-${stageId}`);
+    if (!menu) return;
+    
+    // Cerrar todos los demás menús abiertos
+    document.querySelectorAll('.stage-menu-dropdown.show').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+    
+    // Si se abrió el menú, agregar listener para cerrar al hacer clic fuera
+    if (menu.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeStageMenus);
+        }, 0);
+    }
+}
+
+function closeStageMenus() {
+    document.querySelectorAll('.stage-menu-dropdown.show').forEach(menu => {
+        menu.classList.remove('show');
+    });
+    document.removeEventListener('click', closeStageMenus);
 }
 
 // ========================================

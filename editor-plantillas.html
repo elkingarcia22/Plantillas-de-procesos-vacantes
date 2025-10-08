@@ -435,6 +435,71 @@
             gap: 4px;
             opacity: 1;
         }
+        
+        .stage-menu {
+            position: relative;
+        }
+        
+        .stage-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            padding: 4px;
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        
+        .stage-menu-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .stage-menu-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+            text-align: left;
+            transition: background 0.15s ease;
+        }
+        
+        .stage-menu-item:hover {
+            background: var(--ubits-bg-2);
+        }
+        
+        .stage-menu-item i {
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .stage-menu-item--danger {
+            color: var(--ubits-feedback-accent-error);
+        }
+        
+        .stage-menu-item--danger i {
+            color: var(--ubits-feedback-accent-error);
+        }
+        
+        .stage-menu-item--danger:hover {
+            background: var(--ubits-feedback-bg-error-subtle);
+        }
 
 
         /* Estados de arrastre */
@@ -1084,7 +1149,7 @@
                             <!-- Board info -->
                             <div class="board-info">
                                 <i class="far fa-circle-info"></i>
-                                <span class="board-description">Solo se puede agregar un agente por etapa. Arrastra los agentes desde la lista lateral hacia las etapas.</span>
+                                <span class="board-description">Solo un agente por etapa. Puedes dejarla vacía o arrastrar uno desde la columna izquierda.</span>
                             </div>
                             
                             <div class="board-container">

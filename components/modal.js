@@ -709,7 +709,7 @@ function showFormModal(options = {}) {
             {
                 text: cancelText,
                 variant: 'secondary',
-                onclick: `UBITSModalManager.close('${modalId}'); ${onCancel ? onCancel() : ''}`
+                onclick: `UBITSModalManager.close('${modalId}'); setTimeout(() => UBITSModalManager.destroy('${modalId}'), 300); ${onCancel ? onCancel() : ''}`
             },
             {
                 text: submitText,
@@ -717,7 +717,14 @@ function showFormModal(options = {}) {
                 onclick: `submitFormModal('${modalId}', ${JSON.stringify(fields).replace(/"/g, '&quot;')}, ${onSubmit ? 'true' : 'false'});`
             }
         ],
-        onClose: onCancel
+        onClose: () => {
+            // Limpiar todos los dropdowns flotantes antes de destruir el modal
+            document.querySelectorAll('.ubits-select-dropdown--floating').forEach(dropdown => {
+                dropdown.remove();
+            });
+            setTimeout(() => UBITSModalManager.destroy(modalId), 300);
+            if (onCancel) onCancel();
+        }
     });
 
     modal.open();
@@ -725,7 +732,13 @@ function showFormModal(options = {}) {
     // Crear inputs UBITS oficiales después de que el modal esté abierto
     setTimeout(() => {
         fields.forEach(field => {
-            const { id, label, type, placeholder, required, maxLength, size = 'md', selectOptions } = field;
+            const { id, label, type, placeholder, required, maxLength, size = 'md', selectOptions, value } = field;
+            
+            // Limpiar el contenedor antes de crear el input
+            const container = document.getElementById(`field-${id}`);
+            if (container) {
+                container.innerHTML = '';
+            }
             
             const inputOptions = {
                 containerId: `field-${id}`,
@@ -737,6 +750,11 @@ function showFormModal(options = {}) {
                 mandatoryType: 'obligatorio',
                 maxLength: maxLength || 50
             };
+            
+            // Agregar valor inicial si existe
+            if (value !== undefined && value !== null) {
+                inputOptions.value = value;
+            }
             
             // Agregar opciones específicas según el tipo
             if (type === 'select' && selectOptions) {
@@ -774,15 +792,26 @@ function submitFormModal(modalId, fields, hasCallback) {
     
     const formData = {};
     fields.forEach(field => {
-        const { id } = field;
+        const { id, type } = field;
         // Buscar el input dentro del contenedor UBITS
         const input = modal.querySelector(`#field-${id} .ubits-input`);
         if (input) {
-            formData[id] = input.value;
+            // Para selects, usar el valor guardado en dataset, no el texto visible
+            if (type === 'select' && input.dataset.selectedValue) {
+                formData[id] = input.dataset.selectedValue;
+            } else {
+                formData[id] = input.value;
+            }
         }
     });
     
+    // Limpiar todos los dropdowns flotantes antes de cerrar el modal
+    document.querySelectorAll('.ubits-select-dropdown--floating').forEach(dropdown => {
+        dropdown.remove();
+    });
+    
     UBITSModalManager.close(modalId);
+    setTimeout(() => UBITSModalManager.destroy(modalId), 300);
     
     if (hasCallback && window.modalFormCallback) {
         window.modalFormCallback(formData);
