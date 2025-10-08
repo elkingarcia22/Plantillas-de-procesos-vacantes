@@ -273,19 +273,27 @@ function renderAvailableStages() {
                  data-stage-name="${stage.name}"
                  data-stage-category="${stage.category}">
                 <div class="stage-header">
-                    <div class="stage-icon"><i class="far ${category ? category.icon : 'fa-sitemap'}"></i></div>
                     <div class="stage-info">
                         <div class="stage-name">${stage.name}</div>
-                        <div class="stage-category">${category ? category.name : stage.category}</div>
+                        <div class="stage-category">Categoría de etapa: ${category ? category.name : stage.category}</div>
                     </div>
-                </div>
-                <div class="stage-actions">
-                    <button class="stage-action-btn" onclick="editStageTemplate('${stage.id}')" title="Editar">
-                        <i class="far fa-edit"></i>
-                    </button>
-                    <button class="stage-action-btn" onclick="deleteStageTemplate('${stage.id}')" title="Eliminar">
-                        <i class="far fa-trash"></i>
-                    </button>
+                    <div class="stage-menu">
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                                onclick="toggleStageTemplateMenu(event, '${stage.id}')" 
+                                title="Opciones">
+                            <i class="far fa-ellipsis"></i>
+                        </button>
+                        <div class="stage-menu-dropdown" id="stage-template-menu-${stage.id}">
+                            <button class="stage-menu-item" onclick="editStageTemplate('${stage.id}')">
+                                <i class="far fa-edit"></i>
+                                <span>Editar</span>
+                            </button>
+                            <button class="stage-menu-item stage-menu-item--danger" onclick="deleteStageTemplate('${stage.id}')">
+                                <i class="far fa-trash"></i>
+                                <span>Eliminar</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -399,7 +407,7 @@ function renderStages() {
                     <div class="stage-header">
                         <div class="stage-title-section">
                             <h4 class="stage-name">${stage.name}</h4>
-                            ${category ? `<span class="stage-category-badge">${category.name}</span>` : ''}
+                            ${category ? `<span class="stage-category-badge">Categoría de etapa: ${category.name}</span>` : ''}
                         </div>
                         <div class="stage-actions">
                             <div class="stage-menu">
@@ -1497,6 +1505,44 @@ function closeStageMenus() {
         menu.classList.remove('show');
     });
     document.removeEventListener('click', closeStageMenus);
+}
+
+// ========================================
+// MENÚ DESPLEGABLE DE ETAPAS DE PLANTILLA (COLUMNA IZQUIERDA)
+// ========================================
+
+window.toggleStageTemplateMenu = function(event, stageId) {
+    event.stopPropagation();
+    
+    const menu = document.getElementById(`stage-template-menu-${stageId}`);
+    if (!menu) {
+        console.log('Menu not found:', `stage-template-menu-${stageId}`);
+        return;
+    }
+    
+    // Cerrar todos los demás menús abiertos
+    document.querySelectorAll('.stage-menu-dropdown').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+    
+    // Si se abrió el menú, agregar listener para cerrar al hacer clic fuera
+    if (menu.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeStageTemplateMenus);
+        }, 0);
+    }
+}
+
+function closeStageTemplateMenus() {
+    document.querySelectorAll('.stage-menu-dropdown').forEach(menu => {
+        menu.classList.remove('show');
+    });
+    document.removeEventListener('click', closeStageTemplateMenus);
 }
 
 // ========================================

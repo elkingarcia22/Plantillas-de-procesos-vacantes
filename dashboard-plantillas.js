@@ -310,6 +310,21 @@ function createTemplateCardHTML(template) {
     const statusText = template.status === 'active' ? 'Activa' : 'Borrador';
     const statusColor = template.status === 'active' ? '#2D5A2D' : 'var(--ubits-fg-info-subtle-static-default)';
     
+    // Mapear categoría técnica a texto legible
+    const categoryMap = {
+        'administracion': 'Administración',
+        'atencion-cliente': 'Atención al cliente',
+        'contratacion-general': 'Contratación general',
+        'diseno-creatividad': 'Diseño y creatividad',
+        'finanzas-contabilidad': 'Finanzas y contabilidad',
+        'ingenieria': 'Ingeniería',
+        'operaciones': 'Operaciones',
+        'recursos-humanos': 'Recursos humanos',
+        'tecnologia-desarrollo': 'Tecnología / Desarrollo',
+        'ventas-marketing': 'Ventas y marketing'
+    };
+    const categoryText = categoryMap[template.category] || template.category;
+    
     return `
         <div class="template-card ${statusClass}" data-template-id="${template.id}">
             <div class="template-header">
@@ -348,7 +363,7 @@ function createTemplateCardHTML(template) {
                     </div>
                     <div class="meta-item">
                         <i class="far fa-tag"></i>
-                        <span>${template.category}</span>
+                        <span>${categoryText}</span>
                     </div>
                 </div>
             </div>
