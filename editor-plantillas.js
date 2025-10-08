@@ -348,6 +348,10 @@ function renderAvailableStages() {
                             <i class="far fa-ellipsis"></i>
                         </button>
                         <div class="stage-menu-dropdown" id="stage-template-menu-${stage.id}">
+                            <button class="stage-menu-item" onclick="addStageToBoard('${stage.id}')">
+                                <i class="far fa-plus"></i>
+                                <span>Añadir a la plantilla</span>
+                            </button>
                             <button class="stage-menu-item" onclick="editStageTemplate('${stage.id}')">
                                 <i class="far fa-edit"></i>
                                 <span>Editar</span>
@@ -634,6 +638,43 @@ function makeBoardDroppable() {
     boardContainer.addEventListener('dragover', handleDragOver);
     boardContainer.addEventListener('dragleave', handleDragLeave);
     boardContainer.addEventListener('drop', handleDrop);
+}
+
+window.addStageToBoard = function(stageTemplateId) {
+    // Buscar la etapa en availableStages
+    const stageTemplate = availableStages.find(s => s.id === stageTemplateId);
+    if (!stageTemplate) return;
+    
+    // Verificar que la etapa no esté ya en uso
+    const existingStage = currentTemplate.realContent.stages.find(stage => stage.templateId === stageTemplateId);
+    if (existingStage) {
+        showToast('info', 'Esta etapa ya está en la plantilla');
+        return;
+    }
+    
+    // Crear nueva etapa en el área de trabajo
+    const newStage = {
+        id: 'work-stage-' + Date.now(),
+        templateId: stageTemplateId,
+        name: stageTemplate.name,
+        category: stageTemplate.category,
+        agents: []
+    };
+    
+    // Agregar al final de la plantilla
+    currentTemplate.realContent.stages.push(newStage);
+    
+    // Re-renderizar todo
+    renderEditor();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageTemplateMenus();
+    
+    // Mostrar toast de éxito
+    showToast('success', `Etapa "${stageTemplate.name}" agregada a la plantilla`);
 }
 
 function handleStageTemplateDrop(data) {
