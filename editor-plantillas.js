@@ -85,6 +85,7 @@ let lastSavedTime = null;
 let availableAgents = [...AGENTS];
 let availableStages = []; // Etapas creadas disponibles para arrastrar
 let draggedElement = null;
+let agentConfigStates = {}; // Guardar estados de expandido/contraído de agentes
 
 // ========================================
 // INICIALIZACIÓN
@@ -555,6 +556,27 @@ function renderStages() {
             }
         }
     });
+    
+    // Restaurar estados de acordeón después de renderizar
+    setTimeout(() => {
+        currentTemplate.realContent.stages.forEach((stage) => {
+            if (agentConfigStates[stage.id] === 'collapsed') {
+                const configDiv = document.getElementById(`agent-config-${stage.id}`);
+                const chevron = document.getElementById(`chevron-${stage.id}`);
+                const header = configDiv?.previousElementSibling;
+                
+                if (configDiv && chevron) {
+                    configDiv.style.display = 'none';
+                    chevron.classList.remove('fa-chevron-up');
+                    chevron.classList.add('fa-chevron-down');
+                    if (header) {
+                        header.style.borderBottom = 'none';
+                        header.style.paddingBottom = '0';
+                    }
+                }
+            }
+        });
+    }, 0);
 }
 
 function makeBoardDroppable() {
@@ -1226,6 +1248,8 @@ window.toggleAgentConfig = function(stageId) {
             header.style.borderBottom = '1px solid var(--ubits-border-1)';
             header.style.paddingBottom = '8px';
         }
+        // Guardar estado
+        agentConfigStates[stageId] = 'expanded';
     } else {
         // Contraer
         configDiv.style.display = 'none';
@@ -1236,6 +1260,8 @@ window.toggleAgentConfig = function(stageId) {
             header.style.borderBottom = 'none';
             header.style.paddingBottom = '0';
         }
+        // Guardar estado
+        agentConfigStates[stageId] = 'collapsed';
     }
 }
 
