@@ -411,14 +411,14 @@ function renderStages() {
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="showAgentInfo('${agent.id}')" title="Más información">
                                     <i class="far fa-circle-info"></i>
                                 </button>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
+                                    <i class="far fa-trash"></i>
+                                </button>
                                 ${agentData.hasConfig ? `
                                     <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="toggleAgentConfig('${stage.id}')" title="Expandir/Contraer configuración">
                                         <i class="far fa-chevron-up" id="chevron-${stage.id}"></i>
                                     </button>
                                 ` : ''}
-                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
-                                    <i class="far fa-trash"></i>
-                                </button>
                             </div>
                         </div>
                         ${agentData.hasConfig ? `
