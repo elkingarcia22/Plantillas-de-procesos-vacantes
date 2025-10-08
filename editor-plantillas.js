@@ -501,6 +501,18 @@ function renderStages() {
                                         <i class="far fa-edit"></i>
                                         <span>Editar</span>
                                     </button>
+                                    ${index > 0 ? `
+                                        <button class="stage-menu-item" onclick="moveStageUp('${stage.id}')">
+                                            <i class="far fa-arrow-up"></i>
+                                            <span>Subir</span>
+                                        </button>
+                                    ` : ''}
+                                    ${index < currentTemplate.realContent.stages.length - 1 ? `
+                                        <button class="stage-menu-item" onclick="moveStageDown('${stage.id}')">
+                                            <i class="far fa-arrow-down"></i>
+                                            <span>Bajar</span>
+                                        </button>
+                                    ` : ''}
                                     <button class="stage-menu-item stage-menu-item--danger" onclick="deleteStage('${stage.id}')">
                                         <i class="far fa-trash"></i>
                                         <span>Eliminar etapa</span>
@@ -1022,6 +1034,44 @@ function addNewStage() {
     currentTemplate.realContent.stages.push(newStage);
     markAsUnsaved();
     renderEditor();
+}
+
+window.moveStageUp = function(stageId) {
+    const stages = currentTemplate.realContent.stages;
+    const currentIndex = stages.findIndex(s => s.id === stageId);
+    
+    if (currentIndex <= 0) return; // Ya está en la primera posición
+    
+    // Intercambiar con la etapa anterior
+    [stages[currentIndex - 1], stages[currentIndex]] = [stages[currentIndex], stages[currentIndex - 1]];
+    
+    // Re-renderizar
+    renderStages();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageMenus();
+}
+
+window.moveStageDown = function(stageId) {
+    const stages = currentTemplate.realContent.stages;
+    const currentIndex = stages.findIndex(s => s.id === stageId);
+    
+    if (currentIndex < 0 || currentIndex >= stages.length - 1) return; // Ya está en la última posición
+    
+    // Intercambiar con la etapa siguiente
+    [stages[currentIndex], stages[currentIndex + 1]] = [stages[currentIndex + 1], stages[currentIndex]];
+    
+    // Re-renderizar
+    renderStages();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageMenus();
 }
 
 function editStageName(stageId) {
