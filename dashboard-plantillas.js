@@ -3,29 +3,8 @@
 // Funcionalidad completa del dashboard usando componentes UBITS
 // ========================================
 
-// Datos de ejemplo para las plantillas
-const TEMPLATES = [
-    {
-        id: 'template-1',
-        name: 'Flujo de contratación general',
-        category: 'Contratación General',
-        author: 'María Alexandra Patiño Castillo',
-        avatar: 'images/Profile-image.jpg',
-        version: 1,
-        stages: 5,
-        agents: 5,
-        lastModified: '2024-01-15',
-        status: 'active',
-        description: 'Proceso estándar para contratación de personal en cualquier área de la empresa',
-        stageDetails: [
-            { name: 'Recepción de CVs', agents: 1 },
-            { name: 'Evaluación inicial', agents: 1 },
-            { name: 'Entrevista técnica', agents: 1 },
-            { name: 'Entrevista cultural', agents: 1 },
-            { name: 'Decisión final', agents: 1 }
-        ]
-    }
-];
+// Sistema sin plantillas por defecto - usuarios crean las suyas
+const TEMPLATES = [];
 
 // Estado global
 let currentTemplates = [];
@@ -60,26 +39,8 @@ function loadTemplatesFromStorage() {
     if (stored) {
         currentTemplates = JSON.parse(stored);
     } else {
-        // Si no hay plantillas guardadas, usar las de ejemplo
-        currentTemplates = [...TEMPLATES];
-        
-        // Actualizar contadores basándose en realContent si existe
-        currentTemplates.forEach(template => {
-            if (template.id === 'template-1' && !template.realContent) {
-                // Generar el contenido real para template-1
-                template.realContent = generateRealContractingFlow();
-            }
-            
-            // Calcular stages y agents desde realContent
-            if (template.realContent && template.realContent.stages) {
-                template.stages = template.realContent.stages.length;
-                template.agents = template.realContent.stages.reduce((total, stage) => {
-                    return total + (stage.agents ? stage.agents.length : 0);
-                }, 0);
-            }
-        });
-        
-        saveTemplatesToStorage();
+        // Sistema en blanco - sin plantillas por defecto
+        currentTemplates = [];
     }
     
     filteredTemplates = [...currentTemplates];
@@ -87,38 +48,6 @@ function loadTemplatesFromStorage() {
 
 function saveTemplatesToStorage() {
     localStorage.setItem('templates', JSON.stringify(currentTemplates));
-}
-
-function generateRealContractingFlow() {
-    return {
-        stages: [
-            {
-                id: 'stage-1',
-                name: 'Recepción de CVs',
-                agents: [{ id: 'agent-1', name: 'Reclutador inicial' }]
-            },
-            {
-                id: 'stage-2',
-                name: 'Evaluación inicial',
-                agents: [{ id: 'agent-2', name: 'Evaluador técnico' }]
-            },
-            {
-                id: 'stage-3',
-                name: 'Entrevista técnica',
-                agents: [{ id: 'agent-3', name: 'Entrevista Serena' }]
-            },
-            {
-                id: 'stage-4',
-                name: 'Entrevista cultural',
-                agents: [{ id: 'agent-4', name: 'Analista de salario' }]
-            },
-            {
-                id: 'stage-5',
-                name: 'Decisión final',
-                agents: [{ id: 'agent-5', name: 'Gerente de RRHH' }]
-            }
-        ]
-    };
 }
 
 // ========================================
@@ -584,45 +513,4 @@ function formatDate(dateString) {
     }
 }
 
-// ========================================
-// MIGRACIÓN DE DATOS (para compatibilidad)
-// ========================================
-
-// Script de migración para usuarios existentes
-function migrateExistingData() {
-    const MIGRATION_VERSION = '1.0.0';
-    const userVersion = localStorage.getItem('migration_version');
-    
-    if (!userVersion || userVersion !== MIGRATION_VERSION) {
-        // Migrar template-1 si existe
-        const stored = localStorage.getItem('templates');
-        if (stored) {
-            const templates = JSON.parse(stored);
-            const template1 = templates.find(t => t.id === 'template-1');
-            
-            if (template1) {
-                // Generar realContent si no existe
-                if (!template1.realContent) {
-                    template1.realContent = generateRealContractingFlow();
-                }
-                
-                // Actualizar contadores
-                if (template1.realContent && template1.realContent.stages) {
-                    template1.stages = template1.realContent.stages.length;
-                    template1.agents = template1.realContent.stages.reduce((total, stage) => {
-                        return total + (stage.agents ? stage.agents.length : 0);
-                    }, 0);
-                }
-                
-                // Guardar cambios
-                localStorage.setItem('templates', JSON.stringify(templates));
-            }
-        }
-        
-        // Marcar migración como completada
-        localStorage.setItem('migration_version', MIGRATION_VERSION);
-    }
-}
-
-// Ejecutar migración al cargar
-migrateExistingData();
+// Sistema entregado en blanco - sin datos de migración necesarios

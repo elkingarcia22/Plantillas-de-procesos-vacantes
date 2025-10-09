@@ -1455,28 +1455,8 @@ function loadAvailableStages() {
     if (stored) {
         availableStages = JSON.parse(stored);
     } else {
-        // Crear etapas de ejemplo si no hay ninguna
-        availableStages = [
-            {
-                id: 'stage-ejemplo-1',
-                name: 'Entrevista inicial',
-                category: 'entrevistas',
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 'stage-ejemplo-2',
-                name: 'Evaluación técnica',
-                category: 'pruebas-tecnicas',
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 'stage-ejemplo-3',
-                name: 'Verificación de referencias',
-                category: 'verificacion',
-                createdAt: new Date().toISOString()
-            }
-        ];
-        saveAvailableStages();
+        // Sistema en blanco - sin etapas por defecto
+        availableStages = [];
     }
 }
 
