@@ -364,7 +364,7 @@ function renderAvailableStages() {
                         <div class="stage-menu-dropdown" id="stage-template-menu-${stage.id}">
                             <button class="stage-menu-item" onclick="addStageToBoard('${stage.id}')">
                                 <i class="far fa-plus"></i>
-                                <span>Añadir a la plantilla</span>
+                                <span>Agregar al flujo</span>
                             </button>
                             <button class="stage-menu-item" onclick="editStageTemplate('${stage.id}')">
                                 <i class="far fa-edit"></i>
