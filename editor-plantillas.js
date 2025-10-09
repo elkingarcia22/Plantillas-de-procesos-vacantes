@@ -655,6 +655,12 @@ function makeBoardDroppable() {
 }
 
 window.addStageToBoard = function(stageTemplateId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     // Buscar la etapa en availableStages
     const stageTemplate = availableStages.find(s => s.id === stageTemplateId);
     if (!stageTemplate) return;
@@ -692,6 +698,12 @@ window.addStageToBoard = function(stageTemplateId) {
 }
 
 function handleStageTemplateDrop(data) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const { id, name, category } = data;
     
     // Verificar que la etapa no esté ya en uso
@@ -980,6 +992,12 @@ function handleBoardStageDrop(e) {
         const data = JSON.parse(e.dataTransfer.getData('text/plain'));
         
         if (data.type === 'agent') {
+            // Verificar si la plantilla está activa
+            if (currentTemplate && currentTemplate.status === 'active') {
+                showCreateNewVersionModal();
+                return;
+            }
+            
             const stageId = targetItem.getAttribute('data-stage-id');
             const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
             
@@ -1108,6 +1126,12 @@ function addNewStage() {
 }
 
 window.moveStageUp = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -1127,6 +1151,12 @@ window.moveStageUp = function(stageId) {
 }
 
 window.moveStageDown = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -1146,6 +1176,12 @@ window.moveStageDown = function(stageId) {
 }
 
 function editStageName(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -1191,6 +1227,12 @@ function editStageName(stageId) {
 }
 
 window.addAgentFromSelector = function(stageId, agentId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     if (!agentId) return; // Si no seleccionó nada
     
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
@@ -1226,6 +1268,12 @@ window.addAgentFromSelector = function(stageId, agentId) {
 }
 
 function removeAgentFromStage(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage || !stage.agents || stage.agents.length === 0) return;
     
@@ -1250,6 +1298,12 @@ function removeAgentFromStage(stageId) {
 }
 
 function deleteStage(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -1322,6 +1376,12 @@ function addAgentToStage(stageId, agentId) {
 }
 
 function updateAgentConfig(stageId, configKey, value) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     
     if (!stage || !stage.agents || stage.agents.length === 0) {
@@ -1955,6 +2015,12 @@ function editCategory() {
 function openTemplateCategoryDropdown(event) {
     event.stopPropagation();
     
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
     // Cerrar cualquier dropdown abierto
     closeAllTemplateCategoryDropdowns();
     
@@ -2046,6 +2112,56 @@ function changeTemplateCategory(newCategory) {
 function closeAllTemplateCategoryDropdowns() {
     const dropdowns = document.querySelectorAll('.template-category-dropdown');
     dropdowns.forEach(dropdown => dropdown.remove());
+}
+
+// Función para mostrar modal de crear nueva versión
+function showCreateNewVersionModal() {
+    if (!currentTemplate) return;
+    
+    const currentVersion = currentTemplate.version || 1;
+    const nextVersion = currentVersion + 1;
+    
+    showConfirmModal({
+        title: 'Plantilla activa',
+        message: `Esta plantilla no se puede editar porque está en uso en una vacante activa. Puedes crear una nueva versión (v${nextVersion}) para realizar cambios.`,
+        confirmText: 'Crear nueva versión',
+        cancelText: 'Cancelar',
+        variant: 'primary',
+        onConfirm: () => {
+            createNewVersion();
+        },
+        onCancel: () => {
+            // No hacer nada
+        }
+    });
+}
+
+// Función para crear nueva versión de la plantilla
+function createNewVersion() {
+    if (!currentTemplate) return;
+    
+    const currentVersion = currentTemplate.version || 1;
+    const nextVersion = currentVersion + 1;
+    
+    // Crear copia de la plantilla
+    const newVersionTemplate = {
+        ...currentTemplate,
+        id: 'template-' + Date.now(),
+        name: currentTemplate.name + ' (Copia)',
+        version: nextVersion,
+        status: 'draft',
+        lastModified: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+        realContent: currentTemplate.realContent ? JSON.parse(JSON.stringify(currentTemplate.realContent)) : null
+    };
+    
+    // Guardar en localStorage
+    const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+    templates.unshift(newVersionTemplate);
+    localStorage.setItem('templates', JSON.stringify(templates));
+    
+    // Redirigir al editor de la nueva versión
+    window.location.href = `editor-plantillas.html?id=${newVersionTemplate.id}`;
 }
 
 function goBackToDashboard() {

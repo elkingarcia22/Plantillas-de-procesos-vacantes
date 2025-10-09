@@ -293,13 +293,23 @@ function applySorting() {
 
 function renderTemplates() {
     const grid = document.getElementById('templatesGrid');
+    const controls = document.querySelector('.templates-controls');
     
     if (filteredTemplates.length === 0) {
         grid.innerHTML = getEmptyStateHTML();
+        // Ocultar controles cuando no hay plantillas
+        if (controls) {
+            controls.style.display = 'none';
+        }
         return;
     }
     
     grid.innerHTML = filteredTemplates.map(template => createTemplateCardHTML(template)).join('');
+    
+    // Mostrar controles cuando hay plantillas
+    if (controls) {
+        controls.style.display = 'flex';
+    }
     
     // Agregar event listeners a los botones
     addTemplateCardEventListeners();
@@ -389,13 +399,15 @@ function createTemplateCardHTML(template) {
 function getEmptyStateHTML() {
     return `
         <div class="empty-state">
-            <img src="images/empty-states/sin-cards.svg" alt="Sin plantillas">
-            <h3>No hay plantillas creadas</h3>
-            <p>Crea tu primera plantilla de flujo de contratación para comenzar a optimizar tus procesos de selección.</p>
-            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="createNewTemplate()">
-                <i class="far fa-plus"></i>
-                <span>Crear primera plantilla</span>
-            </button>
+            <img src="images/empty-states/No-templates-img.svg" alt="Sin plantillas">
+            <div class="empty-state-content">
+                <h1 class="ubits-heading-h1" style="color: var(--ubits-fg-2-high);">Crea tu primera plantilla personalizada</h1>
+                <p class="ubits-body-md-regular" style="color: var(--ubits-fg-2-medium);">Transforma la forma en que reclutas talento. Automatiza procesos, optimiza tiempos y encuentra a los mejores candidatos.</p>
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openCreateTemplateModal()">
+                    <i class="far fa-plus"></i>
+                    <span>Crear mi primera plantilla</span>
+                </button>
+            </div>
         </div>
     `;
 }

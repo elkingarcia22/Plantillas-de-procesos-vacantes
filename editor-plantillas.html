@@ -1276,6 +1276,12 @@
     <script>
         // Función para crear etapa con modal UBITS oficial
         function crearEtapaConModal() {
+            // Verificar si la plantilla está activa
+            if (currentTemplate && currentTemplate.status === 'active') {
+                showCreateNewVersionModal();
+                return;
+            }
+            
             // Configurar callback global
             window.modalFormCallback = function(formData) {
                 const { stageName, stageCategory } = formData;
