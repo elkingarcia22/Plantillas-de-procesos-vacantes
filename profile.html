@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - UBITS Dashboard</title>
+    <link rel="stylesheet" href="ubits-colors.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="ubits-typography.css">
+    <link rel="stylesheet" href="fontawesome-icons.css">
+    <link rel="stylesheet" href="components-sidebar.css">
+    <link rel="stylesheet" href="components/tab-bar.css">
+    <link rel="stylesheet" href="components/floating-menu.css">
+    <link rel="stylesheet" href="components/profile-menu.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ¡A LA MIERDA LAS REGLAS PENDEJAS! -->
+</head>
+<body data-theme="light">
+    <div class="dashboard-container">
+        <div class="tooltip" id="tooltip"></div>
+        
+        <!-- Sidebar Container -->
+        <div id="sidebar-container"></div>
+
+        <!-- Contenido principal -->
+    <div class="main-content-profile profile-content">
+        <!-- Contenedor izquierdo -->
+        <div class="left-wrapper">
+            <!-- Primera fila: Personal y Organización -->
+            <div class="personal-org">
+                <div class="widget-user-info" style="background: var(--ubits-bg-1);">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Información Personal</p>
+                    <br><br><br><br><br>
+                </div>
+                <div class="widget-org">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Organización</p>
+                    <br><br><br><br><br>
+                </div>
+            </div>
+
+            <!-- Segunda fila: Aprendizaje -->
+            <div class="widget-learn">
+                <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Aprendizaje</p>
+                <br><br><br><br><br><br><br><br><br>
+            </div>
+
+            <!-- Tercera fila: Objetivos y Encuestas -->
+            <div class="objetivos-encuestas">
+                <div class="widget-objectives">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Objetivos</p>
+                    <br><br><br><br><br><br>
+                </div>
+                <div class="widget-surveys">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Encuestas</p>
+                    <br><br><br><br><br><br>
+                </div>
+            </div>
+
+            <!-- Cuarta fila: Assessments y Evaluaciones -->
+            <div class="assessments-evaluaciones">
+                <div class="widget-assessments">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Assessments</p>
+                    <br><br><br><br><br><br>
+                </div>
+                <div class="widget-evaluations">
+                    <p class="ubits-body-md-regular" style="color: var(--ubits-fg-1-medium);">Evaluaciones</p>
+                    <br><br><br><br><br><br>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar derecho fijo -->
+        <div class="right-sidebar-fixed">
+            <p class="ubits-body-md-regular">Sidebar Derecho</p>
+        </div>
+    </div>
+
+    <!-- Tab Bar Container -->
+    <div id="tab-bar-container"></div>
+
+    <!-- Floating Menu Container -->
+    <div id="floating-menu-container"></div>
+    
+    <!-- Profile Menu Container -->
+    <div id="profile-menu-container"></div>
+
+    <!-- Scripts -->
+    <script src="components/sidebar.js"></script>
+    <script src="components/tab-bar.js"></script>
+    <script src="components/floating-menu.js"></script>
+    <script src="components/profile-menu.js"></script>
+    <script src="script.js"></script>
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar sidebar
+            loadSidebar();
+            
+            // Activar avatar INMEDIATAMENTE
+            const userAvatar = document.querySelector('.user-avatar');
+            if (userAvatar) {
+                userAvatar.classList.add('active');
+                userAvatar.style.border = '2px solid var(--ubits-sidebar-button-bg-active)';
+            }
+            
+            // Cargar otros componentes
+            try {
+                loadTabBar('tab-bar-container');
+                loadFloatingMenu('floating-menu-container');
+                loadProfileMenu('profile-menu-container');
+            } catch (error) {
+                console.log('Error cargando componentes:', error);
+            }
+        });
+    </script>
+    </div>
+</body>
+</html>

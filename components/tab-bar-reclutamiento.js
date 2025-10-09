@@ -151,9 +151,9 @@ function navigateToTabReclutamiento(tabId) {
             console.log('Ya estamos en plantillas');
             return false;
         case 'perfil':
-            // Perfil deshabilitado (archivo eliminado)
-            console.log('Perfil - deshabilitado');
-            return false;
+            // Navegar al perfil
+            window.location.href = 'profile.html';
+            return true;
         default:
             console.log('Tab no reconocido:', tabId);
             return false;
