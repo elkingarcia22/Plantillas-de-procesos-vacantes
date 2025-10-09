@@ -180,6 +180,9 @@ function activateCurrentPageTabReclutamiento() {
     let tabToActivate = null;
     
     switch(currentPage) {
+        case 'profile':
+            tabToActivate = document.querySelector('#tab-bar-reclutamiento [data-tab="perfil"]');
+            break;
         case 'index':
         case 'editor-plantillas':
             // Páginas de plantillas activan el tab de menu
