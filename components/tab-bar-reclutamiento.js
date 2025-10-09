@@ -151,9 +151,9 @@ function navigateToTabReclutamiento(tabId) {
             console.log('Ya estamos en plantillas');
             return false;
         case 'perfil':
-            // Navegar al perfil
-            window.location.href = 'profile.html';
-            return true;
+            // Perfil deshabilitado (archivo eliminado)
+            console.log('Perfil - deshabilitado');
+            return false;
         default:
             console.log('Tab no reconocido:', tabId);
             return false;
@@ -180,9 +180,6 @@ function activateCurrentPageTabReclutamiento() {
     let tabToActivate = null;
     
     switch(currentPage) {
-        case 'profile':
-            tabToActivate = document.querySelector('#tab-bar-reclutamiento [data-tab="perfil"]');
-            break;
         case 'index':
         case 'editor-plantillas':
             // Páginas de plantillas activan el tab de menu
