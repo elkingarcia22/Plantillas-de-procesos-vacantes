@@ -109,7 +109,7 @@ function initializeEditor() {
     renderEditor();
     
     // Solo interceptar navegación manual
-    document.addEventListener('click', handleLinkClick);
+    document.addEventListener('click', handleLinkClick, true); // Usar capture phase
 }
 
 function createNewTemplate() {
@@ -1844,22 +1844,33 @@ function handleLinkClick(event) {
     
     // Interceptar navegación
     event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     
-    // Mostrar modal UBITS
-    showConfirmModal({
-        title: 'Cambios sin guardar',
-        message: 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?',
-        confirmText: 'Salir sin guardar',
-        cancelText: 'Cancelar',
-        variant: 'primary',
-        onConfirm: () => {
-            hasUnsavedChanges = false;
-            goToDashboard();
-        },
-        onCancel: () => {
-            // No hacer nada
-        }
-    });
+    console.log('Mostrando modal de confirmación...');
+    
+    // Usar setTimeout para evitar conflictos con otros event listeners
+    setTimeout(() => {
+        // Mostrar modal UBITS
+        const modal = showConfirmModal({
+            title: 'Cambios sin guardar',
+            message: 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?',
+            confirmText: 'Salir sin guardar',
+            cancelText: 'Cancelar',
+            variant: 'primary',
+            onConfirm: () => {
+                console.log('Usuario confirmó salir sin guardar');
+                hasUnsavedChanges = false;
+                goToDashboard();
+            },
+            onCancel: () => {
+                console.log('Usuario canceló la salida');
+                // No hacer nada
+            }
+        });
+        
+        console.log('Modal creado:', modal);
+    }, 10);
 }
 
 function getStageById(stageId) {

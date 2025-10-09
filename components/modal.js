@@ -568,7 +568,17 @@ function showConfirmModal(options = {}) {
     window.modalCancelCallback = onCancel;
     window.modalConfirmCallback = onConfirm;
 
+    // Asegurar que el modal no se cierre automáticamente
     modal.open();
+    
+    // Verificar que el modal se mantenga abierto
+    setTimeout(() => {
+        if (!modal.isOpen()) {
+            console.warn('Modal se cerró automáticamente, reabriendo...');
+            modal.open();
+        }
+    }, 100);
+    
     return modal;
 }
 
