@@ -24,6 +24,11 @@
     
     <style>
         /* Estilos específicos para el editor de plantillas */
+        .content-area {
+            margin-top: 0 !important; /* Respetar el margen del main-content */
+            padding-top: 0 !important; /* No agregar padding adicional */
+        }
+        
         .editor-container {
             display: flex;
             flex-direction: column;
@@ -33,6 +38,8 @@
             width: 100%;
             overflow: visible;
             max-height: none;
+            box-sizing: border-box;
+            margin-top: 0; /* Respetar el margen del main-content */
         }
 
         /* Header del editor */
@@ -47,6 +54,63 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+        }
+
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Desktop: mostrar estructura original */
+        .header-row-1 {
+            display: none; /* Ocultar en desktop */
+        }
+
+        .header-row-2 {
+            display: none; /* Ocultar en desktop */
+        }
+
+        .template-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--ubits-bg-2);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 4px;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .template-status-badge.draft {
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .template-status-badge.active {
+            color: var(--ubits-feedback-accent-success);
+            background: var(--ubits-feedback-bg-success);
+            border-color: var(--ubits-feedback-border-success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ubits-fg-1-medium);
+        }
+
+        .template-status-badge.active .status-dot {
+            background: var(--ubits-feedback-accent-success);
         }
 
         .editor-title-input {
@@ -1002,16 +1066,21 @@
         @media (max-width: 1024px) {
             .editor-layout {
                 flex-direction: column;
+                gap: 16px;
             }
 
             .agents-sidebar {
                 width: 100%;
                 height: auto;
-                margin-bottom: 16px;
+                margin-bottom: 0;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .board-main {
                 width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .sidebar-tabs {
@@ -1056,29 +1125,87 @@
             .agents-list {
                 flex-direction: row;
                 flex-wrap: wrap;
+                width: 100%;
             }
 
             .agent-item {
                 flex: 1;
                 min-width: 120px;
+                max-width: 100%;
             }
         }
 
         @media (max-width: 768px) {
+            /* Asegurar que el contenedor respete los márgenes del main-content */
+            .editor-container {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+            
             .editor-header {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 12px;
-            }
-
-            .editor-header .ubits-button {
+                gap: 8px;
                 width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Mobile: ocultar elementos de desktop */
+            .header-left {
+                display: none;
+            }
+            
+            .header-right {
+                display: none;
+            }
+            
+            /* Mobile: mostrar filas reorganizadas */
+            .header-row-1 {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .header-row-2 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Botón volver: mantener tamaño fijo */
+            .editor-header .ubits-button--icon-only {
+                width: 40px !important;
+                min-width: 40px !important;
+                height: 40px !important;
+                flex-shrink: 0;
+            }
+            
+            /* Input del título */
+            .editor-title-input {
+                flex: 1;
+                min-width: 0;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Botón guardar: abraza su contenido */
+            .editor-header .ubits-button--primary {
+                width: auto !important;
+                flex-shrink: 0;
             }
 
             .info-bar {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .author-info {
@@ -1098,6 +1225,58 @@
             .board-container {
                 padding: 12px;
             }
+            
+            /* Layout principal - asegurar que no se salga */
+            .editor-layout {
+                flex-direction: column;
+                gap: 16px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+            
+            /* Sidebar de agentes: ajustar al ancho disponible */
+            .agents-sidebar {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+                box-sizing: border-box;
+                margin: 0;
+            }
+            
+            .agents-list {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .agent-item {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Board principal */
+            .board-main {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+                box-sizing: border-box;
+            }
+            
+            /* Ajustar tabs */
+            .sidebar-tabs {
+                flex-wrap: wrap;
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .tab-button {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
@@ -1116,20 +1295,43 @@
                 <div class="editor-container">
                     <!-- Header del editor -->
                     <div class="editor-header">
+                        <!-- Desktop: estructura original -->
                         <div class="header-left">
+                            <div class="header-left-group">
+                                <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--md" onclick="goToDashboard()" title="Volver al dashboard">
+                                    <i class="far fa-arrow-left"></i>
+                                </button>
+                                <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" maxlength="100">
+                                <span class="template-status-badge draft" id="templateStatusBadge">
+                                    <div class="status-dot"></div>
+                                    <span>Borrador</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
+                                <i class="far fa-save"></i>
+                                <span>Guardar</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Mobile: estructura reorganizada -->
+                        <div class="header-row-1">
                             <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--md" onclick="goToDashboard()" title="Volver al dashboard">
                                 <i class="far fa-arrow-left"></i>
                             </button>
                             <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" maxlength="100">
+                        </div>
+                        <div class="header-row-2">
                             <span class="template-status-badge draft" id="templateStatusBadge">
                                 <div class="status-dot"></div>
                                 <span>Borrador</span>
                             </span>
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
+                                <i class="far fa-save"></i>
+                                <span>Guardar</span>
+                            </button>
                         </div>
-                        <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
-                            <i class="far fa-save"></i>
-                            <span>Guardar</span>
-                        </button>
                     </div>
 
                     <!-- Info bar -->
