@@ -336,3 +336,188 @@ window.setActiveItemByCurrentPage = setActiveItemByCurrentPage;
 window.setActiveDirectLink = setActiveDirectLink;
 
 // Funciones duplicadas eliminadas - ya están definidas arriba
+
+/* ========================================
+   FLOATING MENU RECLUTAMIENTO COMPONENT
+   ======================================== */
+
+const FLOATING_MENU_RECLUTAMIENTO_SECTIONS = [
+    {
+        id: 'dashboard',
+        title: 'Dashboard',
+        icon: 'far fa-chart-simple',
+        url: '#',
+        isLink: true,
+        clickable: false // Deshabilitado como pediste
+    },
+    {
+        id: 'vacantes',
+        title: 'Vacantes',
+        icon: 'far fa-briefcase',
+        url: '#',
+        isLink: true,
+        clickable: false // Deshabilitado como pediste
+    },
+    {
+        id: 'plantillas',
+        title: 'Plantillas',
+        icon: 'far fa-sitemap',
+        url: 'index.html',
+        isLink: true,
+        clickable: true
+    }
+];
+
+/**
+ * Genera el HTML del floating menu de reclutamiento
+ * @returns {string} HTML del floating menu
+ */
+function getFloatingMenuReclutamientoHTML() {
+    let html = `
+        <div class="floating-menu" id="floating-menu-reclutamiento">
+            <div class="floating-menu-content">
+                <div class="floating-menu-header">
+                    <h3 class="floating-menu-title">Reclutamiento</h3>
+                    <button class="floating-menu-close" onclick="hideFloatingMenuReclutamiento()">
+                        <i class="far fa-times"></i>
+                    </button>
+                </div>
+                <div class="floating-menu-body">
+    `;
+
+    FLOATING_MENU_RECLUTAMIENTO_SECTIONS.forEach(section => {
+        if (section.isLink) {
+            // Direct link
+            const clickableClass = section.clickable ? '' : 'disabled';
+            const clickableStyle = section.clickable ? '' : 'style="cursor: not-allowed; opacity: 0.4;"';
+            html += `
+                <div class="accordion-link direct-link ${clickableClass}" ${clickableStyle} data-section="${section.id}">
+                    <div class="accordion-icon-circle">
+                        <i class="${section.icon}"></i>
+                    </div>
+                    <span>${section.title}</span>
+                    <div class="accordion-chevron">
+                        <i class="far fa-chevron-right"></i>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+
+    return html;
+}
+
+/**
+ * Carga el floating menu de reclutamiento en el contenedor especificado
+ * @param {string} containerId - ID del contenedor donde cargar el floating menu
+ */
+function loadFloatingMenuReclutamiento(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error(`Contenedor '${containerId}' no encontrado`);
+        return;
+    }
+
+    // Cargar el componente HTML
+    fetch('components/floating-menu-reclutamiento.html')
+        .then(response => response.text())
+        .then(html => {
+            container.innerHTML = html;
+            
+            // Agregar event listeners
+            addFloatingMenuReclutamientoEventListeners();
+            
+            console.log('Floating menu reclutamiento component loaded successfully');
+        })
+        .catch(error => {
+            console.error('Error loading floating-menu-reclutamiento component:', error);
+            // Fallback al HTML generado
+            container.innerHTML = getFloatingMenuReclutamientoHTML();
+            addFloatingMenuReclutamientoEventListeners();
+        });
+}
+
+/**
+ * Agrega event listeners al floating menu de reclutamiento
+ */
+function addFloatingMenuReclutamientoEventListeners() {
+    const menu = document.getElementById('floating-menu-reclutamiento');
+    if (!menu) return;
+
+    // Event listeners para direct links
+    const directLinks = menu.querySelectorAll('.accordion-link.direct-link');
+    directLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const sectionId = this.getAttribute('data-section');
+            const section = FLOATING_MENU_RECLUTAMIENTO_SECTIONS.find(s => s.id === sectionId);
+            
+            if (!section || !section.clickable) {
+                console.log('Sección deshabilitada:', sectionId);
+                return;
+            }
+            
+            console.log('Navegando a sección de reclutamiento:', sectionId);
+            
+            // Cerrar el menu
+            hideFloatingMenuReclutamiento();
+            
+            // Navegar si tiene URL válida
+            if (section.url && section.url !== '#') {
+                window.location.href = section.url;
+            }
+        });
+    });
+
+    // Cerrar menu al hacer click fuera
+    document.addEventListener('click', function(e) {
+        if (!menu.contains(e.target) && !e.target.closest('[data-tab="menu"]')) {
+            hideFloatingMenuReclutamiento();
+        }
+    });
+}
+
+/**
+ * Oculta el floating menu de reclutamiento
+ */
+function hideFloatingMenuReclutamiento() {
+    const menu = document.getElementById('floating-menu-reclutamiento');
+    if (menu) {
+        menu.classList.remove('show');
+    }
+}
+
+/**
+ * Activa un direct link específico en el floating menu de reclutamiento
+ * @param {string} sectionId - ID de la sección a activar
+ */
+function setActiveDirectLinkReclutamiento(sectionId) {
+    const menu = document.getElementById('floating-menu-reclutamiento');
+    if (!menu) return;
+
+    // Remover clase active de todos los links
+    const allLinks = menu.querySelectorAll('.accordion-link');
+    allLinks.forEach(link => {
+        link.classList.remove('active');
+    });
+
+    // Activar el link específico
+    const targetLink = menu.querySelector(`[data-section="${sectionId}"]`);
+    if (targetLink) {
+        targetLink.classList.add('active');
+    }
+}
+
+// Exportar funciones de reclutamiento
+window.getFloatingMenuReclutamientoHTML = getFloatingMenuReclutamientoHTML;
+window.loadFloatingMenuReclutamiento = loadFloatingMenuReclutamiento;
+window.addFloatingMenuReclutamientoEventListeners = addFloatingMenuReclutamientoEventListeners;
+window.hideFloatingMenuReclutamiento = hideFloatingMenuReclutamiento;
+window.setActiveDirectLinkReclutamiento = setActiveDirectLinkReclutamiento;

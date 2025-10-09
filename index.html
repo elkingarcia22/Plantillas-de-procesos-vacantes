@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="fontawesome-icons.css">
     <link rel="stylesheet" href="components/sub-nav.css">
     <link rel="stylesheet" href="components-sidebar.css">
-    <link rel="stylesheet" href="components/tab-bar.css">
+    <link rel="stylesheet" href="components/tab-bar-reclutamiento.css">
     <link rel="stylesheet" href="components/floating-menu.css">
     <link rel="stylesheet" href="components/profile-menu.css">
     <link rel="stylesheet" href="components/button.css">
@@ -482,7 +482,8 @@
     <div id="tab-bar-container"></div>
 
     <!-- Floating Menu Container -->
-    <div id="floating-menu-container"></div>
+    <!-- Floating Menu Reclutamiento -->
+    <div id="floating-menu-reclutamiento-container"></div>
     
     <!-- Profile Menu Container -->
     <div id="profile-menu-container"></div>
@@ -493,7 +494,7 @@
     <!-- Scripts UBITS -->
     <script src="components/sidebar-reclutamiento.js"></script>
     <script src="components/sub-nav.js"></script>
-    <script src="components/tab-bar.js"></script>
+    <script src="components/tab-bar-reclutamiento.js"></script>
     <script src="components/floating-menu.js"></script>
     <script src="components/profile-menu.js"></script>
     <script src="components/input.js"></script>
@@ -594,8 +595,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSidebarReclutamiento('plantillas');
             loadSubNav('top-nav-container', 'template');
-            loadTabBar('tab-bar-container');
-            loadFloatingMenu('floating-menu-container');
+            loadTabBarReclutamiento('tab-bar-container');
+            loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
             loadProfileMenu('profile-menu-container');
             
             // Inicializar dashboard de plantillas

@@ -1,0 +1,48 @@
+<!-- ========================================
+     FLOATING MENU RECLUTAMIENTO COMPONENT
+     ======================================== -->
+
+<div class="floating-menu" id="floating-menu-reclutamiento">
+    <div class="floating-menu-content">
+        <div class="floating-menu-header">
+            <h3 class="floating-menu-title">Reclutamiento</h3>
+            <button class="floating-menu-close" onclick="hideFloatingMenuReclutamiento()">
+                <i class="far fa-times"></i>
+            </button>
+        </div>
+        <div class="floating-menu-body">
+            <!-- Dashboard - Deshabilitado -->
+            <div class="accordion-link direct-link disabled" data-section="dashboard" style="cursor: not-allowed; opacity: 0.4;">
+                <div class="accordion-icon-circle">
+                    <i class="far fa-chart-simple"></i>
+                </div>
+                <span>Dashboard</span>
+                <div class="accordion-chevron">
+                    <i class="far fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <!-- Vacantes - Deshabilitado -->
+            <div class="accordion-link direct-link disabled" data-section="vacantes" style="cursor: not-allowed; opacity: 0.4;">
+                <div class="accordion-icon-circle">
+                    <i class="far fa-briefcase"></i>
+                </div>
+                <span>Vacantes</span>
+                <div class="accordion-chevron">
+                    <i class="far fa-chevron-right"></i>
+                </div>
+            </div>
+            
+            <!-- Plantillas - Habilitado -->
+            <div class="accordion-link direct-link" data-section="plantillas">
+                <div class="accordion-icon-circle">
+                    <i class="far fa-sitemap"></i>
+                </div>
+                <span>Plantillas</span>
+                <div class="accordion-chevron">
+                    <i class="far fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
