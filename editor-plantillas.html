@@ -921,13 +921,27 @@
             margin-bottom: 4px;
         }
 
+        /* Mobile: Stack label above input */
+        @media (max-width: 768px) {
+            .config-field {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .config-label {
+                width: auto;
+                margin-bottom: 0;
+            }
+        }
+
         .config-label {
             font-family: 'Noto Sans', sans-serif;
             font-size: 12px;
             font-weight: 400;
             color: var(--ubits-fg-1-medium);
             white-space: nowrap;
-            width: 180px;
+            width: 200px;
             text-align: left;
         }
 
