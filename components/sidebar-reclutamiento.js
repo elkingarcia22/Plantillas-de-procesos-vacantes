@@ -45,7 +45,7 @@ function loadSidebarReclutamiento(activeButton = null) {
                     <button class="nav-button" data-section="dashboard" data-tooltip="Dashboard" style="cursor: not-allowed; pointer-events: none; opacity: 0.4;">
                         <i class="far fa-chart-simple"></i>
                     </button>
-                    <button class="nav-button" data-section="vacantes" data-tooltip="Vacantes" style="cursor: pointer;">
+                    <button class="nav-button" data-section="vacantes" data-tooltip="Vacantes" onclick="window.location.href='configurar-vacante.html'" style="cursor: pointer;">
                         <i class="far fa-briefcase"></i>
                     </button>
                     <button class="nav-button" data-section="plantillas" data-tooltip="Plantillas" onclick="window.location.href='index.html'" style="cursor: pointer;">
