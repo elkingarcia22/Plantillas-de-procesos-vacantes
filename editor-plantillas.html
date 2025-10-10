@@ -174,6 +174,12 @@
             border: 1px solid var(--ubits-border-1);
             border-radius: 8px;
         }
+        
+        /* Contenedor version-info (desktop: inline) */
+        .version-info-container {
+            display: flex;
+            gap: 8px;
+        }
 
         .author-info {
             display: flex;
@@ -1185,14 +1191,17 @@
                 justify-content: flex-start;
             }
 
+            /* Contenedor para agrupar las version-info en una fila */
+            .version-info-container {
+                display: flex;
+                width: 100%;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
             .version-info {
                 width: auto;
                 justify-content: flex-start;
-            }
-            
-            /* templateVersion (segundo .version-info) alineado a la derecha */
-            .info-bar .version-info:last-child {
-                margin-left: auto;
             }
 
             .template-category {
@@ -1370,11 +1379,13 @@
                                 <i class="far fa-chevron-down"></i>
                             </div>
                         </div>
-                        <div class="version-info">
-                            <span id="templateLastModified">Modificado hoy</span>
-                        </div>
-                        <div class="version-info">
-                            <span id="templateVersion">Versión 1</span>
+                        <div class="version-info-container">
+                            <div class="version-info">
+                                <span id="templateLastModified">Modificado hoy</span>
+                            </div>
+                            <div class="version-info">
+                                <span id="templateVersion">Versión 1</span>
+                            </div>
                         </div>
                     </div>
 
