@@ -297,12 +297,12 @@ function createTemplateCardHTML(template) {
                         <span>${template.author}</span>
                     </div>
                     <div class="meta-item">
-                        <i class="far fa-calendar"></i>
-                        <span>Modificado ${formatDate(template.lastModified)}</span>
-                    </div>
-                    <div class="meta-item">
                         <i class="far fa-tag"></i>
                         <span>${categoryText}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="far fa-calendar"></i>
+                        <span>Modificado ${formatDate(template.lastModified)}</span>
                     </div>
                 </div>
             </div>
