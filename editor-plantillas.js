@@ -776,12 +776,22 @@ function handleStageTemplateDrop(data) {
     markAsUnsaved();
 }
 
+// Flag para evitar múltiples ejecuciones del drop
+let isProcessingDrop = false;
+
 function handleAgentDrop(data) {
     const { id, name, icon } = data;
+    
+    // Evitar múltiples ejecuciones simultáneas
+    if (isProcessingDrop) {
+        return;
+    }
+    isProcessingDrop = true;
     
     // Buscar datos completos del agente
     const agentData = AGENTS.find(a => a.id === id);
     if (!agentData) {
+        isProcessingDrop = false;
         return;
     }
     
@@ -792,6 +802,7 @@ function handleAgentDrop(data) {
     
     if (existingAgentStage) {
         showToast('info', 'Este agente ya está en el flujo');
+        isProcessingDrop = false;
         return;
     }
     
@@ -830,6 +841,11 @@ function handleAgentDrop(data) {
     
     // Mostrar toast de éxito
     showToast('success', `Agente "${agentData.name}" agregado al flujo`);
+    
+    // Reset del flag después de un breve delay
+    setTimeout(() => {
+        isProcessingDrop = false;
+    }, 500);
 }
 
 function updateTemplateInfo() {
