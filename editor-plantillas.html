@@ -175,10 +175,15 @@
             border-radius: 8px;
         }
         
-        /* Contenedor version-info (desktop: separados) */
+        /* Contenedor version-info (desktop: bien separados) */
         .version-info-container {
             display: flex;
-            gap: 24px;
+            gap: 32px;
+        }
+        
+        /* Separación extra en desktop */
+        .version-info-container .version-info:last-child {
+            margin-left: 16px;
         }
 
         .author-info {
