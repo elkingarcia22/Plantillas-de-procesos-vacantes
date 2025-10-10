@@ -26,18 +26,19 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 #### **Gestión de Plantillas:**
 - **Crear plantillas** con modal UBITS (nombre y categoría obligatorios)
 - **Editar plantillas** navegando al editor visual completo
-- **Clonar plantillas** con toast de confirmación "Plantilla clonada exitosamente"
-- **Eliminar plantillas** con modal de confirmación y toast de éxito
+- **Clonar plantillas** con modal de confirmación previo y toast "Plantilla clonada exitosamente"
+- **Eliminar plantillas** con modal de confirmación y toast "Plantilla eliminada exitosamente"
 - **Activar/Desactivar** plantillas (estado activa = en uso en vacante)
+- **Duplicados inteligentes**: Al clonar, se crea con prefijo "Copia de..." (no incrementa versión)
 
 #### **Visualización:**
-- **Grid responsive** de plantillas con auto-fill (320px min, 1fr max)
-- **Template cards** con información completa:
-  - Badge de estado (Activa/Borrador) con border-radius 4px
+- **Grid responsive** optimizado para mostrar 3 plantillas por fila
+- **Template cards** con border-radius de **8px** y información completa:
+  - Badge de estado (Activa/Borrador)
   - Nombre de la plantilla (font-size 16px, font-weight 600)
   - Avatar y nombre del autor
   - Fecha de última modificación (relativa: "hace X días")
-  - Categoría legible (mapeo automático: "atencion-cliente" → "Atención al cliente")
+  - **Categoría de plantilla** claramente etiquetada
   - Estadísticas: Etapas, Agentes, Versión
   - Borde izquierdo verde (4px) si está activa
 - **Empty state horizontal** con:
@@ -60,7 +61,7 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 
 #### **Acciones rápidas por tarjeta:**
 - **Activar/Convertir a borrador** (icono play/edit, oculto por defecto, visible al hover)
-- **Clonar** (icono copy con toast de confirmación)
+- **Clonar** (icono copy con modal de confirmación y toast de éxito)
 - **Eliminar** (icono trash con modal de confirmación y toast de éxito)
 
 ---
@@ -78,7 +79,7 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 
 #### **Info Bar:**
 - **Avatar y nombre** del autor (24px circular)
-- **Label fijo** "Categoría de plantilla:" + **Selector** con 10 categorías
+- **Label clarificado:** "Categoría de plantilla:" + **Selector** con 10 categorías
 - **Fecha de modificación** relativa (formato inteligente)
 - **Número de versión** (ej: "Versión 3")
 - **Dropdown de categorías** con posicionamiento fixed y estilos UBITS
@@ -89,7 +90,7 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 - **Descripción:** "Crea y gestiona las etapas del proceso de selección"
 - **Botón "Crear etapa"** que abre modal UBITS con:
   - Campo nombre (text input, max 50 chars)
-  - Campo categoría (select con 6 categorías)
+  - Campo **categoría de etapa** (select con 6 categorías) - claramente diferenciada de categoría de plantilla
 - **Buscador inteligente:**
   - Solo visible cuando hay más de 6 etapas creadas
   - Icono search a la izquierda
@@ -98,23 +99,27 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 - **Lista de etapas disponibles:**
   - Cards con drag & drop
   - Sin icono izquierdo
-  - Título y categoría ("Categoría de etapa: [nombre]")
+  - Título y **"Categoría de etapa: [nombre]"** (etiqueta clarificada)
   - Menú ellipsis con dropdown:
     - Añadir a la plantilla
     - Editar (modal con datos pre-llenados)
     - Eliminar (validación de uso en plantillas activas)
   - Sin divider inferior
   - Filtro automático (no muestra etapas ya en uso en esta plantilla)
+- **Etapas como entidades globales:**
+  - Identificadas por ID único
+  - Cambios en el nombre se reflejan en todas las plantillas que las usan
+  - No se pueden eliminar si están en uso en plantillas activas
 
 **Tab Agentes:**
-- **Descripción:** "Arrastra y suelta los agentes en las etapas que consideres"
+- **Descripción:** "Arrastra y suelta los agentes IA para automatizar etapas del flujo"
 - **4 agentes IA disponibles:**
   - Analizador CV
   - Entrevista Serena
   - Analista psicométrico
   - Antecedentes judiciales
 - **Agent cards** con:
-  - Icono + Título + Botón info (circle-info)
+  - Icono + Título + **Menú ellipsis con "Ver más información"** (abre modal descriptivo)
   - Descripción breve del agente
   - Drag & drop habilitado
   - **Desaparece de la lista** al asignarse a una etapa
@@ -134,20 +139,25 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
 - **Cards de etapa** con:
   - Icono grip-vertical para arrastrar
   - Número circular (bg-1, fg-1-high, border-1, 4px radius)
-  - Nombre y categoría ("Categoría de etapa: [nombre]")
+  - Nombre y **"Categoría de etapa: [nombre]"** (etiqueta clarificada)
   - Menú ellipsis con dropdown:
     - Editar (modal con nombre y categoría pre-llenados)
-    - Subir (solo si no es la primera)
-    - Bajar (solo si no es la última)
+    - **Subir** (solo si no es la primera etapa)
+    - **Bajar** (solo si no es la última etapa)
     - Eliminar etapa (con confirmación)
   - Padding uniforme de 12px en stage-header
+- **Etapas pueden estar vacías** (sin agentes asignados)
+- **Máximo 1 agente por etapa** (validación con toast de error)
 
 **Agent Cards en Etapas:**
 - **Header horizontal** con:
-  - Icono + Nombre del agente
-  - Botón info (circle-info) → Modal descriptivo
-  - Botón eliminar (trash) → Modal de confirmación
-  - Botón acordeón (chevron-up/down) → Mostrar/ocultar config
+  - Icono + Nombre del agente (sin alias)
+  - Botón acordeón (chevron-up/down) → Mostrar/ocultar config (si tiene)
+  - Menú ellipsis con dropdown:
+    - **Ver más información** → Modal descriptivo completo
+    - **Subir** (solo si no es la primera posición dentro de las etapas)
+    - **Bajar** (solo si no es la última posición dentro de las etapas)
+    - Eliminar agente (con confirmación)
 - **Configuración por agente:**
   - **Analizador CV:**
     - Porcentaje sobre el rango salarial (%, default 0)
@@ -189,17 +199,23 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
    - Al quitarse de etapa, reaparece en sidebar
    - No puede estar en dos etapas simultáneamente
 
-3. **Plantillas activas:**
-   - No se pueden editar directamente
-   - Modal con opción de crear nueva versión
-   - Al aceptar: copia exacta con "(Copia)" + versión+1
-   - Nueva versión en estado "Borrador"
-   - Redirección automática al editor de la nueva versión
+3. **Plantillas activas (Sistema de Control de Versiones):**
+   - No se pueden editar directamente si están en uso en una vacante
+   - Al intentar editar, aparece modal informativo con opción de crear nueva versión
+   - Título: "Esta plantilla está en uso"
+   - Mensaje: "No puedes editar esta plantilla porque está siendo utilizada en una vacante activa. ¿Quieres crear una nueva versión?"
+   - Al aceptar:
+     - Se crea copia exacta con nombre "Copia de [nombre original]"
+     - Versión incrementada automáticamente (ej: v2 → v3)
+     - Nueva versión en estado "Borrador" (editable)
+     - Redirección automática al editor de la nueva versión
+   - La plantilla original permanece intacta y activa
 
 4. **Etapas en uso:**
-   - Etapas usadas en plantillas activas no se pueden eliminar
+   - Etapas usadas en plantillas activas no se pueden eliminar del catálogo
    - Modal informativo: "Esta etapa no se puede borrar porque se está usando en una vacante activa."
    - Solo botón "Entendido"
+   - Garantiza la integridad de los flujos en producción
 
 5. **Cambios sin guardar:**
    - Modal de confirmación al intentar salir sin guardar
@@ -217,3 +233,46 @@ Sistema completo de gestión de plantillas personalizadas para flujos de contrat
    - Detecta espacio disponible abajo
    - Si no hay espacio, se posiciona arriba del input
    - Ajuste dinámico de maxHeight y posición
+
+---
+
+### ✅ **Configuración de Vacante (`configurar-vacante.html`)** *(Nueva Funcionalidad)*
+
+#### **Stepper de Progreso:**
+- **Desktop:**
+  - Stepper horizontal de 5 pasos con líneas conectoras
+  - Pasos completados: check verde
+  - Paso activo: número con fondo azul primario
+  - Pasos pendientes: número gris con borde
+  - Etiquetas descriptivas bajo cada paso
+  
+- **Mobile (<768px):**
+  - Círculo de progreso con porcentaje visual (60% para paso 3/5)
+  - Número "3/5" centrado
+  - Título del paso actual: "Configurar vacante"
+  - Botón "Siguiente" (primary, small)
+
+#### **Configuración Principal:**
+**Selector de Plantilla:**
+- Widget con icono layer-group
+- Título: "Seleccionar plantilla"
+- Input select UBITS con opciones disponibles
+- Permite elegir el flujo base para la vacante
+
+**Notificaciones Automáticas:**
+- Widget con icono envelope
+- Título: "Activar notificaciones automáticas de rechazo"
+- Switch toggle UBITS (activado por defecto)
+- Input numérico para configurar días de espera
+- Label: "Enviar correo de rechazo a los: (días)"
+
+#### **Layout Responsive:**
+- Desktop: 2 columnas (Selector | Notificaciones)
+- Mobile: Apilado verticalmente
+- Sistema modular con `section-dual`
+- Paddings: 20px desktop, 16px mobile
+
+#### **Navegación:**
+- Accesible desde Sidebar (botón Vacantes)
+- Accesible desde Floating Menu (opción Vacantes)
+- Tab-bar mobile activa correctamente la sección
