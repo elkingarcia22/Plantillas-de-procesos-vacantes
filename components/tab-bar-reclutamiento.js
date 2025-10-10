@@ -143,9 +143,9 @@ function navigateToTabReclutamiento(tabId) {
             console.log('Dashboard de reclutamiento - deshabilitado');
             return false;
         case 'vacantes':
-            // Navegar a vacantes (deshabilitado por ahora)
-            console.log('Vacantes - deshabilitado');
-            return false;
+            // Navegar a vacantes (configurar-vacante.html)
+            window.location.href = 'configurar-vacante.html';
+            return true;
         case 'plantillas':
             // Ya estamos en plantillas, no hacer nada
             console.log('Ya estamos en plantillas');
@@ -186,6 +186,10 @@ function activateCurrentPageTabReclutamiento() {
         case 'index':
         case 'editor-plantillas':
             // Páginas de plantillas activan el tab de menu
+            tabToActivate = document.querySelector('#tab-bar-reclutamiento [data-tab="menu"]');
+            break;
+        case 'configurar-vacante':
+            // Página de configurar vacante activa el tab de menu (para acceder a vacantes)
             tabToActivate = document.querySelector('#tab-bar-reclutamiento [data-tab="menu"]');
             break;
         case '':

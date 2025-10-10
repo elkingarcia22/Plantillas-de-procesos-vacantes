@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBITS - Configurar vacante</title>
+    
+    <!-- Estilos UBITS oficiales -->
+    <link rel="stylesheet" href="ubits-colors.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome-icons.css">
+    <link rel="stylesheet" href="ubits-typography.css">
+    <link rel="stylesheet" href="components/sub-nav.css">
+    <link rel="stylesheet" href="components-sidebar.css">
+    <link rel="stylesheet" href="components/tab-bar-reclutamiento.css">
+    <link rel="stylesheet" href="components/floating-menu.css">
+    <link rel="stylesheet" href="components/profile-menu.css">
+    <link rel="stylesheet" href="components/input.css">
+    <link rel="stylesheet" href="components/button.css">
+    <link rel="stylesheet" href="profile.css">
+    <style>
+        /* Estilos específicos para content-sections */
+        .content-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            overflow: visible;
+            max-height: none;
+        }
+
+        /* Espaciador para alinear elementos */
+        .content-sections > *:not(:last-child):not(.section-dual):not(.section-single):not(.section-triple):not(.section-quad) {
+            margin-bottom: 16px;
+        }
+
+        /* Espaciador final */
+        .content-sections::after {
+            content: '';
+            height: 0px;
+            flex-shrink: 0;
+        }
+
+        /* Reducir el gap del último elemento */
+        .content-sections > *:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Secciones de widgets */
+        .section-single {
+            display: flex;
+            width: 100%;
+        }
+
+        .section-dual {
+            display: flex;
+            gap: 20px;
+        }
+
+        .section-triple {
+            display: flex;
+            gap: 20px;
+        }
+
+        .section-quad {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Widgets en secciones - sin altura mínima forzada */
+        .section-single > div,
+        .section-dual > div,
+        .section-triple > div,
+        .section-quad > div {
+            background-color: var(--ubits-bg-1);
+            border: none;
+            border-radius: 8px;
+            padding: 16px !important;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Distribución de anchos */
+        .section-single > div {
+            flex: 1;
+        }
+
+        .section-dual > div {
+            flex: 1;
+        }
+
+        .section-triple > div {
+            flex: 1;
+        }
+
+        .section-quad > div {
+            flex: 1;
+        }
+
+        /* Responsive para secciones */
+        @media (max-width: 1023px) {
+            .content-sections {
+                padding-bottom: 0;
+            }
+            
+            .section-dual,
+            .section-triple,
+            .section-quad {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Padding reducido en móviles pequeños */
+            .section-single > div,
+            .section-dual > div,
+            .section-triple > div,
+            .section-quad > div {
+                padding: 12px !important;
+            }
+        }
+
+        /* Widget Stepper */
+        .widget-stepper {
+            background-color: var(--ubits-bg-1);
+            border-radius: 8px;
+            padding: 24px;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .widget-stepper {
+                padding: 16px;
+                margin-top: 16px;
+            }
+            
+            /* Mobile stepper simplificado */
+            .stepper {
+                display: none;
+            }
+            
+            .mobile-stepper {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+            
+            .mobile-progress-circle {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--ubits-bg-1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--ubits-button-primary-bg-default);
+                position: relative;
+                flex-shrink: 0;
+            }
+            
+            /* Progress circle con SVG */
+            .mobile-progress-circle svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                transform: rotate(-90deg);
+            }
+            
+            .mobile-progress-circle svg circle {
+                fill: none;
+                stroke-width: 2;
+            }
+            
+            .mobile-progress-bg {
+                stroke: var(--ubits-border-1);
+            }
+            
+            .mobile-progress-fill {
+                stroke: var(--ubits-button-primary-bg-default);
+                stroke-dasharray: 138; /* 2π * 22 (radio) */
+                stroke-dashoffset: 138; /* Comienza vacío */
+                transition: stroke-dashoffset 0.3s ease;
+            }
+            
+            /* 3 de 5 pasos = 60% */
+            .mobile-progress-circle[data-progress="60"] .mobile-progress-fill {
+                stroke-dashoffset: 55.2; /* 138 * (1 - 0.6) */
+            }
+            
+            .mobile-stepper-text {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .mobile-current-step {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--ubits-fg-1-high);
+            }
+            
+            .mobile-next-button {
+                align-self: flex-start;
+            }
+        }
+
+        /* Desktop - ocultar mobile stepper */
+        @media (min-width: 769px) {
+            .mobile-stepper {
+                display: none;
+            }
+        }
+
+        /* Mobile - ocultar desktop stepper */
+        @media (max-width: 768px) {
+            .stepper {
+                display: none !important;
+            }
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .stepper-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .stepper-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: calc(50% + 16px);
+            width: calc(100% - 32px);
+            height: 2px;
+            background-color: var(--ubits-border-1);
+            z-index: 1;
+        }
+
+
+        .stepper-item.completed:not(:last-child)::after {
+            background-color: var(--ubits-feedback-accent-success);
+        }
+
+        .stepper-item.active:not(:last-child)::after {
+            background-color: var(--ubits-feedback-accent-success);
+        }
+
+        .stepper-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+            background-color: var(--ubits-bg-1);
+            border: 2px solid var(--ubits-border-1);
+            color: var(--ubits-fg-1-medium);
+        }
+
+
+        .stepper-item.completed .stepper-circle {
+            background-color: var(--ubits-feedback-accent-success);
+            border-color: var(--ubits-feedback-accent-success);
+            color: var(--ubits-fg-1-low);
+        }
+
+        .stepper-item.active .stepper-circle {
+            background-color: var(--ubits-button-primary-bg-default);
+            border-color: var(--ubits-button-primary-bg-default);
+            color: var(--ubits-btn-primary-fg);
+        }
+
+        .stepper-label {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            color: var(--ubits-fg-1-medium);
+            max-width: 120px;
+            line-height: 1.3;
+        }
+
+
+        .stepper-item.completed .stepper-label {
+            color: var(--ubits-fg-1-high);
+            font-weight: 600;
+        }
+
+        .stepper-item.active .stepper-label {
+            color: var(--ubits-button-primary-bg-default);
+            font-weight: 600;
+        }
+
+        .stepper-icon {
+            font-size: 14px;
+        }
+
+
+        .config-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 16px; /* Espacio entre título y switch */
+        }
+
+        .config-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1; /* Permite que el título tome el espacio disponible */
+            min-width: 0; /* Permite que el texto se trunce si es necesario */
+        }
+
+        .config-card-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .config-card-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+        /* Switch styles - Copiados de button.html */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0; /* Evita que el switch se comprima */
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--ubits-border-1);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--ubits-accent-brand);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .config-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .field-group {
+            flex: 1;
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-medium);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            background-color: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: var(--ubits-feedback-accent-info);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Widget Template Selector */
+        .widget-template-selector {
+            background-color: var(--ubits-bg-1);
+            border-radius: 8px;
+            padding: 20px;
+            border: none;
+        }
+
+        /* Widget Notifications */
+        .widget-notifications {
+            background-color: var(--ubits-bg-1);
+            border-radius: 8px;
+            padding: 20px;
+            border: none;
+        }
+
+        .selector-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .selector-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .selector-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stepper-container {
+                margin: 12px;
+            }
+            
+            .stepper {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            
+            .stepper-item {
+                flex: none;
+                min-width: 80px;
+            }
+            
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="dashboard-container">
+        <div class="tooltip" id="tooltip"></div>
+        
+        <!-- Sidebar Container -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Content wrapper con secciones de widgets -->
+                <div class="content-sections">
+                    <!-- Sección 1: Stepper -->
+                    <div class="section-single">
+                        <div class="widget-stepper">
+                            <!-- Desktop Stepper -->
+                            <div class="stepper">
+                                <div class="stepper-item completed">
+                                    <div class="stepper-circle">
+                                        <i class="far fa-check stepper-icon"></i>
+                                    </div>
+                                    <div class="stepper-label">Información básica</div>
+                                </div>
+                                <div class="stepper-item completed">
+                                    <div class="stepper-circle">
+                                        <i class="far fa-check stepper-icon"></i>
+                                    </div>
+                                    <div class="stepper-label">Serena AI</div>
+                                </div>
+                                <div class="stepper-item active">
+                                    <div class="stepper-circle">3</div>
+                                    <div class="stepper-label">Configurar vacante</div>
+                                </div>
+                                <div class="stepper-item">
+                                    <div class="stepper-circle">4</div>
+                                    <div class="stepper-label">Añade miembros</div>
+                                </div>
+                                <div class="stepper-item">
+                                    <div class="stepper-circle">
+                                        <i class="far fa-paper-plane stepper-icon"></i>
+                                    </div>
+                                    <div class="stepper-label">Publícala</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mobile Stepper -->
+                            <div class="mobile-stepper">
+                                <div class="mobile-progress-circle" data-progress="60">
+                                    <svg>
+                                        <circle class="mobile-progress-bg" cx="24" cy="24" r="22"></circle>
+                                        <circle class="mobile-progress-fill" cx="24" cy="24" r="22"></circle>
+                                    </svg>
+                                    <span>3/5</span>
+                                </div>
+                                <div class="mobile-stepper-text">
+                                    <div class="mobile-current-step">Configurar vacante</div>
+                                    <button class="ubits-button ubits-button--primary ubits-button--sm mobile-next-button">
+                                        <span>Siguiente</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Configuración (2 columnas) -->
+                    <div class="section-dual">
+                        <!-- Widget: Selector de plantilla -->
+                        <div class="widget-template-selector">
+                            <div class="selector-header">
+                                <div class="selector-icon">
+                                    <i class="far fa-layer-group"></i>
+                                </div>
+                                <div class="selector-title">Seleccionar plantilla</div>
+                            </div>
+                            <div id="template-input-container"></div>
+                        </div>
+
+                        <!-- Widget: Notificaciones -->
+                        <div class="widget-notifications">
+                            <div class="config-card-header">
+                                <div class="config-card-title">
+                                    <div class="config-card-icon">
+                                        <i class="far fa-envelope"></i>
+                                    </div>
+                                    <div class="config-card-name">Activar notificaciones automáticas de rechazo</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-fields">
+                                <div id="days-input-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Tab Bar Container -->
+    <div id="tab-bar-container"></div>
+
+    <!-- Floating Menu Container -->
+    <div id="floating-menu-reclutamiento-container"></div>
+    
+    <!-- Profile Menu Container -->
+    <div id="profile-menu-container"></div>
+
+    <script src="components/sidebar-reclutamiento.js"></script>
+    <script src="components/sub-nav.js"></script>
+    <script src="components/tab-bar-reclutamiento.js"></script>
+    <script src="components/floating-menu.js"></script>
+    <script src="components/profile-menu.js"></script>
+    <script src="components/input.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Cargar componentes dinámicamente
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSidebarReclutamiento('vacantes');
+            loadTabBarReclutamiento('tab-bar-container');
+            loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
+            loadProfileMenu('profile-menu-container');
+            
+            // Activar vacantes en el floating menu
+            setTimeout(() => {
+                setActiveDirectLinkReclutamiento('vacantes');
+            }, 500);
+            
+            // Crear inputs UBITS
+            createTemplateSelect();
+            createDaysInput();
+        });
+
+        // Crear selector de plantilla con UBITS Input
+        function createTemplateSelect() {
+            createInput({
+                containerId: 'template-input-container',
+                type: 'select',
+                placeholder: 'Selecciona una plantilla...',
+                selectOptions: [
+                    {value: 'desarrollo', text: 'Desarrollo de software'},
+                    {value: 'marketing', text: 'Marketing digital'},
+                    {value: 'ventas', text: 'Ventas'},
+                    {value: 'liderazgo', text: 'Liderazgo'},
+                    {value: 'recursos-humanos', text: 'Recursos humanos'},
+                    {value: 'finanzas', text: 'Finanzas'}
+                ],
+                onChange: function(value) {
+                    console.log('Selected template:', value);
+                }
+            });
+        }
+
+        // Crear input de días con UBITS Input
+        function createDaysInput() {
+            createInput({
+                containerId: 'days-input-container',
+                label: 'Enviar correo de rechazo a los: (días)',
+                type: 'number',
+                placeholder: '0',
+                value: '0',
+                onChange: function(value) {
+                    console.log('Days value:', value);
+                }
+            });
+        }
+
+
+
+        // Template Selection Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const templateSelect = document.getElementById('templateSelect');
+            if (templateSelect) {
+                templateSelect.addEventListener('change', function() {
+                    console.log('Selected template:', this.value);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

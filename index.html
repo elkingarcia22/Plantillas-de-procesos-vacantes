@@ -134,7 +134,6 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
         }
 
         .template-status {
@@ -199,7 +198,7 @@
             font-weight: 600;
             color: var(--ubits-fg-1-high);
             line-height: 1.4;
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
         }
 
         .template-meta {
@@ -599,6 +598,11 @@
             loadTabBarReclutamiento('tab-bar-container');
             loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
             loadProfileMenu('profile-menu-container');
+            
+            // Activar plantillas en el floating menu
+            setTimeout(() => {
+                setActiveDirectLinkReclutamiento('plantillas');
+            }, 500);
             
             // Inicializar dashboard de plantillas
             initializeDashboard();

@@ -427,28 +427,40 @@ function convertToDraft(templateId) {
 
 function cloneTemplate(templateId) {
     const template = currentTemplates.find(t => t.id === templateId);
-    if (template) {
-        const clonedTemplate = {
-            ...template,
-            id: 'template-' + Date.now(),
-            name: template.name + ' (Copia)',
-            version: 1,
-            lastModified: new Date().toISOString().split('T')[0],
-            status: 'draft',
-            realContent: template.realContent ? JSON.parse(JSON.stringify(template.realContent)) : null
-        };
-        
-        currentTemplates.unshift(clonedTemplate);
-        filteredTemplates = [...currentTemplates];
-        saveTemplatesToStorage();
-        renderTemplates();
-        updateTemplatesCount();
-        
-        // Mostrar toast de éxito
-        if (typeof showToast === 'function') {
-            showToast('success', `Plantilla "${template.name}" clonada exitosamente`);
+    if (!template) return;
+    
+    showConfirmModal({
+        title: 'Clonar plantilla',
+        message: `¿Estás seguro de que quieres clonar la plantilla <strong>${template.name}</strong>? Se creará una copia como borrador.`,
+        confirmText: 'Clonar',
+        cancelText: 'Cancelar',
+        variant: 'primary',
+        onConfirm: () => {
+            const clonedTemplate = {
+                ...template,
+                id: 'template-' + Date.now(),
+                name: template.name + ' (Copia)',
+                version: 1,
+                lastModified: new Date().toISOString().split('T')[0],
+                status: 'draft',
+                realContent: template.realContent ? JSON.parse(JSON.stringify(template.realContent)) : null
+            };
+            
+            currentTemplates.unshift(clonedTemplate);
+            filteredTemplates = [...currentTemplates];
+            saveTemplatesToStorage();
+            renderTemplates();
+            updateTemplatesCount();
+            
+            // Mostrar toast de éxito
+            if (typeof showToast === 'function') {
+                showToast('success', `Plantilla "${template.name}" clonada exitosamente`);
+            }
+        },
+        onCancel: () => {
+            console.log('Clonación de plantilla cancelada');
         }
-    }
+    });
 }
 
 function deleteTemplate(templateId) {

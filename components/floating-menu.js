@@ -348,15 +348,15 @@ const FLOATING_MENU_RECLUTAMIENTO_SECTIONS = [
         icon: 'far fa-chart-simple',
         url: '#',
         isLink: true,
-        clickable: false // Deshabilitado como pediste
+        clickable: false // Deshabilitado
     },
     {
         id: 'vacantes',
         title: 'Vacantes',
         icon: 'far fa-briefcase',
-        url: '#',
+        url: 'configurar-vacante.html',
         isLink: true,
-        clickable: false // Deshabilitado como pediste
+        clickable: true // Habilitado
     },
     {
         id: 'plantillas',
@@ -364,7 +364,7 @@ const FLOATING_MENU_RECLUTAMIENTO_SECTIONS = [
         icon: 'far fa-sitemap',
         url: 'index.html',
         isLink: true,
-        clickable: true
+        clickable: true // Habilitado
     }
 ];
 
@@ -502,14 +502,14 @@ function setActiveDirectLinkReclutamiento(sectionId) {
     const menu = document.getElementById('floating-menu-reclutamiento');
     if (!menu) return;
 
-    // Remover clase active de todos los links
-    const allLinks = menu.querySelectorAll('.accordion-link');
-    allLinks.forEach(link => {
+    // Remover clase active SOLO de los direct links
+    const allDirectLinks = menu.querySelectorAll('.accordion-link.direct-link');
+    allDirectLinks.forEach(link => {
         link.classList.remove('active');
     });
 
     // Activar el link específico
-    const targetLink = menu.querySelector(`[data-section="${sectionId}"]`);
+    const targetLink = menu.querySelector(`.accordion-link.direct-link[data-section="${sectionId}"]`);
     if (targetLink) {
         targetLink.classList.add('active');
     }

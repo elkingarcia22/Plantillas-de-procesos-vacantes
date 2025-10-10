@@ -281,29 +281,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Board info */
-        .board-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: var(--ubits-feedback-bg-info-subtle);
-            border: 1px solid var(--ubits-feedback-border-info);
-            border-radius: 8px;
-        }
-
-        .board-info i {
-            color: var(--ubits-feedback-fg-info-subtle);
-            font-size: 12px;
-        }
-
-        .board-description {
-            font-family: 'Noto Sans', sans-serif;
-            font-size: 12px;
-            color: var(--ubits-feedback-fg-info-subtle);
-            line-height: 1.4;
-        }
-
         /* Layout principal del editor */
         .editor-layout {
             display: flex;
@@ -347,7 +324,6 @@
             background: var(--ubits-bg-2);
             border-radius: 6px;
             padding: 4px;
-            margin-bottom: 16px;
         }
 
         .tab-button {
@@ -596,7 +572,7 @@
 
         /* Drop zone para etapas */
         .stages-container.drag-over {
-            background: var(--ubits-feedback-bg-info-subtle);
+            background: var(--ubits-bg-1);
             border: 2px dashed var(--ubits-feedback-accent-info);
         }
 
@@ -676,7 +652,7 @@
         .agent-item {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0;
             padding: 12px;
             background: var(--ubits-bg-1);
             border: 1px solid var(--ubits-border-1);
@@ -756,7 +732,7 @@
         }
         
         .board-container.drag-over {
-            background: var(--ubits-feedback-bg-info-subtle);
+            background: var(--ubits-bg-1);
             border: 2px dashed var(--ubits-feedback-accent-info);
         }
 
@@ -828,7 +804,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 0;
-            border-bottom: 1px solid var(--ubits-border-1);
+            border-bottom: none; /* Sin borde por defecto */
         }
 
         .stage-title-section {
@@ -1083,10 +1059,6 @@
                 overflow-x: hidden;
             }
 
-            .sidebar-tabs {
-                margin-bottom: 12px;
-            }
-
             .tab-button {
                 padding: 6px 8px;
                 font-size: 12px;
@@ -1278,6 +1250,50 @@
                 box-sizing: border-box;
             }
         }
+
+        /* ========================================
+           ESTILOS ESPECÍFICOS PARA AGENT-STAGES
+           ======================================== */
+
+        .agent-stage-divider {
+            width: 100%;
+            height: 1px;
+            background: var(--ubits-border-1);
+            margin: 12px 0;
+        }
+
+        .agent-stage-config {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ========================================
+           ESTILOS ESPECÍFICOS PARA CUSTOM-STAGES
+           ======================================== */
+
+        .custom-stage-divider {
+            width: 100%;
+            height: 1px;
+            background: var(--ubits-border-1);
+            margin: 12px 0;
+        }
+
+        .custom-stage-description {
+            padding: 0;
+            margin-top: 0;
+        }
+
+        .custom-stage-description .description-text {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -1372,7 +1388,7 @@
                                 </button>
                                 <button class="tab-button" data-tab="agents">
                                     <i class="far fa-users"></i>
-                                    <span>Agentes</span>
+                                    <span>Agentes IA</span>
                                 </button>
                             </div>
                             
@@ -1381,7 +1397,7 @@
                                 <p class="agents-description">Crea y gestiona las etapas del proceso de selección</p>
                                 
                                 <!-- Botón crear etapa -->
-                                <button class="create-stage-btn" onclick="crearEtapaConModal();">
+                                <button class="create-stage-btn" onclick="openCreateStageModal();">
                                     <i class="far fa-plus"></i>
                                     <span>Crear etapa</span>
                                 </button>
@@ -1407,9 +1423,9 @@
                                 </div>
                             </div>
                             
-                            <!-- Tab Agentes -->
+                            <!-- Tab Agentes IA -->
                             <div class="tab-content" id="agents-tab">
-                                <p class="agents-description">Arrastra y suelta los agentes en las etapas que consideres</p>
+                                <p class="agents-description">Arrastra y suelta los agentes IA para automatizar etapas del flujo</p>
                                 
                                 <div class="agents-list" id="agentsList">
                                     <!-- Los agentes se cargarán dinámicamente -->
@@ -1419,12 +1435,6 @@
 
                         <!-- Board principal -->
                         <div class="board-main">
-                            <!-- Board info -->
-                            <div class="board-info">
-                                <i class="far fa-circle-info"></i>
-                                <span class="board-description">Solo un agente por etapa. Puedes dejarla vacía o arrastrar uno desde la columna izquierda.</span>
-                            </div>
-                            
                             <div class="board-container">
                                 <div class="stages-container" id="stagesContainer">
                                     <!-- Las etapas se cargarán dinámicamente -->
@@ -1478,116 +1488,7 @@
     
     <script>
         // Función para crear etapa con modal UBITS oficial
-        function crearEtapaConModal() {
-            // Verificar si la plantilla está activa
-            if (currentTemplate && currentTemplate.status === 'active') {
-                showCreateNewVersionModal();
-                return;
-            }
-            
-            // Configurar callback global
-            window.modalFormCallback = function(formData) {
-                const { stageName, stageCategory } = formData;
-                
-                // Crear la etapa
-                const nuevaEtapa = {
-                    id: 'stage-' + Date.now(),
-                    name: stageName.trim(),
-                    category: stageCategory,
-                    createdAt: new Date().toISOString()
-                };
-                
-                // Agregar a la lista
-                if (typeof availableStages !== 'undefined') {
-                    availableStages.push(nuevaEtapa);
-                    localStorage.setItem('availableStages', JSON.stringify(availableStages));
-                    
-                    // Recargar la lista
-                    if (typeof renderAvailableStages === 'function') {
-                        renderAvailableStages();
-                    }
-                    
-                    // Etapa creada exitosamente
-                } else {
-                    alert('Error: No se pudo crear la etapa');
-                }
-            };
-            
-            // Verificar que createInput esté disponible
-            if (typeof createInput === 'undefined') {
-                alert('Error: El componente UBITS Input no está cargado');
-                return;
-            }
-            
-            // Verificar que showFormModal esté disponible
-            if (typeof showFormModal === 'undefined') {
-                alert('Error: El componente UBITS Modal no está cargado');
-                return;
-            }
-            
-            console.log('Creando modal con campos:', [
-                {
-                    id: 'stageName',
-                    label: 'Nombre de la etapa',
-                    type: 'text',
-                    placeholder: 'Ej: Entrevista técnica',
-                    required: true,
-                    maxLength: 50
-                },
-                {
-                    id: 'stageCategory',
-                    label: 'Categoría',
-                    type: 'select',
-                    required: true,
-                    selectOptions: [
-                        {value: 'evaluacion-inicial', text: 'Evaluación inicial'},
-                        {value: 'entrevistas', text: 'Entrevistas'},
-                        {value: 'evaluacion-psicometrica', text: 'Evaluación psicométrica'},
-                        {value: 'pruebas-tecnicas', text: 'Pruebas técnicas'},
-                        {value: 'verificacion', text: 'Verificación'},
-                        {value: 'decision-final', text: 'Decisión final'}
-                    ]
-                }
-            ]);
-            
-            // Mostrar modal UBITS oficial
-            showFormModal({
-                title: 'Crear nueva etapa',
-                fields: [
-                    {
-                        id: 'stageName',
-                        label: 'Nombre de la etapa',
-                        type: 'text',
-                        placeholder: 'Ej: Entrevista técnica',
-                        required: true,
-                        maxLength: 50
-                    },
-                    {
-                        id: 'stageCategory',
-                        label: 'Categoría',
-                        type: 'select',
-                        placeholder: 'Selecciona una categoría',
-                        required: true,
-                        selectOptions: [
-                            {value: 'evaluacion-inicial', text: 'Evaluación inicial'},
-                            {value: 'entrevistas', text: 'Entrevistas'},
-                            {value: 'evaluacion-psicometrica', text: 'Evaluación psicométrica'},
-                            {value: 'pruebas-tecnicas', text: 'Pruebas técnicas'},
-                            {value: 'verificacion', text: 'Verificación'},
-                            {value: 'decision-final', text: 'Decisión final'}
-                        ]
-                    }
-                ],
-                submitText: 'Crear etapa',
-                cancelText: 'Cancelar',
-                onSubmit: function(formData) {
-                    window.modalFormCallback(formData);
-                },
-                onCancel: function() {
-                    // No hacer nada
-                }
-            });
-        }
+        // Función duplicada eliminada - ahora usa openCreateStageModal() del JS
         
         // Cargar componentes UBITS dinámicamente
         document.addEventListener('DOMContentLoaded', function() {
@@ -1596,6 +1497,11 @@
             loadTabBarReclutamiento('tab-bar-container');
             loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
             loadProfileMenu('profile-menu-container');
+            
+            // Activar plantillas en el floating menu
+            setTimeout(() => {
+                setActiveDirectLinkReclutamiento('plantillas');
+            }, 500);
             
             // Inicializar editor de plantillas
             initializeEditor();

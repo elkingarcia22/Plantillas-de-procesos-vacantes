@@ -3,13 +3,14 @@
 // Funcionalidad completa del editor usando componentes UBITS
 // ========================================
 
-// Agentes disponibles
+// Agentes disponibles (ahora son etapas por defecto automatizadas)
 const AGENTS = [
     { 
         id: 'cv-analyzer', 
         name: 'Analizador CV', 
         icon: 'fa-file-alt', 
         description: 'Analiza CV y asigna puntaje',
+        category: 'evaluacion-inicial',
         hasConfig: true,
         config: {
             salaryPercentage: { label: 'Porcentaje sobre el rango salarial', type: 'number', default: 0, suffix: '%' },
@@ -21,6 +22,7 @@ const AGENTS = [
         name: 'Entrevista Serena', 
         icon: 'fa-comments', 
         description: 'Genera preguntas y analiza respuestas',
+        category: 'entrevistas',
         hasConfig: true,
         config: {
             expirationDays: { label: 'Días para que expire la entrevista', type: 'number', default: 0, suffix: 'días' },
@@ -32,6 +34,7 @@ const AGENTS = [
         name: 'Analista psicométrico', 
         icon: 'fa-brain', 
         description: 'Evalúa mediante pruebas psicométricas',
+        category: 'evaluacion-psicometrica',
         hasConfig: true,
         config: {
             minIQ: { label: 'Puntaje CI mínimo', type: 'number', default: 0, suffix: 'pts' },
@@ -64,6 +67,7 @@ const AGENTS = [
         name: 'Antecedentes judiciales', 
         icon: 'fa-shield-check', 
         description: 'Verifica certificado de antecedentes judiciales',
+        category: 'verificacion',
         hasConfig: false
     }
 ];
@@ -278,6 +282,7 @@ function setupStageSearch() {
 // ========================================
 
 function renderEditor() {
+    updateAvailableAgents();  // Actualizar lista de agentes disponibles primero
     renderAgents();
     renderStages();
     renderAvailableStages();
@@ -291,6 +296,18 @@ function renderAgents() {
     const agentsList = document.getElementById('agentsList');
     if (!agentsList) return;
     
+    // Mostrar empty state si todos los agentes están en uso
+    if (availableAgents.length === 0) {
+        agentsList.innerHTML = `
+            <div class="empty-stages-message">
+                <i class="far fa-users"></i>
+                <p>No hay agentes disponibles</p>
+                <small>Ya implementaste todos los agentes a tu flujo</small>
+            </div>
+        `;
+        return;
+    }
+    
     agentsList.innerHTML = availableAgents.map(agent => `
         <div class="agent-item" 
              draggable="true" 
@@ -300,11 +317,25 @@ function renderAgents() {
             <div class="agent-header">
                 <div class="agent-title-section">
                     <div class="agent-icon"><i class="far ${agent.icon}"></i></div>
-                    <div class="agent-name">${agent.name}</div>
+                    <div class="agent-name">${agent.name} (IA)</div>
                 </div>
-                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="event.stopPropagation(); showAgentInfo('${agent.id}')" title="Más información">
-                    <i class="far fa-circle-info"></i>
-                </button>
+                <div class="stage-menu">
+                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                            onclick="toggleAgentMenu(event, '${agent.id}')" 
+                            title="Opciones">
+                        <i class="far fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="stage-menu-dropdown" id="agent-menu-${agent.id}">
+                        <button class="stage-menu-item" onclick="addAgentToFlowFromMenu('${agent.id}')">
+                            <i class="far fa-plus"></i>
+                            <span>Agregar al flujo</span>
+                        </button>
+                        <button class="stage-menu-item" onclick="showAgentInfo('${agent.id}')">
+                            <i class="far fa-circle-info"></i>
+                            <span>Ver más información</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="agent-help">${agent.description}</div>
         </div>
@@ -336,7 +367,7 @@ function renderAvailableStages() {
             <div class="empty-stages-message">
                 <i class="far fa-sitemap"></i>
                 <p>No hay etapas disponibles</p>
-                <small>Todas las etapas ya están en uso o crea una nueva</small>
+                <small>Crea una etapa nueva</small>
             </div>
         `;
         return;
@@ -359,7 +390,7 @@ function renderAvailableStages() {
                         <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
                                 onclick="toggleStageTemplateMenu(event, '${stage.id}')" 
                                 title="Opciones">
-                            <i class="far fa-ellipsis"></i>
+                            <i class="far fa-ellipsis-vertical"></i>
                         </button>
                         <div class="stage-menu-dropdown" id="stage-template-menu-${stage.id}">
                             <button class="stage-menu-item" onclick="addStageToBoard('${stage.id}')">
@@ -388,6 +419,129 @@ function renderAvailableStages() {
     });
 }
 
+// ========================================
+// RENDERIZADO DE ETAPAS AGENTE
+// ========================================
+
+function renderAgentStageCard(stage, index) {
+    // Buscar datos completos del agente
+    const agentData = AGENTS.find(a => a.id === stage.agentId);
+    if (!agentData) {
+        return '';
+    }
+    
+    // Obtener categoría
+    const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
+    const categoryName = category ? category.name : 'Sin categoría';
+    
+    // Estado de expandido/contraído
+    const isExpanded = stage.expanded || false;
+    const chevronIcon = isExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
+    const configDisplay = isExpanded ? 'block' : 'none';
+    
+    // Renderizar configuración si el agente tiene config
+    let configHTML = '';
+    if (agentData.hasConfig && agentData.config) {
+        configHTML = `
+            ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
+            <div class="agent-stage-config" id="agent-config-${stage.id}" style="display: ${configDisplay};">
+                ${Object.entries(agentData.config).map(([key, field]) => {
+                    const value = stage.config?.[key] ?? field.default;
+                    
+                    if (field.type === 'number') {
+                        return `
+                            <div class="config-field">
+                                <label class="config-label">${field.label}</label>
+                                <div class="config-input-group">
+                                    <input 
+                                        type="number" 
+                                        class="config-input" 
+                                        value="${value}"
+                                        min="0"
+                                        onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
+                                    >
+                                    ${field.suffix ? `<span class="config-suffix">${field.suffix}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else if (field.type === 'select') {
+                        return `
+                            <div class="config-field">
+                                <label class="config-label">${field.label}</label>
+                                <select 
+                                    class="config-select" 
+                                    onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
+                                >
+                                    ${field.options.map(opt => `
+                                        <option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>
+                                            ${opt.text}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        `;
+                    }
+                    return '';
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="stage-item agent-stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="agent">
+            <i class="far fa-grip-vertical stage-drag-handle"></i>
+            <div class="stage-content">
+                <div class="stage-header agent-stage-header">
+                    <div class="stage-title-section">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="stage-number">${index + 1}</div>
+                            <div>
+                                <h4 class="stage-name">${stage.name} (IA)</h4>
+                                <span class="stage-category-badge">Categoría de etapa: ${categoryName}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stage-actions">
+                        ${agentData.hasConfig ? `
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
+                                <i class="far ${chevronIcon}" id="chevron-${stage.id}"></i>
+                            </button>
+                        ` : ''}
+                        <div class="stage-menu">
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only stage-menu-trigger" onclick="toggleAgentStageMenu(event, '${stage.id}')" title="Opciones">
+                                <i class="far fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="stage-menu-dropdown" id="agent-stage-menu-${stage.id}">
+                                <button class="stage-menu-item" onclick="showAgentInfo('${stage.agentId}')">
+                                    <i class="far fa-circle-info"></i>
+                                    <span>Ver más información</span>
+                                </button>
+                                ${index > 0 ? `
+                                    <button class="stage-menu-item" onclick="moveAgentStageUp('${stage.id}')">
+                                        <i class="far fa-arrow-up"></i>
+                                        <span>Subir</span>
+                                    </button>
+                                ` : ''}
+                                ${index < currentTemplate.realContent.stages.length - 1 ? `
+                                    <button class="stage-menu-item" onclick="moveAgentStageDown('${stage.id}')">
+                                        <i class="far fa-arrow-down"></i>
+                                        <span>Bajar</span>
+                                    </button>
+                                ` : ''}
+                                <button class="stage-menu-item stage-menu-item--danger" onclick="deleteAgentStage('${stage.id}')">
+                                    <i class="far fa-trash"></i>
+                                    <span>Eliminar agente</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${configHTML}
+            </div>
+        </div>
+    `;
+}
+
 function renderStages() {
     const stagesContainer = document.getElementById('stagesContainer');
     if (!stagesContainer) return;
@@ -401,102 +555,29 @@ function renderStages() {
                         <i class="far fa-sitemap"></i>
                     </div>
                     <h3 class="empty-state-title">Construye tu proceso de selección</h3>
-                    <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
+                    <p class="empty-state-description">Añade etapas personalizadas y agentes IA automatizados para diseñar un nuevo flujo de selección</p>
                 </div>
             </div>
         `;
         return;
     }
     
-    // Crear HTML de las etapas
+    // Crear HTML de las etapas (distinguir entre agent y custom)
     const stagesHTML = currentTemplate.realContent.stages.map((stage, index) => {
-        const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
-        
-        // Renderizar agente como card si existe, o mostrar estado empty
-        let agentHTML = '';
-        if (stage.agents && stage.agents.length > 0) {
-            const agent = stage.agents[0];
-            const agentData = AGENTS.find(a => a.id === agent.id);
-            
-            if (agentData) {
-                agentHTML = `
-                    <div class="agent-card">
-                        <div class="agent-card-header">
-                            <div class="agent-card-title">
-                                <i class="far ${agent.icon || 'fa-user'}"></i>
-                                <span>${agent.name}</span>
-                            </div>
-                            <div class="agent-card-actions">
-                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="showAgentInfo('${agent.id}')" title="Más información">
-                                    <i class="far fa-circle-info"></i>
-                                </button>
-                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="removeAgentFromStage('${stage.id}')" title="Quitar agente">
-                                    <i class="far fa-trash"></i>
-                                </button>
-                                ${agentData.hasConfig ? `
-                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="toggleAgentConfig('${stage.id}')" title="Expandir/Contraer configuración">
-                                        <i class="far fa-chevron-up" id="chevron-${stage.id}"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        ${agentData.hasConfig ? `
-                            <div class="agent-card-config" id="agent-config-${stage.id}">
-                                ${Object.entries(agentData.config).map(([key, field]) => {
-                                    const value = agent.config?.[key] ?? field.default;
-                                    
-                                    if (field.type === 'number') {
-                                        return `
-                                            <div class="config-field">
-                                                <label class="config-label">${field.label}</label>
-                                                <div class="config-input-group">
-                                                    <input 
-                                                        type="number" 
-                                                        class="config-input" 
-                                                        value="${value}"
-                                                        min="0"
-                                                        onchange="updateAgentConfig('${stage.id}', '${key}', this.value)"
-                                                    >
-                                                    ${field.suffix ? `<span class="config-suffix">${field.suffix}</span>` : ''}
-                                                </div>
-                                            </div>
-                                        `;
-                                    } else if (field.type === 'select') {
-                                        return `
-                                            <div class="config-field">
-                                                <label class="config-label">${field.label}</label>
-                                                <select 
-                                                    class="config-select" 
-                                                    onchange="updateAgentConfig('${stage.id}', '${key}', this.value)"
-                                                >
-                                                    ${field.options.map(opt => `
-                                                        <option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>
-                                                            ${opt.text}
-                                                        </option>
-                                                    `).join('')}
-                                                </select>
-                                            </div>
-                                        `;
-                                    }
-                                    return '';
-                                }).join('')}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }
-        } else {
-            // Estado empty: mostrar selector de agentes con componente UBITS
-            agentHTML = `
-                <div class="stage-empty-state" id="empty-state-${stage.id}">
-                    <p class="empty-state-text">Puedes dejar la etapa vacía o agregar un agente:</p>
-                    <div id="agent-selector-${stage.id}"></div>
-                </div>
-            `;
+        // Si es etapa de agente, usar renderizado específico
+        if (stage.type === 'agent') {
+            return renderAgentStageCard(stage, index);
         }
         
+        // Si es etapa personalizada (custom), renderizar con expand/collapse si tiene descripción
+        const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
+        const hasDescription = stage.description && stage.description.trim();
+        const isExpanded = stage.expanded || false;
+        const chevronIcon = isExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
+        const descriptionDisplay = isExpanded ? 'block' : 'none';
+        
         return `
-            <div class="stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}">
+            <div class="stage-item custom-stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="custom">
                 <i class="far fa-grip-vertical stage-drag-handle"></i>
                 <div class="stage-content">
                     <div class="stage-header">
@@ -510,6 +591,11 @@ function renderStages() {
                             </div>
                         </div>
                         <div class="stage-actions">
+                            ${hasDescription ? `
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="toggleCustomStageDescription('${stage.id}')" title="Expandir/Contraer descripción">
+                                    <i class="far ${chevronIcon}" id="chevron-custom-${stage.id}"></i>
+                                </button>
+                            ` : ''}
                             <div class="stage-menu">
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only stage-menu-trigger" onclick="toggleStageMenu(event, '${stage.id}')" title="Opciones">
                                     <i class="far fa-ellipsis-vertical"></i>
@@ -539,9 +625,12 @@ function renderStages() {
                             </div>
                         </div>
                     </div>
-                    <div class="stage-agents">
-                        ${agentHTML}
-                    </div>
+                    ${hasDescription ? `
+                        ${isExpanded ? '<div class="custom-stage-divider"></div>' : ''}
+                        <div class="custom-stage-description" id="custom-description-${stage.id}" style="display: ${descriptionDisplay};">
+                            <p class="description-text">${stage.description}</p>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -558,55 +647,6 @@ function renderStages() {
         item.addEventListener('dragend', handleBoardStageDragEnd);
         item.addEventListener('dragleave', handleBoardStageDragLeave);
     });
-    
-    // Crear selectores UBITS para etapas sin agentes
-    currentTemplate.realContent.stages.forEach((stage, index) => {
-        if (!stage.agents || stage.agents.length === 0) {
-            const containerId = `agent-selector-${stage.id}`;
-            const container = document.getElementById(containerId);
-            
-            if (container && typeof createInput === 'function') {
-                const agentOptions = availableAgents.map(agent => ({
-                    value: agent.id,
-                    text: agent.name
-                }));
-                
-                createInput({
-                    containerId: containerId,
-                    type: 'select',
-                    placeholder: 'Seleccionar agente...',
-                    size: 'md',
-                    selectOptions: agentOptions,
-                    onChange: (value) => {
-                        if (value) {
-                            addAgentFromSelector(stage.id, value);
-                        }
-                    }
-                });
-            }
-        }
-    });
-    
-    // Restaurar estados de acordeón después de renderizar
-    setTimeout(() => {
-        currentTemplate.realContent.stages.forEach((stage) => {
-            if (agentConfigStates[stage.id] === 'collapsed') {
-                const configDiv = document.getElementById(`agent-config-${stage.id}`);
-                const chevron = document.getElementById(`chevron-${stage.id}`);
-                const header = configDiv?.previousElementSibling;
-                
-                if (configDiv && chevron) {
-                    configDiv.style.display = 'none';
-                    chevron.classList.remove('fa-chevron-up');
-                    chevron.classList.add('fa-chevron-down');
-                    if (header) {
-                        header.style.borderBottom = 'none';
-                        header.style.paddingBottom = '0';
-                    }
-                }
-            }
-        });
-    }, 0);
 }
 
 function makeBoardDroppable() {
@@ -672,13 +712,14 @@ window.addStageToBoard = function(stageTemplateId) {
         return;
     }
     
-    // Crear nueva etapa en el área de trabajo
+    // Crear nueva etapa en el área de trabajo (mantener tipo y descripción)
     const newStage = {
         id: 'work-stage-' + Date.now(),
         templateId: stageTemplateId,
         name: stageTemplate.name,
         category: stageTemplate.category,
-        agents: []
+        type: stageTemplate.type || 'custom',
+        description: stageTemplate.description || ''
     };
     
     // Agregar al final de la plantilla
@@ -712,13 +753,17 @@ function handleStageTemplateDrop(data) {
         return;
     }
     
+    // Buscar template de etapa para obtener tipo y descripción
+    const stageTemplate = availableStages.find(s => s.id === id);
+    
     // Crear nueva etapa en el área de trabajo
     const newStage = {
         id: 'work-stage-' + Date.now(),
         templateId: id,
         name: name,
         category: category,
-        agents: []
+        type: stageTemplate?.type || 'custom',
+        description: stageTemplate?.description || ''
     };
     
     // Agregar a la plantilla actual
@@ -734,42 +779,45 @@ function handleStageTemplateDrop(data) {
 function handleAgentDrop(data) {
     const { id, name, icon } = data;
     
-    // Buscar la etapa más cercana al punto de drop
-    const stagesContainer = document.getElementById('stagesContainer');
-    const stages = stagesContainer.querySelectorAll('.stage-item');
-    
-    let targetStage = null;
-    let minDistance = Infinity;
-    
-    stages.forEach(stageElement => {
-        const rect = stageElement.getBoundingClientRect();
-        const centerY = rect.top + rect.height / 2;
-        const distance = Math.abs(centerY - (draggedElement?.element?.getBoundingClientRect().top || 0));
-        
-        if (distance < minDistance) {
-            minDistance = distance;
-            targetStage = stageElement;
-        }
-    });
-    
-    if (!targetStage) {
+    // Buscar datos completos del agente
+    const agentData = AGENTS.find(a => a.id === id);
+    if (!agentData) {
         return;
     }
     
-    const stageId = targetStage.getAttribute('data-stage-id');
-    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    // Verificar que este agente no esté ya en el flujo
+    const existingAgentStage = currentTemplate.realContent.stages.find(stage => 
+        stage.type === 'agent' && stage.agentId === id
+    );
     
-    if (!stage) {
+    if (existingAgentStage) {
+        showToast('info', 'Este agente ya está en el flujo');
         return;
     }
     
-    // Verificar que la etapa no tenga ya un agente
-    if (stage.agents && stage.agents.length > 0) {
-        return;
+    // Crear configuración por defecto del agente si tiene config
+    let defaultConfig = {};
+    if (agentData.hasConfig && agentData.config) {
+        Object.entries(agentData.config).forEach(([key, field]) => {
+            defaultConfig[key] = field.default;
+        });
     }
     
-    // Agregar agente a la etapa
-    stage.agents = [{ id, name, icon }];
+    // Crear nueva etapa tipo 'agent' (etapa automatizada)
+    const newAgentStage = {
+        id: 'agent-stage-' + Date.now(),
+        type: 'agent',
+        agentId: id,
+        name: agentData.name,
+        icon: agentData.icon,
+        category: agentData.category,
+        hasConfig: agentData.hasConfig,
+        config: defaultConfig,
+        expanded: false  // Por defecto contraído
+    };
+    
+    // Agregar al final del flujo
+    currentTemplate.realContent.stages.push(newAgentStage);
     
     // Actualizar agentes disponibles
     updateAvailableAgents();
@@ -779,6 +827,9 @@ function handleAgentDrop(data) {
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
+    
+    // Mostrar toast de éxito
+    showToast('success', `Agente "${agentData.name}" agregado al flujo`);
 }
 
 function updateTemplateInfo() {
@@ -841,13 +892,11 @@ function updateTemplateInfo() {
 }
 
 function updateAvailableAgents() {
-    // Filtrar agentes que ya están asignados
+    // Filtrar agentes que ya están en el flujo como etapas
     const assignedAgentIds = new Set();
     currentTemplate.realContent.stages.forEach(stage => {
-        if (stage.agents) {
-            stage.agents.forEach(agent => {
-                assignedAgentIds.add(agent.id);
-            });
+        if (stage.type === 'agent' && stage.agentId) {
+            assignedAgentIds.add(stage.agentId);
         }
     });
     
@@ -924,22 +973,19 @@ function handleBoardStageDragStart(e) {
 }
 
 function handleBoardStageDragOver(e) {
-    e.preventDefault();
-    
-    const targetItem = e.target.closest('.stage-item');
-    if (!targetItem) return;
-    
-    // Si estamos arrastrando un agente, mostrar feedback visual
-    if (draggedElement && draggedElement.type === 'agent') {
-        e.dataTransfer.dropEffect = 'copy';
-        targetItem.style.background = 'var(--ubits-feedback-bg-info-subtle)';
-        targetItem.style.borderColor = 'var(--ubits-feedback-accent-info)';
-        currentDropTarget = targetItem;
+    // Si NO es reordenamiento del board, dejar que el evento se propague
+    // para que el board-container lo maneje (agentes/etapas desde columna izquierda)
+    if (!draggedBoardStage) {
+        // NO hacer preventDefault() - dejar que llegue al board-container
         return;
     }
     
-    // Si estamos arrastrando una etapa del board, reordenar
-    if (!draggedBoardStage) return;
+    // SOLO si es reordenamiento del board, prevenir y manejar
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const targetItem = e.target.closest('.stage-item');
+    if (!targetItem) return;
     
     e.dataTransfer.dropEffect = 'move';
     
@@ -964,19 +1010,26 @@ function handleBoardStageDragOver(e) {
 }
 
 function handleBoardStageDragLeave(e) {
+    // Solo restaurar si estamos reordenando etapas del board
+    if (!draggedBoardStage) return;
+    
     const targetItem = e.target.closest('.stage-item');
     if (!targetItem) return;
     
-    // Restaurar estilos originales
+    // Restaurar estilos originales (aunque ya no los modificamos)
     targetItem.style.background = '';
     targetItem.style.borderColor = '';
-    
-    if (currentDropTarget === targetItem) {
-        currentDropTarget = null;
-    }
 }
 
 function handleBoardStageDrop(e) {
+    // Si NO es reordenamiento del board, dejar que el evento se propague
+    // para que el board-container lo maneje
+    if (!draggedBoardStage) {
+        // NO hacer preventDefault() - dejar que llegue al board-container
+        return;
+    }
+    
+    // SOLO si es reordenamiento, prevenir y manejar
     e.preventDefault();
     e.stopPropagation();
     
@@ -986,74 +1039,6 @@ function handleBoardStageDrop(e) {
     // Restaurar estilos
     targetItem.style.background = '';
     targetItem.style.borderColor = '';
-    
-    // Si estamos soltando un agente
-    try {
-        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        
-        if (data.type === 'agent') {
-            // Verificar si la plantilla está activa
-            if (currentTemplate && currentTemplate.status === 'active') {
-                showCreateNewVersionModal();
-                return;
-            }
-            
-            const stageId = targetItem.getAttribute('data-stage-id');
-            const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
-            
-            if (!stage) {
-                console.log('No se encontró la etapa');
-                return;
-            }
-            
-            // Verificar que la etapa no tenga ya un agente
-            if (stage.agents && stage.agents.length > 0) {
-                console.log('La etapa ya tiene un agente');
-                
-                // Mostrar toast de error
-                if (typeof showToast === 'function') {
-                    showToast('error', 'Solo se permite un agente por etapa.', {
-                        duration: 5000
-                    });
-                }
-                
-                return;
-            }
-            
-            // Obtener configuración por defecto del agente
-            const agentData = AGENTS.find(a => a.id === data.id);
-            const defaultConfig = {};
-            
-            if (agentData && agentData.hasConfig) {
-                Object.entries(agentData.config).forEach(([key, field]) => {
-                    defaultConfig[key] = field.default;
-                });
-            }
-            
-            // Agregar agente a la etapa con su configuración inicial
-            stage.agents = [{ 
-                id: data.id, 
-                name: data.name, 
-                icon: data.icon,
-                config: defaultConfig
-            }];
-            
-            console.log('Agente agregado a la etapa:', data.name);
-            
-            // Actualizar agentes disponibles
-            updateAvailableAgents();
-            
-            // Re-renderizar todo
-            renderEditor();
-            
-            // Marcar como cambios sin guardar
-            markAsUnsaved();
-        }
-    } catch (error) {
-        console.log('No es un agente, es reordenamiento de etapas');
-    }
-    
-    currentDropTarget = null;
 }
 
 function handleBoardStageDragEnd(e) {
@@ -1117,7 +1102,8 @@ function addNewStage() {
     const newStage = {
         id: stageId,
         name: `Etapa ${stageNumber}`,
-        agents: []
+        type: 'custom',
+        description: ''
     };
     
     currentTemplate.realContent.stages.push(newStage);
@@ -1185,86 +1171,102 @@ function editStageName(stageId) {
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
+    // Solo mostrar campo de descripción para etapas personalizadas (custom)
+    const fields = [
+        {
+            id: 'stageName',
+            label: 'Nombre de la etapa',
+            type: 'text',
+            placeholder: 'Ej: Entrevista técnica',
+            required: true,
+            maxLength: 50,
+            size: 'md',
+            value: stage.name
+        },
+        {
+            id: 'stageCategory',
+            label: 'Categoría',
+            type: 'select',
+            required: true,
+            size: 'md',
+            selectOptions: STAGE_CATEGORIES.map(cat => ({
+                value: cat.id,
+                text: cat.name
+            })),
+            value: stage.category
+        }
+    ];
+    
+    // Añadir campo de descripción solo para etapas custom
+    if (stage.type === 'custom') {
+        fields.push({
+            id: 'stageDescription',
+            label: 'Descripción (opcional)',
+            type: 'textarea',
+            placeholder: 'Describe brevemente esta etapa y qué implica...',
+            required: false,
+            maxLength: 500,
+            size: 'md',
+            value: stage.description || ''
+        });
+    }
+    
+    // CRITICAL: Establecer callback ANTES de abrir el modal
+    window.modalFormCallback = function(formData) {
+        const { stageName, stageCategory, stageDescription } = formData;
+        
+        console.log('Editando etapa con formData:', formData);
+        console.log('Stage actual antes:', stage);
+        
+        if (stageName && stageName.trim()) {
+            stage.name = stageName.trim();
+            stage.category = stageCategory;
+            
+            // Actualizar descripción solo si es etapa custom
+            if (stage.type === 'custom') {
+                stage.description = stageDescription?.trim() || '';
+                console.log('Descripción guardada:', stage.description);
+            }
+            
+            // Si tiene templateId, también actualizar en availableStages
+            if (stage.templateId) {
+                const templateStage = availableStages.find(s => s.id === stage.templateId);
+                if (templateStage) {
+                    templateStage.name = stageName.trim();
+                    templateStage.category = stageCategory;
+                    if (templateStage.type === 'custom') {
+                        templateStage.description = stageDescription?.trim() || '';
+                    }
+                    saveAvailableStages();
+                }
+            }
+            
+            markAsUnsaved();
+            renderEditor();
+            
+            showToast('success', 'Etapa actualizada exitosamente');
+        }
+    };
+    
     showFormModal({
         title: 'Editar etapa',
-        fields: [
-            {
-                id: 'stageName',
-                label: 'Nombre de la etapa',
-                type: 'text',
-                placeholder: 'Ej: Entrevista técnica',
-                required: true,
-                maxLength: 50,
-                value: stage.name
-            },
-            {
-                id: 'stageCategory',
-                label: 'Categoría',
-                type: 'select',
-                required: true,
-                selectOptions: STAGE_CATEGORIES.map(cat => ({
-                    value: cat.id,
-                    text: cat.name
-                })),
-                value: stage.category
-            }
-        ],
+        fields: fields,
         submitText: 'Guardar cambios',
         cancelText: 'Cancelar',
         onSubmit: function(formData) {
-            const { stageName, stageCategory } = formData;
-            if (stageName && stageName.trim()) {
-                stage.name = stageName.trim();
-                stage.category = stageCategory;
-                markAsUnsaved();
-                renderEditor();
-            }
+            window.modalFormCallback(formData);
         },
         onCancel: function() {
-            // No hacer nada
+            console.log('Modal de edición cancelado');
         }
     });
 }
 
+// FUNCIÓN OBSOLETA: Ya no se usan selectores para agregar agentes a etapas
+// Los agentes ahora se arrastran y crean etapas independientes
 window.addAgentFromSelector = function(stageId, agentId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
-    if (!agentId) return; // Si no seleccionó nada
-    
-    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
-    if (!stage) return;
-    
-    const agentData = AGENTS.find(a => a.id === agentId);
-    if (!agentData) return;
-    
-    // Obtener configuración por defecto del agente
-    const defaultConfig = {};
-    if (agentData.hasConfig) {
-        Object.entries(agentData.config).forEach(([key, field]) => {
-            defaultConfig[key] = field.default;
-        });
-    }
-    
-    // Agregar agente a la etapa
-    stage.agents = [{ 
-        id: agentId,
-        name: agentData.name, 
-        icon: agentData.icon,
-        config: defaultConfig
-    }];
-    
-    // Actualizar agentes disponibles
-    updateAvailableAgents();
-    
-    // Re-renderizar
-    renderEditor();
-    
-    // Marcar como cambios sin guardar
-    markAsUnsaved();
+    console.warn('addAgentFromSelector() está obsoleta. Los agentes ahora son etapas independientes.');
+    return;
 }
 
 function removeAgentFromStage(stageId) {
@@ -1360,19 +1362,12 @@ function deleteStage(stageId) {
 // ACCIONES DE AGENTES
 // ========================================
 
+// FUNCIÓN OBSOLETA: Los agentes ya no se agregan dentro de etapas
+// Ahora los agentes son etapas independientes (tipo 'agent')
 function addAgentToStage(stageId, agentId) {
-    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
-    const agent = AGENTS.find(a => a.id === agentId);
-    
-    if (stage && agent) {
-        // Solo permitir un agente por etapa
-        if (!stage.agents || stage.agents.length === 0) {
-            stage.agents = [{ ...agent }];
-            updateAvailableAgents();
-            markAsUnsaved();
-            renderEditor();
-        }
-    }
+    // Esta función ya no se usa en el nuevo sistema
+    console.warn('addAgentToStage() está obsoleta. Los agentes ahora son etapas independientes.');
+    return;
 }
 
 function updateAgentConfig(stageId, configKey, value) {
@@ -1469,8 +1464,23 @@ function generateStageId() {
 }
 
 function openCreateStageModal() {
+    console.log('openCreateStageModal llamada');
+    console.log('availableStages actual:', availableStages);
+    
+    // CRITICAL: Establecer callback ANTES de abrir el modal
+    window.modalFormCallback = function(formData) {
+        console.log('modalFormCallback llamado con formData:', formData);
+        try {
+            createStageTemplate(formData);
+        } catch (error) {
+            console.error('Error al crear etapa:', error);
+            showToast('error', 'Error al crear la etapa: ' + error.message);
+        }
+    };
+    
     showFormModal({
         title: 'Crear nueva etapa',
+        message: 'Las etapas personalizadas son procesos manuales que puedes usar para organizar tu flujo de selección',
         fields: [
             {
                 id: 'stageName',
@@ -1478,26 +1488,38 @@ function openCreateStageModal() {
                 type: 'text',
                 placeholder: 'Ej: Entrevista técnica',
                 required: true,
-                maxLength: 50
+                maxLength: 50,
+                size: 'md'
             },
             {
                 id: 'stageCategory',
                 label: 'Categoría',
                 type: 'select',
                 required: true,
+                size: 'md',
+                placeholder: 'Selecciona una categoría',
                 selectOptions: STAGE_CATEGORIES.map(cat => ({
                     value: cat.id,
                     text: cat.name
                 }))
+            },
+            {
+                id: 'stageDescription',
+                label: 'Descripción (opcional)',
+                type: 'textarea',
+                placeholder: 'Describe brevemente esta etapa y qué implica...',
+                required: false,
+                maxLength: 500,
+                size: 'md'
             }
         ],
         submitText: 'Crear etapa',
         cancelText: 'Cancelar',
         onSubmit: function(formData) {
-            createStageTemplate(formData);
+            window.modalFormCallback(formData);
         },
         onCancel: function() {
-            // No hacer nada
+            console.log('Modal cancelado');
         }
     });
 }
@@ -1506,10 +1528,14 @@ function openCreateStageModal() {
 window.openCreateStageModal = openCreateStageModal;
 
 function createStageTemplate(formData) {
-    const { stageName, stageCategory } = formData;
+    const { stageName, stageCategory, stageDescription } = formData;
+    
+    console.log('createStageTemplate llamada con:', formData);
     
     // Validar que el nombre no esté vacío
     if (!stageName || !stageName.trim()) {
+        console.error('Nombre vacío');
+        showToast('error', 'El nombre de la etapa es obligatorio');
         return;
     }
     
@@ -1519,16 +1545,22 @@ function createStageTemplate(formData) {
     );
     
     if (existingStage) {
+        console.error('Nombre duplicado');
+        showToast('error', 'Ya existe una etapa con ese nombre');
         return;
     }
     
-    // Crear nueva etapa
+    // Crear nueva etapa personalizada (tipo 'custom')
     const newStage = {
         id: generateStageId(),
         name: stageName.trim(),
         category: stageCategory,
+        type: 'custom',
+        description: stageDescription?.trim() || '',
         createdAt: new Date().toISOString()
     };
+    
+    console.log('Nueva etapa creada:', newStage);
     
     // Agregar a la lista de etapas disponibles
     availableStages.push(newStage);
@@ -1541,6 +1573,9 @@ function createStageTemplate(formData) {
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
+    
+    // Mostrar toast de éxito
+    showToast('success', `Etapa "${stageName}" creada exitosamente`);
 }
 
 function editStageTemplate(stageId) {
@@ -1564,6 +1599,7 @@ function editStageTemplate(stageId) {
                 placeholder: 'Ej: Entrevista técnica',
                 required: true,
                 maxLength: 50,
+                size: 'md',
                 value: stage.name
             },
             {
@@ -1571,11 +1607,22 @@ function editStageTemplate(stageId) {
                 label: 'Categoría',
                 type: 'select',
                 required: true,
+                size: 'md',
                 selectOptions: STAGE_CATEGORIES.map(cat => ({
                     value: cat.id,
                     text: cat.name
                 })),
                 value: stage.category
+            },
+            {
+                id: 'stageDescription',
+                label: 'Descripción (opcional)',
+                type: 'textarea',
+                placeholder: 'Describe brevemente esta etapa y qué implica...',
+                required: false,
+                maxLength: 500,
+                size: 'md',
+                value: stage.description || ''
             }
         ],
         submitText: 'Guardar cambios',
@@ -1590,7 +1637,7 @@ function editStageTemplate(stageId) {
 }
 
 function updateStageTemplate(stageId, formData) {
-    const { stageName, stageCategory } = formData;
+    const { stageName, stageCategory, stageDescription } = formData;
     
     // Validar que el nombre no esté vacío
     if (!stageName || !stageName.trim()) {
@@ -1615,6 +1662,7 @@ function updateStageTemplate(stageId, formData) {
         ...availableStages[stageIndex],
         name: stageName.trim(),
         category: stageCategory,
+        description: stageDescription?.trim() || '',
         updatedAt: new Date().toISOString()
     };
     
@@ -1623,6 +1671,18 @@ function updateStageTemplate(stageId, formData) {
     
     // Re-renderizar la lista de etapas
     renderAvailableStages();
+    
+    // También actualizar en el board si existe
+    currentTemplate.realContent.stages.forEach(boardStage => {
+        if (boardStage.templateId === stageId) {
+            boardStage.name = stageName.trim();
+            boardStage.category = stageCategory;
+            boardStage.description = stageDescription?.trim() || '';
+        }
+    });
+    
+    // Re-renderizar el board
+    renderStages();
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
@@ -1902,6 +1962,266 @@ function closeStageMenus() {
         menu.classList.remove('show');
     });
     document.removeEventListener('click', closeStageMenus);
+}
+
+// ========================================
+// FUNCIONES PARA AGENTES (ETAPAS AUTOMATIZADAS)
+// ========================================
+
+window.toggleAgentMenu = function(event, agentId) {
+    event.stopPropagation();
+    
+    const menu = document.getElementById(`agent-menu-${agentId}`);
+    if (!menu) return;
+    
+    // Cerrar todos los demás menús abiertos
+    document.querySelectorAll('.stage-menu-dropdown.show').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+    
+    // Si se abrió el menú, agregar listener para cerrar al hacer clic fuera
+    if (menu.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeStageMenus);
+        }, 0);
+    }
+}
+
+window.addAgentToFlowFromMenu = function(agentId) {
+    // Buscar datos completos del agente
+    const agentData = AGENTS.find(a => a.id === agentId);
+    if (!agentData) return;
+    
+    // Verificar que este agente no esté ya en el flujo
+    const existingAgentStage = currentTemplate.realContent.stages.find(stage => 
+        stage.type === 'agent' && stage.agentId === agentId
+    );
+    
+    if (existingAgentStage) {
+        showToast('info', 'Este agente ya está en el flujo');
+        closeStageMenus();
+        return;
+    }
+    
+    // Crear configuración por defecto del agente si tiene config
+    let defaultConfig = {};
+    if (agentData.hasConfig && agentData.config) {
+        Object.entries(agentData.config).forEach(([key, field]) => {
+            defaultConfig[key] = field.default;
+        });
+    }
+    
+    // Crear nueva etapa tipo 'agent'
+    const newAgentStage = {
+        id: 'agent-stage-' + Date.now(),
+        type: 'agent',
+        agentId: agentId,
+        name: agentData.name,
+        icon: agentData.icon,
+        category: agentData.category,
+        hasConfig: agentData.hasConfig,
+        config: defaultConfig,
+        expanded: false
+    };
+    
+    // Agregar al final del flujo
+    currentTemplate.realContent.stages.push(newAgentStage);
+    
+    // Actualizar agentes disponibles
+    updateAvailableAgents();
+    
+    // Re-renderizar todo
+    renderEditor();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageMenus();
+    
+    // Mostrar toast de éxito
+    showToast('success', `Agente "${agentData.name}" agregado al flujo`);
+}
+
+window.toggleAgentStageMenu = function(event, stageId) {
+    event.stopPropagation();
+    
+    const menu = document.getElementById(`agent-stage-menu-${stageId}`);
+    if (!menu) return;
+    
+    // Cerrar todos los demás menús abiertos
+    document.querySelectorAll('.stage-menu-dropdown.show').forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+    
+    // Si se abrió el menú, agregar listener para cerrar al hacer clic fuera
+    if (menu.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeStageMenus);
+        }, 0);
+    }
+}
+
+window.moveAgentStageUp = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stages = currentTemplate.realContent.stages;
+    const currentIndex = stages.findIndex(s => s.id === stageId);
+    
+    if (currentIndex <= 0) return; // Ya está en la primera posición
+    
+    // Intercambiar con la etapa anterior
+    [stages[currentIndex - 1], stages[currentIndex]] = [stages[currentIndex], stages[currentIndex - 1]];
+    
+    // Re-renderizar
+    renderStages();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageMenus();
+}
+
+window.moveAgentStageDown = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stages = currentTemplate.realContent.stages;
+    const currentIndex = stages.findIndex(s => s.id === stageId);
+    
+    if (currentIndex < 0 || currentIndex >= stages.length - 1) return; // Ya está en la última posición
+    
+    // Intercambiar con la etapa siguiente
+    [stages[currentIndex], stages[currentIndex + 1]] = [stages[currentIndex + 1], stages[currentIndex]];
+    
+    // Re-renderizar
+    renderStages();
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Cerrar menús
+    closeStageMenus();
+}
+
+window.deleteAgentStage = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    if (!stage) return;
+    
+    showConfirmModal({
+        title: 'Eliminar agente',
+        message: `¿Estás seguro de que quieres eliminar el agente <strong>${stage.name}</strong> del flujo?`,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        variant: 'primary',
+        onConfirm: () => {
+            // Eliminar etapa del array
+            currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
+            
+            // Actualizar agentes disponibles
+            updateAvailableAgents();
+            
+            // Re-renderizar
+            renderEditor();
+            markAsUnsaved();
+            
+            // Mostrar toast
+            showToast('success', `Agente "${stage.name}" eliminado del flujo`);
+        },
+        onCancel: () => {
+            // No hacer nada
+        }
+    });
+}
+
+window.toggleAgentStageConfig = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    if (!stage) return;
+    
+    // Toggle estado expandido
+    stage.expanded = !stage.expanded;
+    
+    // Re-renderizar para reflejar el cambio
+    renderEditor();
+    markAsUnsaved();
+}
+
+window.updateAgentStageConfig = function(stageId, configKey, value) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    if (!stage) return;
+    
+    // Inicializar config si no existe
+    if (!stage.config) {
+        stage.config = {};
+    }
+    
+    // Actualizar valor
+    const agentData = AGENTS.find(a => a.id === stage.agentId);
+    if (agentData && agentData.config && agentData.config[configKey]) {
+        const field = agentData.config[configKey];
+        if (field.type === 'number') {
+            stage.config[configKey] = parseInt(value) || 0;
+        } else {
+            stage.config[configKey] = value;
+        }
+    }
+    
+    // Marcar como no guardado
+    markAsUnsaved();
+}
+
+window.toggleCustomStageDescription = function(stageId) {
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+    if (!stage) return;
+    
+    // Toggle estado expandido
+    stage.expanded = !stage.expanded;
+    
+    // Re-renderizar para reflejar el cambio
+    renderEditor();
+    markAsUnsaved();
 }
 
 // ========================================

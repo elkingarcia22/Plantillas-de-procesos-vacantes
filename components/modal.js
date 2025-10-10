@@ -697,6 +697,9 @@ function showFormModal(options = {}) {
 
     const modalId = 'modal-' + Date.now();
     
+    // Guardar fields en variable global para evitar problemas de serialización
+    window.currentModalFields = fields;
+    
     // Crear contenido del modal con inputs UBITS oficiales
     let formHTML = '';
     if (message) {
@@ -724,7 +727,7 @@ function showFormModal(options = {}) {
             {
                 text: submitText,
                 variant: 'primary',
-                onclick: `submitFormModal('${modalId}', ${JSON.stringify(fields).replace(/"/g, '&quot;')}, ${onSubmit ? 'true' : 'false'});`
+                onclick: `submitFormModal('${modalId}', window.currentModalFields, ${onSubmit ? 'true' : 'false'});`
             }
         ],
         onClose: () => {
@@ -798,22 +801,43 @@ function showFormModal(options = {}) {
  */
 function submitFormModal(modalId, fields, hasCallback) {
     const modal = document.getElementById(modalId);
-    if (!modal) return;
+    if (!modal) {
+        console.error('Modal no encontrado:', modalId);
+        return;
+    }
     
     const formData = {};
     fields.forEach(field => {
         const { id, type } = field;
-        // Buscar el input dentro del contenedor UBITS
-        const input = modal.querySelector(`#field-${id} .ubits-input`);
+        console.log('Buscando campo:', id, 'tipo:', type);
+        
+        // Buscar el input/textarea/select dentro del contenedor UBITS
+        let input = modal.querySelector(`#field-${id} .ubits-input`);
+        
+        // Si no lo encuentra con .ubits-input, buscar textarea directamente
+        if (!input) {
+            input = modal.querySelector(`#field-${id} textarea`);
+        }
+        
+        // Si aún no lo encuentra, buscar input directamente
+        if (!input) {
+            input = modal.querySelector(`#field-${id} input`);
+        }
+        
         if (input) {
+            console.log('Campo encontrado:', id, 'valor:', input.value);
             // Para selects, usar el valor guardado en dataset, no el texto visible
             if (type === 'select' && input.dataset.selectedValue) {
                 formData[id] = input.dataset.selectedValue;
             } else {
                 formData[id] = input.value;
             }
+        } else {
+            console.warn('Campo no encontrado:', id);
         }
     });
+    
+    console.log('FormData recopilado:', formData);
     
     // Limpiar todos los dropdowns flotantes antes de cerrar el modal
     document.querySelectorAll('.ubits-select-dropdown--floating').forEach(dropdown => {
@@ -824,7 +848,10 @@ function submitFormModal(modalId, fields, hasCallback) {
     setTimeout(() => UBITSModalManager.destroy(modalId), 300);
     
     if (hasCallback && window.modalFormCallback) {
+        console.log('Llamando a modalFormCallback con:', formData);
         window.modalFormCallback(formData);
+    } else {
+        console.warn('No hay callback o modalFormCallback no está definido');
     }
 }
 
