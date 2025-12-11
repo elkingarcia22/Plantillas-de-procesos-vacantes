@@ -13,8 +13,20 @@ const AGENTS = [
         category: 'evaluacion-inicial',
         hasConfig: true,
         config: {
-            salaryPercentage: { label: 'Porcentaje sobre el rango salarial', type: 'number', default: 0, suffix: '%' },
-            minScore: { label: 'Puntaje mínimo de evaluación', type: 'number', default: 0, suffix: 'pts' }
+            salaryPercentage: { 
+                label: 'Porcentaje sobre el rango salarial', 
+                type: 'number', 
+                default: 0, 
+                suffix: '%',
+                tooltip: 'Define qué tanto puede superar el candidato el salario máximo del puesto y seguir siendo considerado. Ejemplo: si el tope es $1.000 y pones 10%, se aceptan candidatos hasta $1.100.'
+            },
+            minScore: { 
+                label: 'Puntaje mínimo de evaluación', 
+                type: 'number', 
+                default: 0, 
+                suffix: 'pts',
+                tooltip: 'Puntaje mínimo que el CV debe obtener para pasar a la siguiente etapa. Si lo dejas en 0, todos los candidatos avanzan sin filtro por puntaje.'
+            }
         }
     },
     { 
@@ -25,8 +37,20 @@ const AGENTS = [
         category: 'entrevistas',
         hasConfig: true,
         config: {
-            expirationDays: { label: 'Días para que expire la entrevista', type: 'number', default: 0, suffix: 'días' },
-            minScore: { label: 'Puntaje mínimo de la entrevista', type: 'number', default: 0, suffix: 'pts' }
+            expirationDays: { 
+                label: 'Días para que expire la entrevista', 
+                type: 'number', 
+                default: 0, 
+                suffix: 'días',
+                tooltip: 'Cantidad de días que el candidato tiene para completar la entrevista desde que recibe la invitación. Si no responde dentro de ese plazo, la entrevista vence y ya no podrá realizarla.'
+            },
+            minScore: { 
+                label: 'Puntaje mínimo de la entrevista', 
+                type: 'number', 
+                default: 0, 
+                suffix: 'pts',
+                tooltip: 'Puntaje mínimo que el candidato debe obtener en la entrevista para avanzar a la siguiente etapa del proceso.'
+            }
         }
     },
     { 
@@ -37,11 +61,18 @@ const AGENTS = [
         category: 'evaluacion-psicometrica',
         hasConfig: true,
         config: {
-            minIQ: { label: 'Puntaje CI mínimo', type: 'number', default: 0, suffix: 'pts' },
+            minIQ: { 
+                label: 'Puntaje CI mínimo', 
+                type: 'number', 
+                default: 0, 
+                suffix: 'pts',
+                tooltip: 'Puntaje mínimo que el candidato debe lograr en la prueba psicométrica para considerarse aprobado en esta etapa.'
+            },
             testType: { 
-                label: 'Tipo de prueba', 
+                label: 'Tipo de prueba (CI/CA)', 
                 type: 'select', 
                 default: 'ci-ca',
+                tooltip: 'Selecciona el tipo de prueba psicométrica que se aplicará al candidato. Cada opción evalúa habilidades o aspectos distintos según la configuración de tu plataforma.',
                 options: [
                     { value: 'ci-ca', text: 'CI/CA' },
                     { value: '16pf', text: '16PF' },
@@ -54,6 +85,7 @@ const AGENTS = [
                 label: 'Idioma de la prueba', 
                 type: 'select', 
                 default: 'es',
+                tooltip: 'Idioma en el que el candidato verá las instrucciones y preguntas de la prueba psicométrica.',
                 options: [
                     { value: 'es', text: 'Español' },
                     { value: 'en', text: 'Inglés' },
@@ -953,9 +985,9 @@ function renderAgents() {
     agentsList.innerHTML = availableAgents.map(agent => {
         // Obtener descripción del agente para el tooltip
         const descriptions = {
-            'cv-analyzer': 'Permite analizar automáticamente la hoja de vida del candidato para identificar su experiencia y formación.',
-            'interview-ia': 'Permite realizar entrevistas virtuales asistidas por Serena para profundizar en la experiencia y habilidades del candidato.',
-            'psychometric-analyst': 'Permite evaluar las competencias y el perfil psicológico del candidato mediante una prueba estructurada.',
+            'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
+            'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
+            'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
             'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
         };
         const agentDescription = descriptions[agent.id] || agent.description;
@@ -1125,6 +1157,15 @@ function renderAgentStageCard(stage, index) {
         return '';
     }
     
+    // Obtener descripción del agente para el tooltip (misma que en renderAgents)
+    const agentDescriptions = {
+        'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
+        'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
+        'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
+        'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
+    };
+    const agentDescription = agentDescriptions[stage.agentId] || agentData.description;
+    
     // Obtener categoría
     const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
     const categoryName = category ? category.name : 'Sin categoría';
@@ -1145,7 +1186,16 @@ function renderAgentStageCard(stage, index) {
                     if (field.type === 'number') {
                         return `
                             <div class="config-field">
-                                <label class="config-label">${field.label}</label>
+                                <label class="config-label">
+                                    ${field.label}
+                                    ${field.tooltip ? `
+                                        <button class="config-info-btn" 
+                                                data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                            <i class="far fa-circle-info"></i>
+                                        </button>
+                                    ` : ''}
+                                </label>
                                 <div class="config-input-group">
                                     <input 
                                         type="number" 
@@ -1161,7 +1211,16 @@ function renderAgentStageCard(stage, index) {
                     } else if (field.type === 'select') {
                         return `
                             <div class="config-field">
-                                <label class="config-label">${field.label}</label>
+                                <label class="config-label">
+                                    ${field.label}
+                                    ${field.tooltip ? `
+                                        <button class="config-info-btn" 
+                                                data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                            <i class="far fa-circle-info"></i>
+                                        </button>
+                                    ` : ''}
+                                </label>
                                 <select 
                                     class="config-select" 
                                     onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
@@ -1211,13 +1270,13 @@ function renderAgentStageCard(stage, index) {
                                 <i class="far fa-arrow-down"></i>
                             </button>
                         ` : ''}
-                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Eliminar agente" style="color: var(--ubits-feedback-accent-error);">
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar agente" style="color: var(--ubits-feedback-accent-error);">
                             <i class="far fa-trash"></i>
                         </button>
-                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn" 
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn"
                                 data-agent-id="${stage.agentId}"
                                 data-agent-name="${agentData.name}"
-                                data-agent-description="${agentData.description.replace(/"/g, '&quot;')}"
+                                data-agent-description="${agentDescription.replace(/"/g, '&quot;')}"
                                 title="Ver más información">
                             <i class="far fa-circle-info"></i>
                         </button>
@@ -1350,6 +1409,12 @@ function renderStages() {
     stagesContainer.querySelectorAll('.agent-info-btn').forEach(btn => {
         btn.addEventListener('mouseenter', handleAgentInfoHover);
         btn.addEventListener('mouseleave', handleAgentInfoLeave);
+    });
+    
+    // Agregar event listeners para tooltips de campos de configuración
+    stagesContainer.querySelectorAll('.config-info-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', handleConfigInfoHover);
+        btn.addEventListener('mouseleave', handleConfigInfoLeave);
     });
     
     // ========================================
@@ -2125,6 +2190,74 @@ function handleAgentDragEnd(e) {
     draggedElement = null;
     
     console.log('Finalizando arrastre de agente');
+}
+
+// ========================================
+// FUNCIONES PARA TOOLTIP DE INFORMACIÓN DE CAMPOS DE CONFIGURACIÓN
+// ========================================
+
+function handleConfigInfoHover(e) {
+    const btn = e.currentTarget;
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+    
+    const tooltipText = btn.getAttribute('data-tooltip');
+    if (!tooltipText) return;
+    
+    // Agregar clase específica para tooltip de configuración
+    tooltip.classList.add('config-info-tooltip');
+    
+    // Crear contenido del tooltip
+    tooltip.innerHTML = `
+        <div style="font-size: 13px; line-height: 1.4; color: var(--ubits-fg-1-high-static-inverted);">${tooltipText}</div>
+    `;
+    
+    // Mostrar tooltip
+    tooltip.style.opacity = '1';
+    
+    // Posicionar tooltip arriba del botón
+    const rect = btn.getBoundingClientRect();
+    
+    // Calcular espacio disponible
+    const spaceLeft = rect.left;
+    const spaceRight = window.innerWidth - rect.right;
+    const spaceTop = rect.top;
+    const spaceBottom = window.innerHeight - rect.bottom;
+    
+    // Estimar ancho del tooltip
+    const estimatedTooltipWidth = 300;
+    const estimatedTooltipHeight = 80;
+    
+    // Posicionar tooltip arriba del botón
+    let finalLeft = rect.left + (rect.width / 2) - (estimatedTooltipWidth / 2);
+    let finalTop = rect.top - estimatedTooltipHeight - 8;
+    
+    // Ajustar si se sale por la izquierda
+    if (finalLeft < 8) {
+        finalLeft = 8;
+    }
+    
+    // Ajustar si se sale por la derecha
+    if (finalLeft + estimatedTooltipWidth > window.innerWidth - 8) {
+        finalLeft = window.innerWidth - estimatedTooltipWidth - 8;
+    }
+    
+    // Si no hay espacio arriba, mostrar abajo
+    if (spaceTop < estimatedTooltipHeight + 8) {
+        finalTop = rect.bottom + 8;
+    }
+    
+    tooltip.style.left = finalLeft + 'px';
+    tooltip.style.top = finalTop + 'px';
+    tooltip.style.transform = 'none';
+}
+
+function handleConfigInfoLeave(e) {
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+    
+    tooltip.style.opacity = '0';
+    tooltip.classList.remove('config-info-tooltip');
 }
 
 // ========================================
@@ -3883,24 +4016,24 @@ window.deleteAgentStage = function(stageId) {
     if (!stage) return;
     
     showConfirmModal({
-        title: 'Eliminar agente',
-        message: `¿Estás seguro de que quieres eliminar el agente <strong>${stage.name}</strong> del flujo?`,
-        confirmText: 'Eliminar',
+        title: 'Quitar agente',
+        message: `¿Estás seguro de que quieres quitar el agente <strong>${stage.name}</strong> del flujo?`,
+        confirmText: 'Quitar',
         cancelText: 'Cancelar',
         variant: 'primary',
         onConfirm: () => {
             // Eliminar etapa del array
             currentTemplate.realContent.stages = currentTemplate.realContent.stages.filter(s => s.id !== stageId);
-            
+
             // Actualizar agentes disponibles
             updateAvailableAgents();
-            
+
             // Re-renderizar
             renderEditor();
             markAsUnsaved();
-            
+
             // Mostrar toast
-            showToast('success', `Agente "${stage.name}" eliminado del flujo`);
+            showToast('success', `Agente "${stage.name}" quitado del flujo`);
         },
         onCancel: () => {
             // No hacer nada

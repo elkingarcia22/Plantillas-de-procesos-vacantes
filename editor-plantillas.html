@@ -851,6 +851,25 @@
             left: auto;
             right: -6px;
         }
+        
+        /* Tooltip para información de campos de configuración */
+        .tooltip.config-info-tooltip {
+            white-space: normal;
+            max-width: 300px;
+            min-width: 200px;
+            padding: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            box-sizing: border-box;
+            max-width: min(300px, calc(100vw - 24px));
+        }
+        
+        .tooltip.config-info-tooltip::before {
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -6px;
+            top: auto;
+        }
 
         /* Board principal */
         .board-main {
@@ -1209,6 +1228,33 @@
             white-space: nowrap;
             width: 200px;
             text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+        
+        .config-info-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .config-info-btn:hover {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .config-info-btn i {
+            font-size: 12px;
         }
 
         .config-input-group {
