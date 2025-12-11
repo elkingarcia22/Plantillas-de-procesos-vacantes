@@ -361,7 +361,7 @@ const FLOATING_MENU_RECLUTAMIENTO_SECTIONS = [
     {
         id: 'plantillas',
         title: 'Plantillas',
-        icon: 'far fa-sitemap',
+        icon: 'far fa-file-lines',
         url: 'index.html',
         isLink: true,
         clickable: true // Habilitado

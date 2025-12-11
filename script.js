@@ -87,13 +87,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // El sidebar debe tener al menos 578px de alto
         const sidebarHeight = Math.max(578, availableHeight);
         
-        sidebar.style.height = `${sidebarHeight}px`;
-        sidebar.style.minHeight = `578px`;
+        if (sidebar) {
+            sidebar.style.height = `${sidebarHeight}px`;
+            sidebar.style.minHeight = `578px`;
+        }
         
         // Ajustar posición para mantener margen de 16px arriba y abajo
-        const topPosition = topMargin;
-        sidebar.style.top = `${topPosition}px`;
-        sidebar.style.bottom = 'auto';
+        if (sidebar) {
+            const topPosition = topMargin;
+            sidebar.style.top = `${topPosition}px`;
+            sidebar.style.bottom = 'auto';
+        }
         
 
     }
@@ -347,30 +351,32 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.style.minWidth = '80px';
             sidebar.style.left = '8px';
             
-            // Ajustar contenedor principal para mobile
+            // NO aplicar inline styles al main-content - usar CSS
             const mainContent = document.querySelector('.main-content');
             if (mainContent) {
-                mainContent.style.left = '108px';
-                mainContent.style.right = '12px';
+                mainContent.style.left = '';
+                mainContent.style.right = '';
             }
         } else {
-            sidebar.style.width = '96px';
-            sidebar.style.minWidth = '96px';
-            sidebar.style.left = '11px';
+            if (sidebar) {
+                sidebar.style.width = '96px';
+                sidebar.style.minWidth = '96px';
+                sidebar.style.left = '24px';
+            }
             
-            // Restaurar posición del contenedor principal
+            // NO aplicar inline styles al main-content - usar CSS
             const mainContent = document.querySelector('.main-content');
             if (mainContent) {
-                mainContent.style.left = '131px';
-                mainContent.style.right = '12px';
+                mainContent.style.left = '';
+                mainContent.style.right = '';
             }
         }
         
         // Ajustar para pantallas con poco alto
         if (windowHeight <= 600) {
-            sidebar.style.padding = '12px 22px';
+            if (sidebar) sidebar.style.padding = '12px 22px';
         } else {
-            sidebar.style.padding = '16px 28px';
+            if (sidebar) sidebar.style.padding = '16px 28px';
         }
         
         // Reajustar dimensiones

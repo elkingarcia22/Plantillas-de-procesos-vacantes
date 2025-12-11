@@ -49,7 +49,7 @@ function loadSidebarReclutamiento(activeButton = null) {
                         <i class="far fa-briefcase"></i>
                     </button>
                     <button class="nav-button" data-section="plantillas" data-tooltip="Plantillas" onclick="window.location.href='index.html'" style="cursor: pointer;">
-                        <i class="far fa-sitemap"></i>
+                        <i class="far fa-file-lines"></i>
                     </button>
                 </div>
             </div>

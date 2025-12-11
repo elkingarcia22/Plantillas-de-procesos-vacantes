@@ -8,11 +8,21 @@ body {
     background-color: var(--ubits-bg-2);
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
     overflow-y: auto;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
     /* Forzar scroll más claro */
     scrollbar-width: thin;
     scrollbar-color: var(--ubits-fg-2-medium-static) var(--ubits-bg-5);
+}
+
+html {
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
 }
 
 /* Scroll más claro para WebKit (Chrome, Safari, Edge) */
@@ -35,10 +45,53 @@ body {
 
 /* Contenedor principal */
 .dashboard-container {
-    display: flex;
+    display: block;
     min-height: 100vh;
     width: 100%;
-    overflow: visible;
+    max-width: 100vw;
+    overflow-x: hidden;
+    overflow-y: visible;
+    box-sizing: border-box;
+    position: relative;
+    padding-left: 0;
+    margin-left: 0;
+    /* Asegurar que el contenedor no cause overflow */
+    min-width: 0;
+}
+
+/* Asegurar que el dashboard-container no cause overflow */
+.dashboard-container > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Asegurar que el main-content esté centrado en pantallas grandes */
+@media (min-width: 1440px) {
+    .dashboard-container > .main-content {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+/* Asegurar que sidebar-container y tooltip no afecten el centrado del main-content */
+.dashboard-container > #sidebar-container {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+}
+
+.dashboard-container > #sidebar-container > * {
+    pointer-events: auto !important;
+}
+
+.dashboard-container > .tooltip {
+    position: fixed;
+    z-index: 1000;
 }
 
 /* Sidebar - Dimensiones fijas que NO cambian con el tema */
@@ -303,6 +356,9 @@ body {
     font-family: 'Noto Sans', sans-serif;
     font-size: 14px;
     font-weight: 400;
+    /* Asegurar que el tooltip no cause overflow horizontal */
+    max-width: 90vw;
+    box-sizing: border-box;
 }
 
 .tooltip::before {
@@ -357,15 +413,45 @@ body {
 /* Main Content - Páginas con sidebar */
 .main-content {
     position: relative;
-    flex: 1;
     margin: 16px 24px 0 143px;
-    width: calc(100% - 143px - 24px);
-    overflow: visible;
+    width: calc(100vw - 143px - 24px);
+    max-width: calc(100vw - 143px - 24px);
+    overflow-x: hidden;
+    overflow-y: visible;
     max-height: none;
     display: flex;
     flex-direction: column;
     gap: 20px;
     z-index: 5;
+    box-sizing: border-box;
+    /* Forzar que no se apliquen inline styles */
+    left: auto !important;
+    right: auto !important;
+}
+
+/* Centrado para pantallas grandes */
+@media (min-width: 1440px) {
+    .dashboard-container {
+        overflow-x: hidden;
+    }
+    
+    .main-content {
+        margin: 16px auto 0 auto;
+        padding-left: 143px;
+        padding-right: 24px;
+        width: 1607px;
+        max-width: 1607px;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+}
+
+/* Asegurar que main-content no exceda el viewport en pantallas medianas */
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .main-content {
+        width: calc(100vw - 143px - 24px);
+        max-width: calc(100vw - 143px - 24px);
+    }
 }
 
 /* Ajustar gap en móvil cuando no hay subnav */
@@ -373,7 +459,8 @@ body {
     .main-content {
         gap: 20px;
         margin: 16px 12px 0 12px;
-        width: calc(100% - 24px);
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
     }
     
     /* Eliminar margen superior del primer elemento para compensar el gap */
@@ -381,6 +468,7 @@ body {
         margin-top: -20px;
     }
 }
+
 
 /* Top Navigation */
 .top-nav {
@@ -541,11 +629,14 @@ body[data-theme="dark"] .content-area.no-background {
     }
     
     .main-content {
-        margin: 16px 12px 0 108px;
-        width: calc(100% - 108px - 12px);
+        margin: 16px 12px 0 0;
+        padding-left: 108px;
+        width: calc(100vw - 108px - 12px);
+        max-width: calc(100vw - 108px - 12px);
         gap: 20px;
         position: relative;
-        overflow: visible;
+        overflow-x: hidden;
+        overflow-y: visible;
         max-height: none;
     }
     
@@ -2321,7 +2412,25 @@ body {
 
 /* Contenedor del sidebar para posicionar el menu */
 #sidebar-container {
-    position: relative;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#sidebar-container > * {
+    pointer-events: auto !important;
+    position: fixed !important;
 }
 
 /* Contenedor del avatar para posicionar el menu */

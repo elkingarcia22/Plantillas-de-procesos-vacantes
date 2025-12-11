@@ -27,6 +27,17 @@
         .content-area {
             margin-top: 0 !important; /* Respetar el margen del main-content */
             padding-top: 0 !important; /* No agregar padding adicional */
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: visible;
+            overflow-y: visible;
+            /* Asegurar que no cause desplazamiento */
+            position: relative;
+            left: 0;
+            margin-left: 0;
+            padding-left: 0;
+            padding-right: 0;
         }
         
         .editor-container {
@@ -36,10 +47,19 @@
             flex: 1;
             min-width: 0;
             width: 100%;
-            overflow: visible;
+            max-width: 100%;
+            overflow-x: visible;
+            overflow-y: visible;
             max-height: none;
             box-sizing: border-box;
             margin-top: 0; /* Respetar el margen del main-content */
+            margin-left: 0;
+            margin-right: 0;
+            /* Asegurar que no cause desplazamiento */
+            position: relative;
+            left: 0;
+            padding-left: 0;
+            padding-right: 0;
         }
 
         /* Header del editor */
@@ -55,12 +75,17 @@
             align-items: center;
             gap: 12px;
             flex: 1;
+            min-width: 0;
+            overflow: visible;
         }
 
         .header-left-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: visible;
         }
 
         .header-right {
@@ -117,14 +142,36 @@
             font-family: 'Noto Sans', sans-serif;
             font-size: 24px;
             font-weight: 600;
-            color: var(--ubits-fg-1-high);
+            color: var(--ubits-fg-1-high) !important;
             background: transparent;
             border: none;
+            border-bottom: 1px solid transparent;
             outline: none;
             padding: 0;
             margin: 0;
             width: auto;
+            min-width: 50px;
             max-width: 600px;
+            flex: 0 0 auto;
+            display: inline-block;
+            opacity: 1 !important;
+            visibility: visible !important;
+            position: relative;
+            z-index: 1;
+            box-sizing: content-box;
+        }
+        
+        .editor-title-input:hover {
+            border-bottom: 1px solid var(--ubits-border-1);
+        }
+        
+        .editor-title-input::placeholder {
+            color: var(--ubits-fg-1-medium);
+            opacity: 0.5;
+        }
+        
+        .editor-title-input:not(:placeholder-shown) {
+            color: var(--ubits-fg-1-high) !important;
         }
 
         .editor-title-input:focus {
@@ -132,6 +179,11 @@
             border: 1px solid var(--ubits-accent-brand);
             border-radius: 4px;
             padding: 4px 8px;
+        }
+        
+        .editor-title-input:not(:focus) {
+            padding: 0;
+            margin: 0;
         }
 
         .template-status-badge {
@@ -147,8 +199,12 @@
 
         .template-status-badge.draft {
             background: var(--ubits-feedback-bg-info-subtle);
-            color: var(--ubits-fg-info-subtle-static-default);
+            color: var(--ubits-fg-1-high);
             border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        .template-status-badge.draft span {
+            color: var(--ubits-fg-1-high) !important;
         }
 
         .template-status-badge.active {
@@ -298,11 +354,25 @@
             gap: 16px;
             flex: 1;
             min-height: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Cambiar a hidden para evitar que el board se salga */
+            overflow-y: visible;
+            /* Asegurar que no cause desplazamiento */
+            position: relative;
+            left: 0;
+            margin-left: 0;
+            padding-left: 0;
+            padding-right: 0;
         }
 
         /* Sidebar de agentes */
         .agents-sidebar {
             width: 40%;
+            max-width: 40%;
+            min-width: 0;
+            flex: 0 0 40%;
             background: var(--ubits-bg-1);
             border: 1px solid var(--ubits-border-1);
             border-radius: 8px;
@@ -311,6 +381,9 @@
             flex-direction: column;
             gap: 16px;
             height: fit-content;
+            box-sizing: border-box;
+            overflow-x: visible;
+            overflow-y: auto;
         }
 
         .agents-title {
@@ -374,6 +447,7 @@
         /* Contenido de tabs */
         .tab-content {
             display: none;
+            overflow-x: visible; /* Permitir que los dropdowns no se corten */
         }
 
         .tab-content.active {
@@ -415,31 +489,45 @@
             flex-direction: column;
             gap: 8px;
             margin-top: 8px;
+            overflow-x: visible; /* Permitir que los dropdowns no se corten */
         }
 
         /* Mensaje vacío para etapas */
-        .empty-stages-message {
+        .empty-stages-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
             text-align: center;
-            padding: 20px;
+        }
+
+        .empty-stages-visual .empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .empty-stages-visual .empty-icon i {
+            font-size: 24px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .empty-stages-visual .empty-text {
+            margin: 0 0 20px 0;
+            font-size: 14px;
+            font-weight: 500;
             color: var(--ubits-fg-1-medium);
             font-family: 'Noto Sans', sans-serif;
         }
-
-        .empty-stages-message i {
-            font-size: 24px;
-            margin-bottom: 8px;
-            color: var(--ubits-fg-1-low);
-        }
-
-        .empty-stages-message p {
-            margin: 0 0 4px 0;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .empty-stages-message small {
-            font-size: 12px;
-            color: var(--ubits-fg-1-low);
+        
+        .empty-stages-visual .ubits-button {
+            margin-top: 4px;
         }
 
         /* Item de etapa en sidebar (columna izquierda) */
@@ -453,6 +541,8 @@
             cursor: grab;
             transition: all 0.2s ease;
             font-family: 'Noto Sans', sans-serif;
+            overflow: visible; /* Permitir que el dropdown no se corte */
+            position: relative; /* Asegurar contexto de posicionamiento */
         }
 
         #stagesList .stage-item:hover {
@@ -503,27 +593,35 @@
             display: flex;
             gap: 4px;
             opacity: 1;
+            align-items: center;
         }
         
         .stage-menu {
             position: relative;
+            /* Asegurar que el dropdown pueda salirse del contenedor */
+            overflow: visible;
         }
         
         .stage-menu-dropdown {
-            position: absolute;
-            top: calc(100% + 4px);
-            right: 0;
+            position: fixed; /* Cambiar a fixed para que no se corte por contenedores */
             background: var(--ubits-bg-1);
             border: 1px solid var(--ubits-border-1);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             min-width: 160px;
             padding: 4px;
-            z-index: 1000;
+            z-index: 10000; /* Aumentar z-index para que esté por encima de todo */
             display: none;
             opacity: 0;
             transform: translateY(-8px);
             transition: opacity 0.2s ease, transform 0.2s ease;
+            /* Asegurar que el dropdown pueda salirse del contenedor si es necesario */
+            overflow: visible;
+            /* Valores por defecto que se sobrescribirán con JavaScript */
+            top: auto;
+            right: auto;
+            left: auto;
+            bottom: auto;
         }
         
         .stage-menu-dropdown.show {
@@ -716,6 +814,12 @@
             color: var(--ubits-fg-1-high);
         }
 
+        .agent-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .agent-help {
             font-size: 12px;
             color: var(--ubits-fg-1-medium);
@@ -723,13 +827,45 @@
             margin-left: 0;
         }
 
+        /* Tooltip para información de agentes */
+        .tooltip.agent-info-tooltip {
+            white-space: normal;
+            max-width: 400px;
+            min-width: 250px;
+            padding: 12px;
+            /* Asegurar que no cause overflow horizontal */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            /* Asegurar que el tooltip no cause scroll horizontal */
+            box-sizing: border-box;
+            /* Limitar ancho máximo para evitar overflow */
+            max-width: min(400px, calc(100vw - 24px));
+        }
+
+        .tooltip.agent-info-tooltip::before {
+            left: -6px;
+        }
+        
+        /* Tooltip en board (paso del proceso) - alineado a la derecha */
+        .board-container .tooltip.agent-info-tooltip::before {
+            left: auto;
+            right: -6px;
+        }
+
         /* Board principal */
         .board-main {
             width: 60%;
-            flex: 1;
+            max-width: 60%;
+            min-width: 0;
+            flex: 0 0 60%;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Cambiar a hidden para evitar overflow */
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
         }
 
         .board-container {
@@ -739,7 +875,13 @@
             border-radius: 8px;
             padding: 16px;
             height: fit-content;
-            transition: all 0.2s ease;
+            transition: none; /* Remover transición para evitar "brincos" */
+            box-sizing: border-box;
+            overflow-x: hidden !important; /* Cambiar a hidden para evitar que el contenido se salga */
+            overflow-y: auto;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
         }
         
         .board-container.drag-over {
@@ -752,6 +894,12 @@
             flex-direction: column;
             gap: 12px;
             min-height: 200px;
+            min-width: 0;
+            overflow-x: hidden; /* Cambiar a hidden para evitar que las cards se expandan horizontalmente */
+            overflow-y: auto;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
         }
         
         .stages-container:empty {
@@ -771,6 +919,11 @@
             cursor: grab;
             transition: all 0.2s ease;
             position: relative;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow: hidden; /* Prevenir que el contenido se salga */
         }
 
         .stage-item:hover {
@@ -783,24 +936,32 @@
         }
 
         .stage-number {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+            flex-shrink: 0 !important;
             display: flex;
             align-items: center;
             justify-content: center;
             background: var(--ubits-bg-1);
             color: var(--ubits-fg-1-high);
             border: 1px solid var(--ubits-border-1);
-            border-radius: 50%;
+            border-radius: 50% !important;
             font-family: 'Noto Sans', sans-serif;
             font-size: 14px;
             font-weight: 600;
+            box-sizing: border-box;
         }
 
         .stage-drag-handle {
-            color: var(--ubits-fg-1-low);
+            color: var(--ubits-fg-1-medium);
             cursor: grab;
+            font-size: 14px;
+        }
+        
+        .stage-drag-handle:hover {
+            color: var(--ubits-fg-1-high);
         }
 
         .stage-content {
@@ -808,6 +969,11 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            min-width: 0;
+            max-width: 100% !important;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden; /* Prevenir que el contenido se salga */
         }
 
         .stage-content .stage-header {
@@ -816,12 +982,62 @@
             justify-content: space-between;
             padding: 0;
             border-bottom: none; /* Sin borde por defecto */
+            min-width: 0;
+            max-width: 100% !important;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden; /* Prevenir que el contenido se salga */
         }
 
         .stage-title-section {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            flex: 1;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden; /* Prevenir que el contenido se salga */
+        }
+        
+        /* Asegurar que los divs internos también respeten el ancho */
+        .stage-title-section > div {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            flex: 1;
+        }
+        
+        .stage-title-section > div > div {
+            flex: 1;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        
+        /* Asegurar que el div con display: flex inline también respete el ancho */
+        .stage-title-section > div[style*="display: flex"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+        }
+        
+        /* Asegurar que el div interno que contiene stage-number y el div con el nombre también respete el ancho */
+        .stage-title-section > div[style*="display: flex"] > div:first-child {
+            flex-shrink: 0 !important;
+        }
+        
+        .stage-title-section > div[style*="display: flex"] > div:last-child {
+            flex: 1 !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
         }
 
         .stage-name {
@@ -830,6 +1046,21 @@
             font-weight: 600;
             color: var(--ubits-fg-1-high);
             margin: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que h4 dentro de stage-name también respete el ancho */
+        .stage-name h4 {
+            margin: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .stage-category-badge {
@@ -841,6 +1072,9 @@
             border-radius: 0;
             border: none;
             margin: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
         }
 
         .stage-agents {
@@ -848,6 +1082,10 @@
             flex-direction: column;
             gap: 12px;
             margin-top: 12px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         /* Stage Empty State */
@@ -877,6 +1115,10 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .agent-card-header {
@@ -885,6 +1127,10 @@
             justify-content: space-between;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--ubits-border-1);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
         .agent-card-title {
@@ -906,12 +1152,19 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            flex-shrink: 0;
+            min-width: 0;
         }
 
         .agent-card-config {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow-x: hidden;
         }
 
         .config-field {
@@ -919,6 +1172,19 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 4px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow-x: hidden;
+        }
+        
+        .agent-stage-config {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow-x: hidden;
         }
 
         /* Mobile: Stack label above input */
@@ -950,10 +1216,14 @@
             align-items: center;
             gap: 8px;
             min-width: 120px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .config-input {
             width: 100px;
+            max-width: 100px;
             padding: 6px 10px;
             border: 1px solid var(--ubits-border-1);
             border-radius: 6px;
@@ -963,6 +1233,8 @@
             font-size: 13px;
             outline: none;
             transition: border-color 0.2s ease;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .config-input:focus {
@@ -982,6 +1254,7 @@
 
         .config-select {
             min-width: 120px;
+            max-width: 100%;
             padding: 6px 10px;
             border: 1px solid var(--ubits-border-1);
             border-radius: 6px;
@@ -992,6 +1265,8 @@
             outline: none;
             cursor: pointer;
             transition: border-color 0.2s ease;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .config-select:focus {
@@ -1006,63 +1281,154 @@
             display: flex;
             gap: 4px;
             opacity: 1;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 0;
         }
 
 
         /* Botón agregar etapa - ELIMINADO */
 
-        /* Empty state */
-        .empty-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .empty-state-content {
+        /* Board Empty State Full - Cuando no hay etapas */
+        .board-empty-state-full {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            max-width: 400px;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
         }
 
-        .empty-state-icon-circle {
-            width: 64px;
-            height: 64px;
+        .empty-icon-circle {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            background: var(--ubits-accent-brand);
+            background: var(--ubits-bg-2);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 8px;
+            margin-bottom: 24px;
         }
 
-        .empty-state-icon-circle i {
-            font-size: 24px;
-            color: white;
+        .empty-icon-circle i {
+            font-size: 32px;
+            color: var(--ubits-fg-1-medium);
         }
 
-        .empty-state-title {
+        .empty-title {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 24px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .empty-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+            max-width: 320px;
+        }
+
+        /* Board Header Section - Visible cuando hay etapas */
+        .board-header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .board-empty-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
             font-weight: 600;
             color: var(--ubits-fg-1-high);
             margin: 0;
             line-height: 1.2;
         }
 
-        .empty-state-description {
+        .board-empty-instruction {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 16px;
+            font-size: 14px;
             color: var(--ubits-fg-1-medium);
             margin: 0;
             line-height: 1.4;
-            max-width: 350px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
-        /* Botón empty state - ELIMINADO */
+        /* Board Drop Slots */
+        .board-drop-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .board-drop-slot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            min-height: 48px;
+            max-height: 48px;
+            border: 2px dashed var(--ubits-border-1);
+            border-radius: 8px;
+            background: var(--ubits-bg-2);
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+
+        .board-drop-slot:hover {
+            border-color: var(--ubits-feedback-accent-info);
+            background: var(--ubits-feedback-bg-info-subtle);
+        }
+
+        .board-container.drag-over .board-drop-slot {
+            border-color: var(--ubits-feedback-accent-info);
+            background: var(--ubits-feedback-bg-info-subtle);
+        }
+
+        .board-drop-slot.drag-over {
+            border-color: var(--ubits-feedback-accent-info);
+            background: var(--ubits-feedback-bg-info-subtle);
+            border-style: solid;
+        }
+
+        .slot-number {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            max-width: 24px !important;
+            flex-shrink: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 50% !important;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        .slot-placeholder {
+            flex: 1;
+            height: 32px;
+            border-radius: 4px;
+            background: transparent;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
 
         /* Responsive */
         @media (max-width: 1024px) {
@@ -1076,7 +1442,7 @@
                 height: auto;
                 margin-bottom: 0;
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow-x: visible; /* Cambiar a visible para que los dropdowns no se corten */
             }
 
             .board-main {
@@ -1135,6 +1501,11 @@
 
         @media (max-width: 768px) {
             /* Asegurar que el contenedor respete los márgenes del main-content */
+            .main-content {
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+            
             .editor-container {
                 width: 100%;
                 max-width: 100%;
@@ -1254,6 +1625,7 @@
             .agents-list {
                 width: 100%;
                 box-sizing: border-box;
+                overflow-x: visible; /* Permitir que los dropdowns no se corten */
             }
             
             .agent-item {
@@ -1301,6 +1673,11 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow-x: hidden;
         }
 
         /* ========================================
@@ -1351,9 +1728,11 @@
                                 <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--md" onclick="goToDashboard()" title="Volver al dashboard">
                                     <i class="far fa-arrow-left"></i>
                                 </button>
-                                <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" maxlength="100">
+                                <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" placeholder="Nombre de la plantilla" maxlength="100">
+                                <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="focusTemplateName()" title="Editar título">
+                                    <i class="far fa-pencil"></i>
+                                </button>
                                 <span class="template-status-badge draft" id="templateStatusBadge">
-                                    <div class="status-dot"></div>
                                     <span>Borrador</span>
                                 </span>
                             </div>
@@ -1370,11 +1749,13 @@
                             <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--md" onclick="goToDashboard()" title="Volver al dashboard">
                                 <i class="far fa-arrow-left"></i>
                             </button>
-                            <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" maxlength="100">
+                            <input type="text" id="templateName" class="editor-title-input" value="Nueva plantilla" placeholder="Nombre de la plantilla" maxlength="100">
+                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="focusTemplateName()" title="Editar título">
+                                <i class="far fa-pencil"></i>
+                            </button>
                         </div>
                         <div class="header-row-2">
                             <span class="template-status-badge draft" id="templateStatusBadge">
-                                <div class="status-dot"></div>
                                 <span>Borrador</span>
                             </span>
                             <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
@@ -1403,9 +1784,6 @@
                             <div class="version-info">
                                 <span id="templateLastModified">Modificado hoy</span>
                             </div>
-                            <div class="version-info">
-                                <span id="templateVersion">Versión 1</span>
-                            </div>
                         </div>
                     </div>
 
@@ -1430,10 +1808,10 @@
                             
                             <!-- Tab Etapas -->
                             <div class="tab-content active" id="stages-tab">
-                                <p class="agents-description">Crea y gestiona las etapas del proceso de selección</p>
+                                <p class="agents-description" id="stagesDescription">Crea y gestiona las etapas del proceso de selección</p>
                                 
                                 <!-- Botón crear etapa -->
-                                <button class="create-stage-btn" onclick="openCreateStageModal();">
+                                <button class="create-stage-btn" id="createStageBtn" onclick="openCreateStageModal();">
                                     <i class="far fa-plus"></i>
                                     <span>Crear etapa</span>
                                 </button>
@@ -1476,13 +1854,14 @@
                                     <!-- Las etapas se cargarán dinámicamente -->
                                     
                                     <!-- Empty state cuando no hay etapas -->
-                                    <div class="empty-state" id="emptyState" style="display: none;">
-                                        <div class="empty-state-content">
-                                            <div class="empty-state-icon-circle">
-                                                <i class="far fa-sitemap"></i>
+                                    <div class="board-header-section" id="emptyState" style="display: none;">
+                                        <h3 class="board-empty-title">Pasos del proceso</h3>
+                                        <p class="board-empty-instruction">Arrasta y suelta las etapas aquí</p>
+                                        <div class="board-drop-slots">
+                                            <div class="board-drop-slot" data-slot-number="1">
+                                                <div class="slot-number">1</div>
+                                                <div class="slot-placeholder"></div>
                                             </div>
-                                            <h3 class="empty-state-title">Construye tu proceso de selección</h3>
-                                            <p class="empty-state-description">Añade etapas para organizar el proceso de selección y asigna agentes IA que te ayuden a evaluar candidatos.</p>
                                         </div>
                                     </div>
                                 </div>
