@@ -397,11 +397,15 @@ function setupStageSearch() {
     function applyFilters() {
         const searchTerm = searchInput.value.toLowerCase().trim();
         
-        // Obtener categoría seleccionada del input UBITS
-        let selectedCategory = '';
-        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
-        if (categoryInput) {
-            selectedCategory = categoryInput.dataset.selectedValue || '';
+        // Obtener categorías seleccionadas del dropdown
+        let selectedCategories = [];
+        const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+        if (categoryFilterContainer && categoryFilterContainer.dataset.selectedCategories) {
+            try {
+                selectedCategories = JSON.parse(categoryFilterContainer.dataset.selectedCategories);
+            } catch (e) {
+                selectedCategories = [];
+            }
         }
         
         const stageItems = stagesList.querySelectorAll('.stage-item');
@@ -433,7 +437,7 @@ function setupStageSearch() {
         });
         
         // Mostrar/ocultar empty state SOLO cuando hay búsqueda/filtro activo y no hay resultados
-        if (visibleCount === 0 && (searchTerm || selectedCategory)) {
+        if (visibleCount === 0 && (searchTerm || selectedCategories.length > 0)) {
             // Hay filtros activos pero no hay resultados - mostrar empty state
             if (emptyState) {
                 emptyState.classList.add('show');
@@ -489,6 +493,7 @@ function setupStageSearch() {
 // Función para toggle del dropdown de categorías
 window.toggleCategoryDropdown = function(event) {
     event.stopPropagation();
+    event.preventDefault();
     const menu = document.getElementById('categoryFilterMenu');
     const button = document.getElementById('categoryFilterButton');
     
@@ -498,21 +503,19 @@ window.toggleCategoryDropdown = function(event) {
             menu.classList.remove('show');
             button.classList.remove('active');
         } else {
+            // Calcular posición del dropdown usando position fixed
+            const buttonRect = button.getBoundingClientRect();
+            menu.style.top = (buttonRect.bottom + 8) + 'px';
+            menu.style.left = buttonRect.left + 'px';
+            
             menu.classList.add('show');
             button.classList.add('active');
         }
     }
+    return false;
 }
 
-// Función para toggle de selección de categoría
-window.toggleCategorySelection = function(categoryId, event) {
-    event.stopPropagation();
-    const checkbox = document.getElementById(`category-${categoryId}`);
-    if (checkbox) {
-        checkbox.checked = !checkbox.checked;
-        updateCategoryFilter();
-    }
-}
+// Función para manejar click en el item (ya no necesaria, el label maneja el click)
 
 // Función para actualizar el filtro de categorías
 window.updateCategoryFilter = function() {
@@ -526,20 +529,55 @@ window.updateCategoryFilter = function() {
     // Guardar en el dataset
     categoryFilterContainer.dataset.selectedCategories = JSON.stringify(selectedCategories);
     
-    // Actualizar badge
+    // Actualizar badge y estado del botón
     const badge = document.getElementById('categoryFilterBadge');
-    if (badge) {
+    const button = document.getElementById('categoryFilterButton');
+    
+    if (badge && button) {
         if (selectedCategories.length > 0) {
             badge.textContent = selectedCategories.length;
             badge.style.display = 'inline-flex';
+            button.classList.add('has-filters');
+            button.classList.add('ubits-button--active');
         } else {
             badge.style.display = 'none';
+            button.classList.remove('has-filters');
+            button.classList.remove('ubits-button--active');
         }
     }
     
     // Aplicar filtros
     if (window.applyStageFilters && typeof window.applyStageFilters === 'function') {
         window.applyStageFilters();
+    } else {
+        // Si no existe applyStageFilters, llamar directamente a la función de filtrado
+        const searchInput = document.getElementById('stageSearch');
+        const stagesList = document.getElementById('stagesList');
+        
+        if (searchInput && stagesList) {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const stageItems = stagesList.querySelectorAll('.stage-item');
+            
+            stageItems.forEach(item => {
+                const stageName = item.getAttribute('data-stage-name').toLowerCase();
+                const stageCategory = item.getAttribute('data-stage-category');
+                
+                // Filtro por búsqueda
+                const matchesSearch = !searchTerm || 
+                    stageName.includes(searchTerm) || 
+                    stageCategory.toLowerCase().includes(searchTerm);
+                
+                // Filtro por categoría (múltiple)
+                const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(stageCategory);
+                
+                // Mostrar si cumple ambos filtros
+                if (matchesSearch && matchesCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
     }
 }
 
@@ -1248,20 +1286,19 @@ function renderAvailableStages() {
             // Crear el dropdown de categorías
             const dropdownHTML = `
                 <div class="category-filter-dropdown">
-                    <button type="button" class="category-filter-button" id="categoryFilterButton" onclick="toggleCategoryDropdown(event)">
-                        <span>Categorías</span>
+                    <button type="button" class="category-filter-button ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" id="categoryFilterButton" onclick="toggleCategoryDropdown(event)" title="Filtrar por categorías">
+                        <i class="far fa-filter"></i>
                         <span class="category-filter-badge" id="categoryFilterBadge" style="display: none;">0</span>
-                        <i class="far fa-chevron-down"></i>
                     </button>
                     <div class="category-filter-dropdown-menu" id="categoryFilterMenu">
                         ${STAGE_CATEGORIES.map(cat => `
-                            <div class="category-filter-item" onclick="toggleCategorySelection('${cat.id}', event)">
+                            <label class="category-filter-item" for="category-${cat.id}">
                                 <input type="checkbox" id="category-${cat.id}" value="${cat.id}" onchange="updateCategoryFilter()">
-                                <label class="category-filter-item-label" for="category-${cat.id}">
+                                <span class="category-filter-item-label">
                                     <i class="far ${cat.icon}"></i>
                                     <span>${cat.name}</span>
-                                </label>
-                            </div>
+                                </span>
+                            </label>
                         `).join('')}
                     </div>
                 </div>
@@ -1270,16 +1307,31 @@ function renderAvailableStages() {
             categoryFilterContainer.innerHTML = dropdownHTML;
             
             // Cerrar dropdown al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                const dropdown = categoryFilterContainer.querySelector('.category-filter-dropdown');
-                const menu = categoryFilterContainer.querySelector('.category-filter-dropdown-menu');
-                const button = categoryFilterContainer.querySelector('.category-filter-button');
+            // Usar un solo listener global para evitar múltiples listeners
+            if (!window.categoryDropdownCloseHandler) {
+                window.categoryDropdownCloseHandler = function(e) {
+                    const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+                    if (!categoryFilterContainer) return;
+                    
+                    const dropdown = categoryFilterContainer.querySelector('.category-filter-dropdown');
+                    const menu = categoryFilterContainer.querySelector('.category-filter-dropdown-menu');
+                    const button = categoryFilterContainer.querySelector('.category-filter-button');
+                    
+                    // No cerrar si el click es dentro del dropdown
+                    if (dropdown && dropdown.contains(e.target)) {
+                        return;
+                    }
+                    
+                    // Cerrar si está abierto y el click es fuera
+                    if (menu && menu.classList.contains('show')) {
+                        menu.classList.remove('show');
+                        if (button) button.classList.remove('active');
+                    }
+                };
                 
-                if (dropdown && !dropdown.contains(e.target) && menu && menu.classList.contains('show')) {
-                    menu.classList.remove('show');
-                    if (button) button.classList.remove('active');
-                }
-            });
+                // Agregar listener solo una vez
+                document.addEventListener('click', window.categoryDropdownCloseHandler);
+            }
         } else if (categoryFilterContainer && !hasStages) {
             // Si no hay etapas, ocultar el contenedor del filtro
             categoryFilterContainer.innerHTML = '';
