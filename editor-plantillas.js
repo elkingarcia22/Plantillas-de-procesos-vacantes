@@ -70,39 +70,33 @@ const AGENTS = [
         category: 'evaluacion-psicometrica',
         hasConfig: true,
         config: {
-            minIQ: { 
-                label: 'Puntaje mínimo psicométrico', 
+            minScore: { 
+                label: 'Puntaje mínimo global', 
                 type: 'number', 
                 default: 0, 
                 suffix: 'pts',
-                tooltip: 'Puntaje mínimo que el candidato debe lograr en la prueba psicométrica para considerarse aprobado en esta etapa.'
+                tooltip: 'Puntaje mínimo global que el candidato debe lograr en todas las pruebas psicométricas para considerarse aprobado en esta etapa. Si es 0, no se aplica filtro global.'
             },
-            testType: { 
-                label: 'Tipo de prueba psicométrica', 
-                type: 'select', 
-                default: 'cognicion',
-                tooltip: 'Selecciona el tipo de prueba psicométrica que se aplicará al candidato. Cada opción evalúa habilidades o aspectos distintos según la configuración de tu plataforma.',
-                options: [
-                    { value: 'cognicion', text: 'Cognición (inteligencia)' },
-                    { value: 'perfil-motivacion', text: 'Perfil de motivación' },
-                    { value: 'dominancia-cerebral', text: 'Dominancia Cerebral' },
-                    { value: 'estilo-social', text: 'Estilo Social' },
-                    { value: 'inventario-valores', text: 'Inventario de valores organizacionales (Corta)' },
-                    { value: 'personalidad-16', text: 'Personalidad 16' }
-                ]
-            },
-            testLanguage: { 
-                label: 'Idioma de la prueba', 
-                type: 'select', 
-                default: 'es',
-                tooltip: 'Idioma en el que el candidato verá las instrucciones y preguntas de la prueba psicométrica.',
-                options: [
-                    { value: 'es', text: 'Español' },
-                    { value: 'en', text: 'Inglés' },
-                    { value: 'pt', text: 'Portugués' }
-                ]
+            tests: {
+                label: 'Pruebas psicotécnicas',
+                type: 'psychometric-tests-manager',
+                default: []
             }
-        }
+        },
+        // Opciones disponibles para las pruebas
+        testTypes: [
+            { value: 'cognicion', text: 'Cognición (inteligencia)' },
+            { value: 'perfil-motivacion', text: 'Perfil de motivación' },
+            { value: 'dominancia-cerebral', text: 'Dominancia Cerebral' },
+            { value: 'estilo-social', text: 'Estilo Social' },
+            { value: 'inventario-valores', text: 'Inventario de valores organizacionales (Corta)' },
+            { value: 'personalidad-16', text: 'Personalidad 16' }
+        ],
+        testLanguages: [
+            { value: 'es', text: 'Español' },
+            { value: 'en', text: 'Inglés' },
+            { value: 'pt', text: 'Portugués' }
+        ]
     },
     { 
         id: 'background-check', 
@@ -177,6 +171,46 @@ function createNewTemplate() {
     };
 }
 
+// Migrar configuración antigua del analista psicométrico a la nueva estructura
+function migratePsychometricAnalystConfig(stage) {
+    if (stage.agentId !== 'psychometric-analyst') return;
+    
+    // Si ya tiene la nueva estructura (tests array), no migrar
+    if (stage.config && stage.config.tests && Array.isArray(stage.config.tests)) {
+        return;
+    }
+    
+    // Si tiene la estructura antigua (minIQ, testType, testLanguage), migrar
+    if (stage.config && (stage.config.minIQ !== undefined || stage.config.testType !== undefined || stage.config.testLanguage !== undefined)) {
+        const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+        if (!agentData) return;
+        
+        // Crear array de tests con la prueba antigua
+        const oldTest = {
+            id: 'test-' + Date.now(),
+            type: stage.config.testType || agentData.testTypes[0].value,
+            language: stage.config.testLanguage || agentData.testLanguages[0].value,
+            minScore: stage.config.minIQ || 0
+        };
+        
+        // Crear nueva estructura
+        const newConfig = {
+            minScore: stage.config.minIQ || 0,
+            tests: [oldTest]
+        };
+        
+        // Eliminar campos antiguos
+        delete stage.config.minIQ;
+        delete stage.config.testType;
+        delete stage.config.testLanguage;
+        
+        // Actualizar con nueva estructura
+        stage.config = { ...stage.config, ...newConfig };
+        
+        console.log('✅ Migración completada para analista psicométrico:', stage.id);
+    }
+}
+
 function loadTemplate(templateId) {
     const stored = localStorage.getItem('templates');
     if (stored) {
@@ -188,6 +222,13 @@ function loadTemplate(templateId) {
             // Asegurar que realContent existe
             if (!currentTemplate.realContent) {
                 currentTemplate.realContent = { stages: [] };
+            }
+            
+            // Migrar configuraciones antiguas del analista psicométrico
+            if (currentTemplate.realContent.stages) {
+                currentTemplate.realContent.stages.forEach(stage => {
+                    migratePsychometricAnalystConfig(stage);
+                });
             }
         } else {
             createNewTemplate();
@@ -379,8 +420,8 @@ function setupStageSearch() {
                 stageName.includes(searchTerm) || 
                 stageCategory.toLowerCase().includes(searchTerm);
             
-            // Filtro por categoría
-            const matchesCategory = !selectedCategory || stageCategory === selectedCategory;
+            // Filtro por categoría (múltiple)
+            const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(stageCategory);
             
             // Mostrar si cumple ambos filtros
             if (matchesSearch && matchesCategory) {
@@ -445,21 +486,60 @@ function setupStageSearch() {
     }
 }
 
-// Función para filtrar por categoría (llamada desde el select UBITS)
-window.filterStagesByCategory = function(categoryId) {
-    try {
-        // Guardar el valor seleccionado en el dataset del input
-        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
-        if (categoryInput) {
-            categoryInput.dataset.selectedValue = categoryId || '';
+// Función para toggle del dropdown de categorías
+window.toggleCategoryDropdown = function(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('categoryFilterMenu');
+    const button = document.getElementById('categoryFilterButton');
+    
+    if (menu && button) {
+        const isOpen = menu.classList.contains('show');
+        if (isOpen) {
+            menu.classList.remove('show');
+            button.classList.remove('active');
+        } else {
+            menu.classList.add('show');
+            button.classList.add('active');
         }
-        
-        // Llamar a la función de aplicar filtros que ya maneja todo
-        if (window.applyStageFilters && typeof window.applyStageFilters === 'function') {
-            window.applyStageFilters();
+    }
+}
+
+// Función para toggle de selección de categoría
+window.toggleCategorySelection = function(categoryId, event) {
+    event.stopPropagation();
+    const checkbox = document.getElementById(`category-${categoryId}`);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        updateCategoryFilter();
+    }
+}
+
+// Función para actualizar el filtro de categorías
+window.updateCategoryFilter = function() {
+    const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+    if (!categoryFilterContainer) return;
+    
+    // Obtener todas las categorías seleccionadas
+    const checkboxes = categoryFilterContainer.querySelectorAll('input[type="checkbox"]:checked');
+    const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
+    
+    // Guardar en el dataset
+    categoryFilterContainer.dataset.selectedCategories = JSON.stringify(selectedCategories);
+    
+    // Actualizar badge
+    const badge = document.getElementById('categoryFilterBadge');
+    if (badge) {
+        if (selectedCategories.length > 0) {
+            badge.textContent = selectedCategories.length;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
         }
-    } catch (e) {
-        console.error('Error en filterStagesByCategory:', e);
+    }
+    
+    // Aplicar filtros
+    if (window.applyStageFilters && typeof window.applyStageFilters === 'function') {
+        window.applyStageFilters();
     }
 }
 
@@ -1156,39 +1236,48 @@ function renderAvailableStages() {
     const hasStages = availableStages.length > 0;
     
     try {
-        if (categoryFilterContainer && typeof createInput === 'function' && hasStages) {
+        if (categoryFilterContainer && hasStages) {
             // Limpiar contenedor primero
             categoryFilterContainer.innerHTML = '';
             
-            // Preparar opciones del select
-            const categoryOptions = [
-                { value: '', text: 'Todas las categorías' },
-                ...STAGE_CATEGORIES.map(cat => ({ value: cat.id, text: cat.name }))
-            ];
+            // Estado de categorías seleccionadas (almacenado en el contenedor)
+            if (!categoryFilterContainer.dataset.selectedCategories) {
+                categoryFilterContainer.dataset.selectedCategories = JSON.stringify([]);
+            }
             
-            // Crear el input select UBITS
-            createInput({
-                containerId: 'stageCategoryFilterContainer',
-                type: 'select',
-                placeholder: 'Todas las categorías',
-                selectOptions: categoryOptions,
-                size: 'md',
-                showLabel: false,
-                value: '', // Valor inicial: todas las categorías
-                onChange: function(value) {
-                    try {
-                        // Guardar el valor en el dataset del input
-                        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
-                        if (categoryInput) {
-                            categoryInput.dataset.selectedValue = value || '';
-                        }
-                        // Aplicar filtros
-                        if (window.filterStagesByCategory) {
-                            window.filterStagesByCategory(value);
-                        }
-                    } catch (e) {
-                        console.error('Error en onChange del filtro:', e);
-                    }
+            // Crear el dropdown de categorías
+            const dropdownHTML = `
+                <div class="category-filter-dropdown">
+                    <button type="button" class="category-filter-button" id="categoryFilterButton" onclick="toggleCategoryDropdown(event)">
+                        <span>Categorías</span>
+                        <span class="category-filter-badge" id="categoryFilterBadge" style="display: none;">0</span>
+                        <i class="far fa-chevron-down"></i>
+                    </button>
+                    <div class="category-filter-dropdown-menu" id="categoryFilterMenu">
+                        ${STAGE_CATEGORIES.map(cat => `
+                            <div class="category-filter-item" onclick="toggleCategorySelection('${cat.id}', event)">
+                                <input type="checkbox" id="category-${cat.id}" value="${cat.id}" onchange="updateCategoryFilter()">
+                                <label class="category-filter-item-label" for="category-${cat.id}">
+                                    <i class="far ${cat.icon}"></i>
+                                    <span>${cat.name}</span>
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            categoryFilterContainer.innerHTML = dropdownHTML;
+            
+            // Cerrar dropdown al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                const dropdown = categoryFilterContainer.querySelector('.category-filter-dropdown');
+                const menu = categoryFilterContainer.querySelector('.category-filter-dropdown-menu');
+                const button = categoryFilterContainer.querySelector('.category-filter-button');
+                
+                if (dropdown && !dropdown.contains(e.target) && menu && menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                    if (button) button.classList.remove('active');
                 }
             });
         } else if (categoryFilterContainer && !hasStages) {
@@ -1404,17 +1493,23 @@ function renderAgentStageCard(stage, index) {
     // Renderizar configuración si el agente tiene config
     let configHTML = '';
     if (agentData.hasConfig && agentData.config) {
-        configHTML = `
-            ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
-            <div class="agent-stage-config" id="agent-config-${stage.id}" style="display: ${configDisplay};">
-                ${Object.entries(agentData.config).map(([key, field]) => {
-                    // Asegurar que el campo tenga todas las propiedades necesarias
-                    if (!field.options && field.type === 'select') {
-                        console.warn('⚠️ Campo select sin opciones:', key, field);
-                    }
-                    const value = stage.config?.[key] ?? field.default;
-                    
-                    if (field.type === 'number') {
+        // Caso especial: Analista psicométrico - NO mostrar configuración desplegable
+        if (stage.agentId === 'psychometric-analyst') {
+            // No mostrar configuración desplegable para analista psicométrico
+            configHTML = '';
+        } else {
+            // Renderizado normal para otros agentes
+            configHTML = `
+                ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
+                <div class="agent-stage-config" id="agent-config-${stage.id}" style="display: ${configDisplay};">
+                    ${Object.entries(agentData.config).map(([key, field]) => {
+                        // Asegurar que el campo tenga todas las propiedades necesarias
+                        if (!field.options && field.type === 'select') {
+                            console.warn('⚠️ Campo select sin opciones:', key, field);
+                        }
+                        const value = stage.config?.[key] ?? field.default;
+                        
+                        if (field.type === 'number') {
                         return `
                             <div class="config-field">
                                 <label class="config-label">
@@ -1502,6 +1597,7 @@ function renderAgentStageCard(stage, index) {
                 }).join('')}
             </div>
         `;
+        }
     }
     
     console.log('🎨 Renderizando card de agente:', {
@@ -1528,7 +1624,12 @@ function renderAgentStageCard(stage, index) {
                         </div>
                     </div>
                     <div class="stage-actions">
-                        ${agentData.hasConfig ? `
+                        ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Gestionar pruebas psicotécnicas">
+                                <i class="far fa-list"></i>
+                                <span>Gestionar pruebas</span>
+                            </button>
+                        ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' ? `
                             <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only ${isExpanded ? 'ubits-button--active' : ''}" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
                                 <i class="far fa-gear" id="chevron-${stage.id}"></i>
                             </button>
@@ -2390,6 +2491,15 @@ function handleStageTemplateDrop(data) {
     // Re-renderizar todo
     renderEditor();
     
+    // Si es analista psicométrico, abrir drawer automáticamente
+    if (agentId === 'psychometric-analyst') {
+        setTimeout(() => {
+            openPsychometricTestsDrawer(newAgentStage.id);
+            // Mostrar vista de creación automáticamente
+            showCreateTestView();
+        }, 300);
+    }
+    
     // Fijar el ancho del board-container después de renderizar
     // Usar doble requestAnimationFrame para asegurar que se ejecute después del render completo
     requestAnimationFrame(() => {
@@ -2436,7 +2546,12 @@ function handleAgentDrop(data) {
     let defaultConfig = {};
     if (agentData.hasConfig && agentData.config) {
         Object.entries(agentData.config).forEach(([key, field]) => {
-            defaultConfig[key] = field.default;
+            if (key === 'tests' && field.type === 'psychometric-tests-manager') {
+                // Para analista psicométrico, inicializar con array vacío
+                defaultConfig[key] = [];
+            } else {
+                defaultConfig[key] = field.default;
+            }
         });
     }
     
@@ -2464,6 +2579,15 @@ function handleAgentDrop(data) {
     
     // Re-renderizar todo
     renderEditor();
+    
+    // Si es analista psicométrico, abrir drawer automáticamente
+    if (id === 'psychometric-analyst') {
+        setTimeout(() => {
+            openPsychometricTestsDrawer(newAgentStage.id);
+            // Mostrar vista de creación automáticamente
+            showCreateTestView();
+        }, 300);
+    }
     
     // Fijar el ancho del board-container después de renderizar
     // Usar doble requestAnimationFrame para asegurar que se ejecute después del render completo
@@ -4247,10 +4371,15 @@ window.addAgentToFlowFromMenu = function(agentId) {
     let defaultConfig = {};
     if (agentData.hasConfig && agentData.config) {
         Object.entries(agentData.config).forEach(([key, field]) => {
-            defaultConfig[key] = field.default;
+            if (key === 'tests' && field.type === 'psychometric-tests-manager') {
+                // Para analista psicométrico, inicializar con array vacío
+                defaultConfig[key] = [];
+            } else {
+                defaultConfig[key] = field.default;
+            }
         });
     }
-    
+
     // Crear nueva etapa tipo 'agent'
     const newAgentStage = {
         id: 'agent-stage-' + Date.now(),
@@ -4285,6 +4414,15 @@ window.addAgentToFlowFromMenu = function(agentId) {
     
     // Re-renderizar todo
     renderEditor();
+    
+    // Si es analista psicométrico, abrir drawer automáticamente
+    if (agentId === 'psychometric-analyst') {
+        setTimeout(() => {
+            openPsychometricTestsDrawer(newAgentStage.id);
+            // Mostrar vista de creación automáticamente
+            showCreateTestView();
+        }, 300);
+    }
     
     // Fijar el ancho del board-container después de renderizar
     // Usar doble requestAnimationFrame para asegurar que se ejecute después del render completo
@@ -4739,20 +4877,24 @@ window.updateAgentStageConfig = function(stageId, configKey, value) {
         showCreateNewVersionModal();
         return;
     }
-    
+
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
-    
+
     // Inicializar config si no existe
     if (!stage.config) {
         stage.config = {};
     }
-    
+
     // Actualizar valor
     const agentData = AGENTS.find(a => a.id === stage.agentId);
     if (agentData && agentData.config && agentData.config[configKey]) {
         const field = agentData.config[configKey];
-        if (field.type === 'number') {
+        
+        // Manejar array de tests para analista psicométrico
+        if (configKey === 'tests' && Array.isArray(value)) {
+            stage.config[configKey] = value;
+        } else if (field.type === 'number') {
             stage.config[configKey] = parseInt(value) || 0;
         } else if (field.type === 'radio') {
             stage.config[configKey] = value;
@@ -5074,6 +5216,697 @@ function createNewVersion() {
     
     // Redirigir al editor de la nueva versión
     window.location.href = `editor-plantillas.html?id=${newVersionTemplate.id}`;
+}
+
+// ========================================
+// GESTIÓN DE PRUEBAS PSICOTÉCNICAS - DRAWER
+// ========================================
+
+let currentPsychometricStageId = null;
+let editingTestId = null;
+let currentDrawerView = 'list'; // 'list', 'create', 'edit'
+
+// Abrir drawer de pruebas psicotécnicas
+function openPsychometricTestsDrawer(stageId) {
+    console.log('🟢 openPsychometricTestsDrawer llamado', { stageId });
+    currentPsychometricStageId = stageId;
+    editingTestId = null;
+    currentDrawerView = 'list';
+    
+    const drawer = document.getElementById('psychometricTestsDrawer');
+    if (drawer) {
+        console.log('  ✅ Activando drawer');
+        drawer.classList.add('active');
+        // Verificar que el drawer esté visible
+        const isActive = drawer.classList.contains('active');
+        const computedDisplay = window.getComputedStyle(drawer).display;
+        console.log('  📊 Drawer estado:', { isActive, computedDisplay });
+        renderPsychometricTestsView();
+    } else {
+        console.log('  ⚠️ Drawer no encontrado');
+    }
+}
+
+// Mostrar vista de lista
+function showListView(event) {
+    console.log('🔵 showListView llamado', { event, currentDrawerView, editingTestId });
+    
+    // Prevenir propagación del evento si existe
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('  ✅ Evento prevenido y detenido');
+    }
+    
+    currentDrawerView = 'list';
+    editingTestId = null;
+    
+    console.log('  📋 Cambiando a vista de lista');
+    
+    renderPsychometricTestsView();
+    
+    // Asegurar que el drawer siga abierto (nunca cerrarlo desde aquí)
+    const drawer = document.getElementById('psychometricTestsDrawer');
+    console.log('  🔍 Drawer encontrado:', !!drawer);
+    if (drawer) {
+        const isActive = drawer.classList.contains('active');
+        console.log('  📊 Drawer activo antes:', isActive);
+        drawer.classList.add('active');
+        const isActiveAfter = drawer.classList.contains('active');
+        console.log('  📊 Drawer activo después:', isActiveAfter);
+    }
+    
+    return false; // Prevenir cualquier acción por defecto
+}
+
+// Mostrar vista de creación
+function showCreateTestView() {
+    console.log('🟢 showCreateTestView llamado');
+    currentDrawerView = 'create';
+    editingTestId = null;
+    renderPsychometricTestsView();
+    
+    // Asegurar que el drawer siga abierto
+    const drawer = document.getElementById('psychometricTestsDrawer');
+    if (drawer) {
+        drawer.classList.add('active');
+    }
+}
+
+// Mostrar vista de edición
+function showEditTestView(testId) {
+    console.log('🟢 showEditTestView llamado', { testId });
+    currentDrawerView = 'edit';
+    editingTestId = testId;
+    renderPsychometricTestsView();
+    
+    // Asegurar que el drawer siga abierto
+    const drawer = document.getElementById('psychometricTestsDrawer');
+    if (drawer) {
+        drawer.classList.add('active');
+    }
+}
+
+// Manejar click en el overlay del drawer
+function handleDrawerOverlayClick(event) {
+    console.log('🟡 handleDrawerOverlayClick llamado', { 
+        target: event.target, 
+        targetClass: event.target.className,
+        isOverlay: event.target.classList.contains('drawer-overlay'),
+        currentTarget: event.currentTarget,
+        relatedTarget: event.relatedTarget,
+        isInContent: event.target.closest('.drawer-content') !== null
+    });
+    
+    // Si el clic es dentro del drawer-content, NO hacer nada y detener propagación
+    if (event.target.closest('.drawer-content')) {
+        console.log('  ✅ Clic dentro de drawer-content - ignorando');
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+    }
+    
+    // Solo cerrar si se hace clic directamente en el overlay (no en contenido)
+    if (event.target.classList.contains('drawer-overlay') || event.target === event.currentTarget) {
+        console.log('  ❌ Clic en overlay - cerrando drawer');
+        event.stopPropagation();
+        event.preventDefault();
+        closePsychometricTestsDrawer();
+        return false;
+    }
+    
+    // Por defecto, detener propagación
+    event.stopPropagation();
+    event.preventDefault();
+    return false;
+}
+
+// Manejar clic en el botón de cerrar del drawer
+function handleDrawerCloseButton(event) {
+    console.log('🟡 handleDrawerCloseButton llamado', { currentDrawerView });
+    event.stopPropagation();
+    event.preventDefault();
+    
+    // Si estamos en la vista de lista, cerrar el drawer
+    if (currentDrawerView === 'list') {
+        console.log('  ❌ En vista de lista - cerrando drawer');
+        closePsychometricTestsDrawer();
+    } else {
+        // Si estamos en creación o edición, volver a la lista
+        console.log('  📋 En vista de creación/edición - volviendo a lista');
+        showListView(event);
+    }
+    
+    return false;
+}
+
+// Cerrar drawer de pruebas psicotécnicas
+function closePsychometricTestsDrawer() {
+    console.log('🔴 closePsychometricTestsDrawer llamado');
+    console.trace('  📍 Stack trace:');
+    
+    const drawer = document.getElementById('psychometricTestsDrawer');
+    if (drawer) {
+        console.log('  ❌ Cerrando drawer');
+        drawer.classList.remove('active');
+    } else {
+        console.log('  ⚠️ Drawer no encontrado');
+    }
+    currentPsychometricStageId = null;
+    editingTestId = null;
+    currentDrawerView = 'list';
+}
+
+// Renderizar vista actual del drawer
+function renderPsychometricTestsView() {
+    console.log('🟣 renderPsychometricTestsView llamado', { 
+        currentDrawerView, 
+        editingTestId, 
+        currentPsychometricStageId 
+    });
+    
+    const listContainer = document.getElementById('psychometricTestsList');
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerFooterActions = document.getElementById('drawerFooterActions');
+    
+    console.log('  🔍 Elementos encontrados:', {
+        listContainer: !!listContainer,
+        drawerTitle: !!drawerTitle,
+        drawerFooterActions: !!drawerFooterActions,
+        currentPsychometricStageId: !!currentPsychometricStageId
+    });
+    
+    if (!listContainer || !currentPsychometricStageId) {
+        console.log('  ⚠️ Faltan elementos requeridos, retornando');
+        return;
+    }
+    
+    // Buscar el stage en el template
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage) return;
+    
+    const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+    if (!agentData) return;
+    
+    const tests = stage.config?.tests || [];
+    
+    // Limpiar contenedor
+    listContainer.innerHTML = '';
+    
+    // Renderizar según la vista actual
+    if (currentDrawerView === 'create') {
+        console.log('  📝 Renderizando vista de CREACIÓN');
+        // Actualizar título
+        if (drawerTitle) drawerTitle.textContent = 'Nueva prueba psicotécnica';
+        
+        // Generar testId único para esta creación
+        const newTestId = 'test-' + Date.now();
+        console.log('  🆔 TestId generado:', newTestId);
+        
+        // Renderizar formulario sin botones
+        listContainer.innerHTML = renderTestForm(null, newTestId);
+        
+        // Renderizar botones en el footer
+        if (drawerFooterActions) {
+            console.log('  🔘 Renderizando botones en footer (creación)');
+            drawerFooterActions.innerHTML = `
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="(function(e){console.log('🟢 Botón Cancelar clickeado'); e.stopPropagation(); e.preventDefault(); showListView(e); return false;})(event)">
+                    <span>Cancelar</span>
+                </button>
+                <button class="ubits-button ubits-button--primary ubits-button--md" onclick="(function(e){console.log('🟢 Botón Guardar clickeado'); e.stopPropagation(); e.preventDefault(); savePsychometricTest('${newTestId}'); return false;})(event)">
+                    <i class="far fa-check"></i>
+                    <span>Guardar</span>
+                </button>
+            `;
+        }
+        
+        setTimeout(() => {
+            initializeTestFormInputs(newTestId);
+        }, 100);
+    } else if (currentDrawerView === 'edit' && editingTestId !== null) {
+        console.log('  ✏️ Renderizando vista de EDICIÓN', { editingTestId });
+        // Actualizar título
+        if (drawerTitle) drawerTitle.textContent = 'Editar prueba psicotécnica';
+        
+        const testToEdit = tests.find(t => t.id === editingTestId);
+        if (testToEdit) {
+            console.log('  ✅ Prueba encontrada para editar');
+            // Renderizar formulario sin botones
+            listContainer.innerHTML = renderTestForm(testToEdit);
+            
+            // Renderizar botones en el footer
+            if (drawerFooterActions) {
+                console.log('  🔘 Renderizando botones en footer (edición)');
+                drawerFooterActions.innerHTML = `
+                    <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="(function(e){console.log('🟢 Botón Cancelar (edición) clickeado'); e.stopPropagation(); e.preventDefault(); showListView(e); return false;})(event)">
+                        <span>Cancelar</span>
+                    </button>
+                    <button class="ubits-button ubits-button--primary ubits-button--md" onclick="(function(e){console.log('🟢 Botón Guardar (edición) clickeado'); e.stopPropagation(); e.preventDefault(); savePsychometricTest('${testToEdit.id}'); return false;})(event)">
+                        <i class="far fa-check"></i>
+                        <span>Guardar</span>
+                    </button>
+                `;
+            } else {
+                if (drawerFooterActions) drawerFooterActions.innerHTML = '';
+            }
+            
+            setTimeout(() => {
+                initializeTestFormInputs(testToEdit.id);
+            }, 200);
+        } else {
+            console.log('  ⚠️ Prueba no encontrada, volviendo a lista');
+            // Si no se encuentra la prueba, volver a lista
+            showListView();
+        }
+    } else {
+        console.log('  📋 Renderizando vista de LISTA');
+        // Vista de lista
+        // Actualizar título
+        if (drawerTitle) drawerTitle.textContent = 'Gestionar pruebas psicotécnicas';
+        
+        // Obtener tests para verificar si hay pruebas
+        const hasTests = tests && tests.length > 0;
+        
+        // Obtener el footer completo para ocultarlo cuando no hay pruebas
+        const drawerFooter = document.querySelector('.drawer-footer');
+        
+        // Renderizar botón de agregar en el footer SOLO si hay pruebas
+        // Si no hay pruebas, el empty state ya tiene su propio botón
+        if (drawerFooterActions) {
+            if (hasTests) {
+                console.log('  🔘 Renderizando botón agregar en footer (lista con pruebas)');
+                drawerFooterActions.innerHTML = `
+                    <button class="ubits-button ubits-button--primary ubits-button--md" onclick="addPsychometricTest()">
+                        <i class="far fa-plus"></i>
+                        <span>Agregar prueba</span>
+                    </button>
+                `;
+                // Mostrar el footer si estaba oculto
+                if (drawerFooter) {
+                    drawerFooter.style.display = 'flex';
+                }
+            } else {
+                console.log('  🔘 Ocultando footer (empty state visible)');
+                drawerFooterActions.innerHTML = '';
+                // Ocultar el footer completo cuando no hay pruebas
+                if (drawerFooter) {
+                    drawerFooter.style.display = 'none';
+                }
+            }
+        }
+        
+        renderTestsList(tests, agentData);
+    }
+    
+    console.log('  ✅ renderPsychometricTestsView completado');
+}
+
+// Renderizar lista de pruebas
+function renderTestsList(tests, agentData) {
+    const listContainer = document.getElementById('psychometricTestsList');
+    if (!listContainer) return;
+    
+    // Si no hay pruebas, mostrar empty state con el mismo estilo que los otros empty states
+    if (tests.length === 0) {
+        listContainer.innerHTML = `
+            <div class="board-empty-state-full">
+                <div class="empty-icon-circle">
+                    <i class="far fa-clipboard-list"></i>
+                </div>
+                <h3 class="empty-title">No hay pruebas psicotécnicas configuradas</h3>
+                <p class="empty-description">Crea tu primera prueba psicotécnica para comenzar a evaluar candidatos con inteligencia artificial.</p>
+                <button class="ubits-button ubits-button--primary ubits-button--md" onclick="addPsychometricTest()">
+                    <i class="far fa-plus"></i>
+                    <span>Agregar prueba</span>
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Renderizar lista de pruebas
+    tests.forEach((test, index) => {
+        const testTypeOption = agentData.testTypes.find(opt => opt.value === test.type);
+        const testLanguageOption = agentData.testLanguages.find(opt => opt.value === test.language);
+        
+        const testItem = document.createElement('div');
+        testItem.className = 'test-item';
+        testItem.innerHTML = `
+            <div class="test-item-header">
+                <div class="test-item-info">
+                    <div class="test-item-title">${testTypeOption ? testTypeOption.text : test.type}</div>
+                    <div class="test-item-subtitle">Idioma: ${testLanguageOption ? testLanguageOption.text : test.language}${test.minScore ? ` • Puntaje mínimo: ${test.minScore} pts` : ''}</div>
+                </div>
+                <div class="test-item-actions">
+                    ${index > 0 ? `
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                                onclick="movePsychometricTestUp('${test.id}')" 
+                                title="Subir">
+                            <i class="far fa-arrow-up"></i>
+                        </button>
+                    ` : ''}
+                    ${index < tests.length - 1 ? `
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                                onclick="movePsychometricTestDown('${test.id}')" 
+                                title="Bajar">
+                            <i class="far fa-arrow-down"></i>
+                        </button>
+                    ` : ''}
+                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                            onclick="showEditTestView('${test.id}')" 
+                            title="Editar">
+                        <i class="far fa-pencil"></i>
+                    </button>
+                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                            onclick="deletePsychometricTest('${test.id}')" 
+                            title="Eliminar"
+                            style="color: var(--ubits-feedback-accent-error);">
+                        <i class="far fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        listContainer.appendChild(testItem);
+    });
+}
+
+// Renderizar formulario de prueba
+function renderTestForm(test = null, testId = null) {
+    const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+    if (!agentData) return '';
+    
+    const finalTestId = testId || (test ? test.id : 'test-' + Date.now());
+    
+    return `
+        <div class="test-form" data-test-id="${finalTestId}">
+            <div class="test-form-fields">
+                <div class="test-form-field">
+                    <label>Tipo de prueba</label>
+                    <div id="test-form-type-${finalTestId}" class="config-input-container"></div>
+                </div>
+                <div class="test-form-field">
+                    <label>Idioma de la prueba</label>
+                    <div id="test-form-language-${finalTestId}" class="config-input-container"></div>
+                </div>
+                <div class="test-form-field">
+                    <label>Puntaje mínimo (opcional)</label>
+                    <div id="test-form-minscore-${finalTestId}" class="config-input-container"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Inicializar inputs del formulario
+function initializeTestFormInputs(testId = null) {
+    if (!currentPsychometricStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage) return;
+    
+    const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+    if (!agentData) return;
+    
+    // Obtener testId del formulario renderizado o del parámetro
+    let finalTestId = testId;
+    if (!finalTestId) {
+        const form = document.querySelector('.test-form');
+        if (form) {
+            finalTestId = form.getAttribute('data-test-id');
+        }
+    }
+    
+    if (!finalTestId) {
+        // Buscar el testId en los IDs de los contenedores
+        const typeContainer = document.querySelector('[id^="test-form-type-"]');
+        if (typeContainer) {
+            finalTestId = typeContainer.id.replace('test-form-type-', '');
+        }
+    }
+    
+    if (!finalTestId) return;
+    
+    // Obtener valores por defecto o del test existente
+    let testType = agentData.testTypes[0].value;
+    let testLanguage = agentData.testLanguages[0].value;
+    let minScore = 0;
+    
+    if (editingTestId && editingTestId === finalTestId) {
+        const test = stage.config?.tests?.find(t => t.id === editingTestId);
+        if (test) {
+            testType = test.type;
+            testLanguage = test.language;
+            minScore = test.minScore || 0;
+        }
+    }
+    
+    // Crear select de tipo de prueba con componente UBITS
+    const typeContainer = document.getElementById(`test-form-type-${finalTestId}`);
+    if (typeContainer && typeof createInput !== 'undefined') {
+        // Limpiar contenedor antes de crear
+        typeContainer.innerHTML = '';
+        
+        createInput({
+            containerId: `test-form-type-${finalTestId}`,
+            type: 'select',
+            label: '',
+            placeholder: 'Selecciona el tipo de prueba...',
+            value: testType,
+            selectOptions: agentData.testTypes.map(opt => ({
+                value: opt.value,
+                text: opt.text
+            }))
+        });
+        
+    }
+    
+    // Crear select de idioma con componente UBITS
+    const languageContainer = document.getElementById(`test-form-language-${finalTestId}`);
+    if (languageContainer && typeof createInput !== 'undefined') {
+        // Limpiar contenedor antes de crear
+        languageContainer.innerHTML = '';
+        
+        createInput({
+            containerId: `test-form-language-${finalTestId}`,
+            type: 'select',
+            label: '',
+            placeholder: 'Selecciona el idioma...',
+            value: testLanguage,
+            selectOptions: agentData.testLanguages.map(opt => ({
+                value: opt.value,
+                text: opt.text
+            }))
+        });
+        
+        // Asegurar que el texto se establezca después de crear el select
+        setTimeout(() => {
+            const input = languageContainer.querySelector('.ubits-input');
+            if (input && testLanguage) {
+                // Buscar el texto correspondiente al valor
+                const option = agentData.testLanguages.find(opt => opt.value === testLanguage);
+                if (option) {
+                    input.value = option.text;
+                    input.dataset.selectedValue = testLanguage;
+                }
+            }
+        }, 500);
+    }
+    
+    // Crear input de puntaje mínimo con componente UBITS
+    const minScoreContainer = document.getElementById(`test-form-minscore-${finalTestId}`);
+    if (minScoreContainer && typeof createInput !== 'undefined') {
+        // Limpiar contenedor antes de crear
+        minScoreContainer.innerHTML = '';
+        
+        createInput({
+            containerId: `test-form-minscore-${finalTestId}`,
+            type: 'number',
+            label: '',
+            placeholder: '0',
+            value: minScore.toString(),
+            helperText: 'Opcional: puntaje mínimo que debe obtener el candidato en esta prueba'
+        });
+    }
+}
+
+// Agregar nueva prueba
+function addPsychometricTest() {
+    showCreateTestView();
+}
+
+// Editar prueba (mantener para compatibilidad)
+function editPsychometricTest(testId) {
+    showEditTestView(testId);
+}
+
+// Guardar prueba
+function savePsychometricTest(testId) {
+    if (!currentPsychometricStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage) return;
+    
+    if (!stage.config) {
+        stage.config = {};
+    }
+    if (!stage.config.tests) {
+        stage.config.tests = [];
+    }
+    
+    // Si no se proporciona testId, intentar obtenerlo del formulario
+    if (!testId || testId === 'undefined') {
+        const form = document.querySelector('.test-form');
+        if (form) {
+            testId = form.getAttribute('data-test-id');
+        }
+        if (!testId) {
+            // Buscar en los contenedores
+            const typeContainer = document.querySelector('[id^="test-form-type-"]');
+            if (typeContainer) {
+                testId = typeContainer.id.replace('test-form-type-', '');
+            }
+        }
+        if (!testId) {
+            testId = 'test-' + Date.now();
+        }
+    }
+    
+    // Obtener valores del formulario (componentes UBITS)
+    // Para selects UBITS, el valor está en dataset.selectedValue
+    const typeContainer = document.getElementById(`test-form-type-${testId}`);
+    const languageContainer = document.getElementById(`test-form-language-${testId}`);
+    const minScoreContainer = document.getElementById(`test-form-minscore-${testId}`);
+    
+    if (!typeContainer || !languageContainer || !minScoreContainer) {
+        showToast('error', 'Error: No se encontraron los campos del formulario');
+        return;
+    }
+    
+    // Obtener input elements de los contenedores
+    const typeInput = typeContainer.querySelector('.ubits-input');
+    const languageInput = languageContainer.querySelector('.ubits-input');
+    const minScoreInput = minScoreContainer.querySelector('.ubits-input');
+    
+    if (!typeInput || !languageInput || !minScoreInput) {
+        showToast('error', 'Error: No se encontraron los inputs UBITS');
+        return;
+    }
+    
+    // Para selects, obtener el valor de dataset.selectedValue, si no existe usar value
+    const testType = typeInput.dataset.selectedValue || typeInput.value || '';
+    const testLanguage = languageInput.dataset.selectedValue || languageInput.value || '';
+    const minScore = parseInt(minScoreInput.value) || 0;
+    
+    // Validar que los valores requeridos estén presentes
+    if (!testType || !testLanguage) {
+        showToast('error', 'Por favor completa todos los campos requeridos');
+        return;
+    }
+    
+    const testData = {
+        id: testId,
+        type: testType,
+        language: testLanguage,
+        minScore: minScore
+    };
+    
+    // Buscar si la prueba ya existe
+    const testIndex = stage.config.tests.findIndex(t => t.id === testId);
+    
+    if (testIndex !== -1) {
+        // Actualizar prueba existente
+        stage.config.tests[testIndex] = testData;
+    } else {
+        // Agregar nueva prueba
+        stage.config.tests.push(testData);
+    }
+    
+    // Guardar cambios
+    updateAgentStageConfig(currentPsychometricStageId, 'tests', stage.config.tests);
+    
+    // Cerrar edición y volver a lista
+    editingTestId = null;
+    currentDrawerView = 'list';
+    
+    // Re-renderizar
+    renderPsychometricTestsView();
+    
+    // Re-renderizar el stage card para actualizar el contador
+    renderStages();
+    
+    showToast('success', 'Prueba guardada correctamente');
+}
+
+// Eliminar prueba
+function deletePsychometricTest(testId) {
+    if (!currentPsychometricStageId) return;
+    
+    if (!confirm('¿Estás seguro de que quieres eliminar esta prueba?')) {
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage || !stage.config || !stage.config.tests) return;
+    
+    const testIndex = stage.config.tests.findIndex(t => t.id === testId);
+    if (testIndex === -1) return;
+    
+    stage.config.tests.splice(testIndex, 1);
+    
+    // Guardar cambios
+    updateAgentStageConfig(currentPsychometricStageId, 'tests', stage.config.tests);
+    
+    // Re-renderizar
+    renderPsychometricTestsView();
+    
+    // Re-renderizar el stage card para actualizar el contador
+    renderStages();
+    
+    showToast('success', 'Prueba eliminada correctamente');
+}
+
+// Mover prueba hacia arriba
+function movePsychometricTestUp(testId) {
+    if (!currentPsychometricStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage || !stage.config || !stage.config.tests) return;
+    
+    const testIndex = stage.config.tests.findIndex(t => t.id === testId);
+    if (testIndex <= 0) return;
+    
+    // Intercambiar posiciones
+    const temp = stage.config.tests[testIndex];
+    stage.config.tests[testIndex] = stage.config.tests[testIndex - 1];
+    stage.config.tests[testIndex - 1] = temp;
+    
+    // Guardar cambios
+    updateAgentStageConfig(currentPsychometricStageId, 'tests', stage.config.tests);
+    
+    // Re-renderizar
+    renderPsychometricTestsView();
+}
+
+// Mover prueba hacia abajo
+function movePsychometricTestDown(testId) {
+    if (!currentPsychometricStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
+    if (!stage || !stage.config || !stage.config.tests) return;
+    
+    const testIndex = stage.config.tests.findIndex(t => t.id === testId);
+    if (testIndex === -1 || testIndex >= stage.config.tests.length - 1) return;
+    
+    // Intercambiar posiciones
+    const temp = stage.config.tests[testIndex];
+    stage.config.tests[testIndex] = stage.config.tests[testIndex + 1];
+    stage.config.tests[testIndex + 1] = temp;
+    
+    // Guardar cambios
+    updateAgentStageConfig(currentPsychometricStageId, 'tests', stage.config.tests);
+    
+    // Re-renderizar
+    renderPsychometricTestsList();
 }
 
 function goBackToDashboard() {
