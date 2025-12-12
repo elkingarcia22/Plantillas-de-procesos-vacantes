@@ -46,6 +46,29 @@ const AGENTS = [
         category: 'entrevistas',
         hasConfig: true,
         config: {
+            interviewType: {
+                label: 'Tipo de entrevista',
+                type: 'radio',
+                default: 'telefonica',
+                options: [
+                    { value: 'telefonica', text: 'Telefónica' },
+                    { value: 'virtual', text: 'Virtual' }
+                ]
+            },
+            voice: {
+                label: 'Voz de Serena',
+                type: 'select',
+                default: 'colombia',
+                options: [
+                    { value: 'peru', text: 'Perú 🇵🇪' },
+                    { value: 'costa-rica', text: 'Costa Rica 🇨🇷' },
+                    { value: 'honduras', text: 'Honduras 🇭🇳' },
+                    { value: 'argentina', text: 'Argentina 🇦🇷' },
+                    { value: 'chile', text: 'Chile 🇨🇱' },
+                    { value: 'mexico', text: 'México 🇲🇽' },
+                    { value: 'colombia', text: 'Colombia 🇨🇴' }
+                ]
+            },
             expirationDays: { 
                 label: 'Días para que expire la entrevista', 
                 type: 'number', 
@@ -60,7 +83,17 @@ const AGENTS = [
                 suffix: 'pts',
                 tooltip: 'Puntaje mínimo que el candidato debe obtener en la entrevista para avanzar a la siguiente etapa del proceso.'
             }
-        }
+        },
+        // Voces disponibles con información adicional
+        voices: [
+            { id: 'peru', name: 'Perú', flag: '🇵🇪', code: 'es-PE' },
+            { id: 'costa-rica', name: 'Costa Rica', flag: '🇨🇷', code: 'es-CR' },
+            { id: 'honduras', name: 'Honduras', flag: '🇭🇳', code: 'es-HN' },
+            { id: 'argentina', name: 'Argentina', flag: '🇦🇷', code: 'es-AR' },
+            { id: 'chile', name: 'Chile', flag: '🇨🇱', code: 'es-CL' },
+            { id: 'mexico', name: 'México', flag: '🇲🇽', code: 'es-MX' },
+            { id: 'colombia', name: 'Colombia', flag: '🇨🇴', code: 'es-CO' }
+        ]
     },
     { 
         id: 'psychometric-analyst', 
@@ -533,10 +566,58 @@ window.updateCategoryFilter = function() {
     const badge = document.getElementById('categoryFilterBadge');
     const button = document.getElementById('categoryFilterButton');
     
+    console.log('🔍 [updateCategoryFilter] Badge encontrado:', badge);
+    console.log('🔍 [updateCategoryFilter] Button encontrado:', button);
+    console.log('🔍 [updateCategoryFilter] Categorías seleccionadas:', selectedCategories.length);
+    
     if (badge && button) {
         if (selectedCategories.length > 0) {
-            badge.textContent = selectedCategories.length;
+            const count = selectedCategories.length;
+            badge.textContent = count;
             badge.style.display = 'inline-flex';
+            
+            // Forzar color blanco directamente en el estilo
+            badge.style.color = '#ffffff';
+            badge.style.background = 'var(--ubits-button-badge)';
+            
+            // Obtener estilos computados
+            const computedStyle = window.getComputedStyle(badge);
+            const computedColor = computedStyle.color;
+            const computedBackground = computedStyle.background;
+            
+            console.log('✅ [updateCategoryFilter] Badge actualizado:', {
+                textContent: badge.textContent,
+                display: badge.style.display,
+                inlineColor: badge.style.color,
+                inlineBackground: badge.style.background,
+                computedColor: computedColor,
+                computedBackground: computedBackground,
+                classes: badge.className,
+                parentElement: badge.parentElement?.tagName,
+                parentClasses: badge.parentElement?.className
+            });
+            
+            // Verificar si el color computado no es blanco
+            if (computedColor !== 'rgb(255, 255, 255)' && computedColor !== '#ffffff') {
+                console.warn('⚠️ [updateCategoryFilter] El color computado NO es blanco:', computedColor);
+                console.warn('⚠️ [updateCategoryFilter] Intentando forzar color blanco con !important...');
+                
+                // Intentar con !important en el estilo
+                badge.setAttribute('style', badge.getAttribute('style') + ' color: #ffffff !important;');
+                
+                // Verificar nuevamente
+                const newComputedColor = window.getComputedStyle(badge).color;
+                console.log('🔍 [updateCategoryFilter] Color después de !important:', newComputedColor);
+            }
+            
+            // Para números de un solo dígito, hacer el badge perfectamente circular
+            if (count < 10) {
+                badge.style.width = '18px';
+                badge.style.padding = '0';
+            } else {
+                badge.style.width = 'auto';
+                badge.style.padding = '0 4px';
+            }
             button.classList.add('has-filters');
             button.classList.add('ubits-button--active');
         } else {
@@ -544,6 +625,8 @@ window.updateCategoryFilter = function() {
             button.classList.remove('has-filters');
             button.classList.remove('ubits-button--active');
         }
+    } else {
+        console.error('❌ [updateCategoryFilter] Badge o button no encontrado');
     }
     
     // Aplicar filtros
@@ -1295,7 +1378,6 @@ function renderAvailableStages() {
                             <label class="category-filter-item" for="category-${cat.id}">
                                 <input type="checkbox" id="category-${cat.id}" value="${cat.id}" onchange="updateCategoryFilter()">
                                 <span class="category-filter-item-label">
-                                    <i class="far ${cat.icon}"></i>
                                     <span>${cat.name}</span>
                                 </span>
                             </label>
@@ -1679,9 +1761,13 @@ function renderAgentStageCard(stage, index) {
                         ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
                             <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Gestionar pruebas psicotécnicas">
                                 <i class="far fa-list"></i>
-                                <span>Gestionar pruebas</span>
+                                <span>Gestionar pruebas (${stage.config?.tests?.length || 0})</span>
                             </button>
-                        ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' ? `
+                        ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
+                                <i class="far fa-gear"></i>
+                            </button>
+                        ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia' ? `
                             <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only ${isExpanded ? 'ubits-button--active' : ''}" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
                                 <i class="far fa-gear" id="chevron-${stage.id}"></i>
                             </button>
@@ -2641,6 +2727,13 @@ function handleAgentDrop(data) {
         }, 300);
     }
     
+    // Si es entrevista Serena, abrir drawer de configuración automáticamente
+    if (id === 'interview-ia') {
+        setTimeout(() => {
+            openSerenaConfigDrawer(newAgentStage.id);
+        }, 300);
+    }
+    
     // Fijar el ancho del board-container después de renderizar
     // Usar doble requestAnimationFrame para asegurar que se ejecute después del render completo
     requestAnimationFrame(() => {
@@ -2715,12 +2808,18 @@ function updateTemplateInfo() {
             templateName.style.color = 'var(--ubits-fg-1-high)';
         }
         
-        // Actualizar estado
+        // Actualizar estado (ocultar si no hay status)
         if (templateStatusBadge) {
-            const status = currentTemplate.status || 'draft';
-            const statusText = status === 'active' ? 'Activa' : 'Borrador';
-            templateStatusBadge.innerHTML = `<span>${statusText}</span>`;
-            templateStatusBadge.className = 'template-status-badge ' + (status === 'active' ? 'active' : 'draft');
+            const status = currentTemplate.status;
+            if (status) {
+                const statusText = status === 'active' ? 'Activa' : 'Borrador';
+                templateStatusBadge.innerHTML = `<span>${statusText}</span>`;
+                templateStatusBadge.className = 'template-status-badge ' + (status === 'active' ? 'active' : 'draft');
+                templateStatusBadge.style.display = 'flex';
+            } else {
+                // Ocultar la etiqueta si no hay status
+                templateStatusBadge.style.display = 'none';
+            }
         }
         
         // Actualizar categoría
@@ -2823,13 +2922,22 @@ function handleAgentDragEnd(e) {
 function handleConfigInfoHover(e) {
     const btn = e.currentTarget;
     const tooltip = document.getElementById('tooltip');
-    if (!tooltip) return;
+    if (!tooltip) {
+        console.warn('⚠️ Tooltip element not found in handleConfigInfoHover');
+        return;
+    }
     
     const tooltipText = btn.getAttribute('data-tooltip');
-    if (!tooltipText) return;
+    if (!tooltipText) {
+        console.warn('⚠️ No tooltip text found on button');
+        return;
+    }
     
     // Agregar clase específica para tooltip de configuración
     tooltip.classList.add('config-info-tooltip');
+    
+    // Asegurar que el tooltip esté por encima del drawer (z-index: 10001)
+    tooltip.style.zIndex = '10002';
     
     // Crear contenido del tooltip
     tooltip.innerHTML = `
@@ -2890,6 +2998,7 @@ function handleConfigInfoLeave(e) {
     if (!tooltip) return;
     
     tooltip.style.opacity = '0';
+    tooltip.style.zIndex = '10000'; // Restaurar z-index por defecto
     tooltip.classList.remove('config-info-tooltip');
 }
 
@@ -4270,6 +4379,56 @@ function saveTemplate() {
     }
 }
 
+// Terminar plantilla (quitar etiqueta de borrador)
+function finishTemplate() {
+    console.log('finishTemplate() called');
+    
+    // Verificar que currentTemplate existe
+    if (!currentTemplate) {
+        console.log('No currentTemplate found');
+        alert('Error: No hay plantilla para terminar');
+        return;
+    }
+    
+    // Guardar primero los cambios
+    saveTemplate();
+    
+    // Eliminar el status (quitar etiqueta de borrador)
+    delete currentTemplate.status;
+    
+    // Actualizar fecha de modificación
+    currentTemplate.lastModified = new Date().toISOString().split('T')[0];
+    
+    // Guardar en localStorage
+    const stored = localStorage.getItem('templates');
+    let templates = stored ? JSON.parse(stored) : [];
+    
+    const existingIndex = templates.findIndex(t => t.id === currentTemplate.id);
+    if (existingIndex !== -1) {
+        templates[existingIndex] = currentTemplate;
+    } else {
+        templates.unshift(currentTemplate);
+    }
+    
+    localStorage.setItem('templates', JSON.stringify(templates));
+    console.log('Template finished and saved to localStorage');
+    
+    // Marcar que no hay cambios sin guardar
+    markAsSaved();
+    
+    // Mostrar toast de éxito
+    if (typeof showToast === 'function') {
+        showToast('success', 'Plantilla terminada exitosamente');
+    } else {
+        alert('Plantilla terminada exitosamente');
+    }
+    
+    // Redirigir al home después de un breve delay para que se vea el toast
+    setTimeout(() => {
+        goToDashboard();
+    }, 500);
+}
+
 // ========================================
 // MANEJO DE CAMBIOS SIN GUARDAR
 // ========================================
@@ -4473,6 +4632,13 @@ window.addAgentToFlowFromMenu = function(agentId) {
             openPsychometricTestsDrawer(newAgentStage.id);
             // Mostrar vista de creación automáticamente
             showCreateTestView();
+        }, 300);
+    }
+    
+    // Si es entrevista Serena, abrir drawer de configuración automáticamente
+    if (agentId === 'interview-ia') {
+        setTimeout(() => {
+            openSerenaConfigDrawer(newAgentStage.id);
         }, 300);
     }
     
@@ -5466,6 +5632,9 @@ function renderPsychometricTestsView() {
     listContainer.innerHTML = '';
     
     // Renderizar según la vista actual
+    // Obtener el footer completo para controlar su visibilidad
+    const drawerFooter = document.querySelector('.drawer-footer');
+    
     if (currentDrawerView === 'create') {
         console.log('  📝 Renderizando vista de CREACIÓN');
         // Actualizar título
@@ -5477,6 +5646,11 @@ function renderPsychometricTestsView() {
         
         // Renderizar formulario sin botones
         listContainer.innerHTML = renderTestForm(null, newTestId);
+        
+        // Asegurar que el footer esté visible en creación
+        if (drawerFooter) {
+            drawerFooter.style.display = 'flex';
+        }
         
         // Renderizar botones en el footer
         if (drawerFooterActions) {
@@ -5506,6 +5680,11 @@ function renderPsychometricTestsView() {
             // Renderizar formulario sin botones
             listContainer.innerHTML = renderTestForm(testToEdit);
             
+            // Asegurar que el footer esté visible en edición
+            if (drawerFooter) {
+                drawerFooter.style.display = 'flex';
+            }
+            
             // Renderizar botones en el footer
             if (drawerFooterActions) {
                 console.log('  🔘 Renderizando botones en footer (edición)');
@@ -5518,8 +5697,6 @@ function renderPsychometricTestsView() {
                         <span>Guardar</span>
                     </button>
                 `;
-            } else {
-                if (drawerFooterActions) drawerFooterActions.innerHTML = '';
             }
             
             setTimeout(() => {
@@ -5539,9 +5716,6 @@ function renderPsychometricTestsView() {
         // Obtener tests para verificar si hay pruebas
         const hasTests = tests && tests.length > 0;
         
-        // Obtener el footer completo para ocultarlo cuando no hay pruebas
-        const drawerFooter = document.querySelector('.drawer-footer');
-        
         // Renderizar botón de agregar en el footer SOLO si hay pruebas
         // Si no hay pruebas, el empty state ya tiene su propio botón
         if (drawerFooterActions) {
@@ -5553,14 +5727,14 @@ function renderPsychometricTestsView() {
                         <span>Agregar prueba</span>
                     </button>
                 `;
-                // Mostrar el footer si estaba oculto
+                // Mostrar el footer cuando hay pruebas
                 if (drawerFooter) {
                     drawerFooter.style.display = 'flex';
                 }
             } else {
                 console.log('  🔘 Ocultando footer (empty state visible)');
                 drawerFooterActions.innerHTML = '';
-                // Ocultar el footer completo cuando no hay pruebas
+                // Ocultar el footer completo SOLO cuando no hay pruebas (empty state)
                 if (drawerFooter) {
                     drawerFooter.style.display = 'none';
                 }
@@ -5893,10 +6067,6 @@ function savePsychometricTest(testId) {
 function deletePsychometricTest(testId) {
     if (!currentPsychometricStageId) return;
     
-    if (!confirm('¿Estás seguro de que quieres eliminar esta prueba?')) {
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === currentPsychometricStageId);
     if (!stage || !stage.config || !stage.config.tests) return;
     
@@ -5959,6 +6129,575 @@ function movePsychometricTestDown(testId) {
     
     // Re-renderizar
     renderPsychometricTestsList();
+}
+
+// ========================================
+// GESTIÓN DE CONFIGURACIÓN SERENA AI - DRAWER
+// ========================================
+
+let currentSerenaStageId = null;
+
+// Abrir drawer de configuración de Serena
+function openSerenaConfigDrawer(stageId) {
+    console.log('🟢 openSerenaConfigDrawer llamado', { stageId });
+    currentSerenaStageId = stageId;
+    
+    const drawer = document.getElementById('serenaConfigDrawer');
+    if (drawer) {
+        drawer.classList.add('active');
+        renderSerenaConfigView();
+    }
+}
+
+// Cerrar drawer de configuración de Serena
+function closeSerenaConfigDrawer() {
+    console.log('🔴 closeSerenaConfigDrawer llamado');
+    const drawer = document.getElementById('serenaConfigDrawer');
+    if (drawer) {
+        drawer.classList.remove('active');
+    }
+    currentSerenaStageId = null;
+}
+
+// Manejar click en el overlay del drawer de Serena
+function handleSerenaDrawerOverlayClick(event) {
+    if (event.target.closest('.drawer-content')) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+    }
+    closeSerenaConfigDrawer();
+}
+
+// Renderizar vista de configuración de Serena
+function renderSerenaConfigView() {
+    if (!currentSerenaStageId) return;
+    
+    const contentContainer = document.getElementById('serenaConfigContent');
+    const footerActions = document.getElementById('serenaDrawerFooterActions');
+    
+    if (!contentContainer) return;
+    
+    // Buscar el stage en el template
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentSerenaStageId);
+    if (!stage) return;
+    
+    const agentData = AGENTS.find(a => a.id === 'interview-ia');
+    if (!agentData) return;
+    
+    // Obtener valores actuales
+    const interviewType = stage.config?.interviewType || agentData.config.interviewType.default;
+    const voice = stage.config?.voice || agentData.config.voice.default;
+    const expirationDays = stage.config?.expirationDays ?? agentData.config.expirationDays.default;
+    const minScore = stage.config?.minScore ?? agentData.config.minScore.default;
+    
+    // Renderizar contenido
+    contentContainer.innerHTML = `
+        <!-- Sección: Tipo de entrevista -->
+        <div class="serena-section">
+            <h4 class="serena-section-title">Tipo de entrevista</h4>
+            <p class="serena-section-description">Elige cómo prefieres que Serena interactúe con tus candidatos:</p>
+            <div class="interview-type-cards">
+                <div class="interview-type-card ${interviewType === 'telefonica' ? 'selected' : ''}" 
+                     onclick="selectInterviewType('telefonica')">
+                    <label class="config-radio-label" onclick="event.stopPropagation();">
+                        <input 
+                            type="radio" 
+                            name="serena-interview-type-${currentSerenaStageId}"
+                            value="telefonica"
+                            ${interviewType === 'telefonica' ? 'checked' : ''}
+                            onchange="selectInterviewType('telefonica')"
+                        >
+                        <span></span>
+                    </label>
+                    <div class="interview-type-card-content">
+                        <i class="far fa-phone interview-type-card-icon"></i>
+                        <span class="interview-type-card-label">Telefónica</span>
+                    </div>
+                </div>
+                <div class="interview-type-card ${interviewType === 'virtual' ? 'selected' : ''}" 
+                     onclick="selectInterviewType('virtual')">
+                    <label class="config-radio-label" onclick="event.stopPropagation();">
+                        <input 
+                            type="radio" 
+                            name="serena-interview-type-${currentSerenaStageId}"
+                            value="virtual"
+                            ${interviewType === 'virtual' ? 'checked' : ''}
+                            onchange="selectInterviewType('virtual')"
+                        >
+                        <span></span>
+                    </label>
+                    <div class="interview-type-card-content">
+                        <i class="far fa-laptop interview-type-card-icon"></i>
+                        <span class="interview-type-card-label">Virtual</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección: Voces de Serena -->
+        <div class="serena-section">
+            <h4 class="serena-section-title">Voz de Serena</h4>
+            <p class="serena-section-description">Selecciona la voz que utilizará Serena durante la entrevista:</p>
+            <div id="serena-voice-select-container"></div>
+            <div class="serena-voice-preview" id="serena-voice-preview" style="display: none;">
+                <div class="serena-voice-preview-icon-wrapper">
+                    <div class="serena-voice-waves">
+                        <div class="serena-voice-wave"></div>
+                        <div class="serena-voice-wave"></div>
+                        <div class="serena-voice-wave"></div>
+                        <div class="serena-voice-wave"></div>
+                        <div class="serena-voice-wave"></div>
+                    </div>
+                    <div class="serena-voice-preview-icon">
+                        <i class="far fa-waveform"></i>
+                    </div>
+                </div>
+                <div class="serena-voice-preview-info">
+                    <div class="serena-voice-preview-name">
+                        <span id="serena-voice-preview-name">-</span>
+                        <span class="serena-voice-preview-flag" id="serena-voice-preview-flag"></span>
+                    </div>
+                    <div class="serena-voice-preview-hint">Haz clic en el botón para escuchar una muestra de esta voz</div>
+                </div>
+                <div class="serena-voice-preview-controls">
+                    <button class="ubits-button ubits-button--primary ubits-button--md ubits-button--icon-only" id="serena-voice-preview-play-btn" onclick="toggleSerenaVoicePreview()" title="Reproducir/Pausar voz">
+                        <i class="far fa-play" id="serena-voice-preview-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección: Configuración adicional -->
+        <div class="serena-section">
+            <h4 class="serena-section-title">Configuración adicional</h4>
+            <div class="serena-config-fields">
+                <div class="serena-config-field">
+                    <div class="serena-config-field-label-wrapper">
+                        <label class="serena-config-field-label">Días para que expire la entrevista</label>
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only config-info-btn" data-tooltip="Cantidad de días que el candidato tiene para completar la entrevista desde que recibe la invitación. Si no responde dentro de ese plazo, la entrevista vence y ya no podrá realizarla." title="Información">
+                            <i class="far fa-info-circle"></i>
+                        </button>
+                    </div>
+                    <div id="serena-expiration-days-container"></div>
+                </div>
+                <div class="serena-config-field">
+                    <div class="serena-config-field-label-wrapper">
+                        <label class="serena-config-field-label">Puntaje mínimo de la entrevista</label>
+                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only config-info-btn" data-tooltip="Puntaje mínimo que el candidato debe obtener en la entrevista para avanzar a la siguiente etapa del proceso." title="Información">
+                            <i class="far fa-info-circle"></i>
+                        </button>
+                    </div>
+                    <div id="serena-min-score-container"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Renderizar botones en el footer
+    if (footerActions) {
+        footerActions.innerHTML = `
+            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="closeSerenaConfigDrawer(); return false;">
+                <span>Cancelar</span>
+            </button>
+            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="saveSerenaConfig(); return false;">
+                <i class="far fa-save"></i>
+                <span>Guardar</span>
+            </button>
+            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="finishTemplate(); return false;">
+                <i class="far fa-check-circle"></i>
+                <span>Terminar</span>
+            </button>
+        `;
+    }
+    
+    // Inicializar inputs UBITS
+    setTimeout(() => {
+        // Select de voz de Serena
+        const voiceSelectContainer = document.getElementById('serena-voice-select-container');
+        if (voiceSelectContainer) {
+            createInput({
+                containerId: 'serena-voice-select-container',
+                type: 'select',
+                label: '',
+                placeholder: 'Selecciona una voz...',
+                selectOptions: agentData.voices.map(v => ({
+                    value: v.id,
+                    text: `${v.flag} ${v.name}`
+                })),
+                value: voice
+            });
+            
+            // Agregar listener para actualizar preview cuando cambie la selección
+            setTimeout(() => {
+                const voiceSelectInput = voiceSelectContainer.querySelector('input');
+                if (voiceSelectInput) {
+                    // Usar MutationObserver para detectar cambios en dataset.selectedValue
+                    const observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'data-selected-value') {
+                                const newValue = voiceSelectInput.dataset.selectedValue || voiceSelectInput.value;
+                                if (newValue) {
+                                    updateSerenaVoicePreview(newValue);
+                                }
+                            }
+                        });
+                    });
+                    
+                    observer.observe(voiceSelectInput, {
+                        attributes: true,
+                        attributeFilter: ['data-selected-value']
+                    });
+                    
+                    // También escuchar clicks en el dropdown
+                    voiceSelectContainer.addEventListener('click', function(e) {
+                        setTimeout(() => {
+                            const newValue = voiceSelectInput.dataset.selectedValue || voiceSelectInput.value;
+                            if (newValue) {
+                                updateSerenaVoicePreview(newValue);
+                            }
+                        }, 100);
+                    });
+                }
+            }, 300);
+        }
+        
+        // Actualizar preview inicial
+        updateSerenaVoicePreview(voice);
+        
+        // Input de días de expiración
+        const expirationContainer = document.getElementById('serena-expiration-days-container');
+        if (expirationContainer) {
+            createInput({
+                containerId: 'serena-expiration-days-container',
+                type: 'number',
+                placeholder: '0',
+                value: expirationDays,
+                min: 0
+            });
+        }
+        
+        // Input de puntaje mínimo
+        const minScoreContainer = document.getElementById('serena-min-score-container');
+        if (minScoreContainer) {
+            createInput({
+                containerId: 'serena-min-score-container',
+                type: 'number',
+                placeholder: '0',
+                value: minScore,
+                min: 0
+            });
+        }
+        
+        // Agregar event listeners para tooltips de información de configuración
+        const contentContainer = document.getElementById('serenaConfigContent');
+        
+        if (contentContainer) {
+            const infoButtons = contentContainer.querySelectorAll('.config-info-btn');
+            infoButtons.forEach(btn => {
+                // Agregar listeners
+                btn.addEventListener('mouseenter', handleConfigInfoHover);
+                btn.addEventListener('mouseleave', handleConfigInfoLeave);
+            });
+        }
+    }, 300);
+}
+
+// Seleccionar tipo de entrevista
+function selectInterviewType(type) {
+    if (!currentSerenaStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentSerenaStageId);
+    if (!stage) return;
+    
+    if (!stage.config) stage.config = {};
+    stage.config.interviewType = type;
+    
+    // Re-renderizar para actualizar selección visual
+    renderSerenaConfigView();
+}
+
+// Actualizar preview de voz de Serena
+function updateSerenaVoicePreview(voiceId) {
+    if (!voiceId) return;
+    
+    // Detener reproducción si está activa
+    if (serenaVoicePlaying) {
+        stopSerenaVoicePreview();
+    }
+    
+    const agentData = AGENTS.find(a => a.id === 'interview-ia');
+    if (!agentData) return;
+    
+    const voiceOption = agentData.voices.find(v => v.id === voiceId);
+    if (!voiceOption) return;
+    
+    const preview = document.getElementById('serena-voice-preview');
+    const previewName = document.getElementById('serena-voice-preview-name');
+    const previewFlag = document.getElementById('serena-voice-preview-flag');
+    
+    if (preview && previewName && previewFlag) {
+        previewName.textContent = voiceOption.name;
+        previewFlag.textContent = voiceOption.flag;
+        preview.style.display = 'flex';
+        
+        // Actualizar el valor en el stage
+        if (currentSerenaStageId) {
+            const stage = currentTemplate.realContent.stages.find(s => s.id === currentSerenaStageId);
+            if (stage) {
+                if (!stage.config) stage.config = {};
+                stage.config.voice = voiceId;
+            }
+        }
+    }
+}
+
+// Estado de reproducción de voz
+let serenaVoicePlaying = false;
+let serenaVoiceTimeout = null;
+
+// Toggle play/pause del preview de voz de Serena
+function toggleSerenaVoicePreview() {
+    if (!currentSerenaStageId) return;
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentSerenaStageId);
+    if (!stage) return;
+    
+    const voiceId = stage.config?.voice;
+    if (!voiceId) {
+        showToast('warning', 'Primero selecciona una voz');
+        return;
+    }
+    
+    const agentData = AGENTS.find(a => a.id === 'interview-ia');
+    if (!agentData) return;
+    
+    const voiceOption = agentData.voices.find(v => v.id === voiceId);
+    if (!voiceOption) return;
+    
+    const preview = document.getElementById('serena-voice-preview');
+    const playButton = document.getElementById('serena-voice-preview-play-btn');
+    
+    if (!preview || !playButton) return;
+    
+    // Toggle estado de reproducción
+    serenaVoicePlaying = !serenaVoicePlaying;
+    
+    // Obtener el icono y cambiar su clase
+    const icon = document.getElementById('serena-voice-preview-icon');
+    
+    if (serenaVoicePlaying) {
+        // Iniciar reproducción
+        preview.classList.add('playing');
+        playButton.classList.add('playing');
+        
+        // Cambiar icono a pausa
+        if (icon) {
+            icon.classList.remove('fa-play');
+            icon.classList.add('fa-pause');
+        }
+        
+        console.log('🎵 Reproduciendo voz:', voiceId, voiceOption.name);
+        
+        // Simular reproducción por 5 segundos (aquí se conectaría con el audio real)
+        serenaVoiceTimeout = setTimeout(() => {
+            stopSerenaVoicePreview();
+        }, 5000);
+        
+        showToast('info', `Reproduciendo voz de ${voiceOption.name}...`);
+    } else {
+        // Pausar reproducción
+        stopSerenaVoicePreview();
+    }
+}
+
+// Detener reproducción de voz
+function stopSerenaVoicePreview() {
+    const preview = document.getElementById('serena-voice-preview');
+    const playButton = document.getElementById('serena-voice-preview-play-btn');
+    const icon = document.getElementById('serena-voice-preview-icon');
+    
+    if (preview) {
+        preview.classList.remove('playing');
+    }
+    
+    if (playButton) {
+        playButton.classList.remove('playing');
+    }
+    
+    // Cambiar icono a play
+    if (icon) {
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+    }
+    
+    if (serenaVoiceTimeout) {
+        clearTimeout(serenaVoiceTimeout);
+        serenaVoiceTimeout = null;
+    }
+    
+    serenaVoicePlaying = false;
+}
+
+// Guardar configuración de Serena
+function saveSerenaConfig() {
+    console.log('💾 saveSerenaConfig llamado', { currentSerenaStageId });
+    
+    if (!currentSerenaStageId) {
+        showToast('error', 'Error: No se encontró el stage ID');
+        console.error('❌ currentSerenaStageId es null o undefined');
+        return;
+    }
+    
+    const stage = currentTemplate.realContent.stages.find(s => s.id === currentSerenaStageId);
+    if (!stage) {
+        showToast('error', 'Error: No se encontró el stage');
+        console.error('❌ Stage no encontrado con ID:', currentSerenaStageId);
+        return;
+    }
+    
+    if (!stage.config) stage.config = {};
+    
+    // Obtener valor del select de voz (componente UBITS)
+    const voiceContainer = document.getElementById('serena-voice-select-container');
+    console.log('🔍 Buscando contenedor de voz:', voiceContainer);
+    
+    if (!voiceContainer) {
+        showToast('error', 'Error: No se encontró el selector de voz');
+        console.error('❌ Contenedor de voz no encontrado');
+        return;
+    }
+    
+    // Buscar el input de diferentes formas
+    let voiceInput = voiceContainer.querySelector('input.ubits-input');
+    if (!voiceInput) {
+        voiceInput = voiceContainer.querySelector('.ubits-input');
+    }
+    if (!voiceInput) {
+        voiceInput = voiceContainer.querySelector('input');
+    }
+    
+    console.log('🔍 Input de voz encontrado:', voiceInput);
+    console.log('🔍 Contenedor HTML:', voiceContainer.innerHTML.substring(0, 200));
+    
+    if (voiceInput) {
+        // Para selects UBITS, el valor está en dataset.selectedValue
+        const selectedVoice = voiceInput.dataset.selectedValue || voiceInput.value || '';
+        console.log('🔍 Valor de voz:', {
+            datasetSelectedValue: voiceInput.dataset.selectedValue,
+            inputValue: voiceInput.value,
+            finalValue: selectedVoice
+        });
+        
+        if (selectedVoice) {
+            stage.config.voice = selectedVoice;
+            console.log('✅ Voz guardada:', selectedVoice);
+        } else {
+            console.warn('⚠️ No se encontró valor de voz, usando valor por defecto');
+            // Usar valor por defecto si no hay selección
+            const agentData = AGENTS.find(a => a.id === 'interview-ia');
+            if (agentData && agentData.config.voice) {
+                stage.config.voice = agentData.config.voice.default;
+            }
+        }
+    } else {
+        console.error('❌ No se encontró input de voz en el contenedor');
+        showToast('error', 'Error: No se encontró el selector de voz');
+        return;
+    }
+    
+    // Obtener valores de los inputs UBITS numéricos
+    const expirationContainer = document.getElementById('serena-expiration-days-container');
+    const minScoreContainer = document.getElementById('serena-min-score-container');
+    
+    console.log('🔍 Contenedores encontrados:', {
+        expiration: !!expirationContainer,
+        minScore: !!minScoreContainer
+    });
+    
+    if (expirationContainer) {
+        let expirationInput = expirationContainer.querySelector('input.ubits-input');
+        if (!expirationInput) {
+            expirationInput = expirationContainer.querySelector('.ubits-input');
+        }
+        if (!expirationInput) {
+            expirationInput = expirationContainer.querySelector('input');
+        }
+        
+        if (expirationInput) {
+            stage.config.expirationDays = parseFloat(expirationInput.value) || 0;
+            console.log('✅ Días de expiración guardados:', stage.config.expirationDays);
+        } else {
+            console.warn('⚠️ No se encontró input de expiración, usando 0');
+            stage.config.expirationDays = 0;
+        }
+    } else {
+        console.warn('⚠️ Contenedor de expiración no encontrado, usando 0');
+        stage.config.expirationDays = 0;
+    }
+    
+    if (minScoreContainer) {
+        let minScoreInput = minScoreContainer.querySelector('input.ubits-input');
+        if (!minScoreInput) {
+            minScoreInput = minScoreContainer.querySelector('.ubits-input');
+        }
+        if (!minScoreInput) {
+            minScoreInput = minScoreContainer.querySelector('input');
+        }
+        
+        if (minScoreInput) {
+            stage.config.minScore = parseFloat(minScoreInput.value) || 0;
+            console.log('✅ Puntaje mínimo guardado:', stage.config.minScore);
+        } else {
+            console.warn('⚠️ No se encontró input de puntaje mínimo, usando 0');
+            stage.config.minScore = 0;
+        }
+    } else {
+        console.warn('⚠️ Contenedor de puntaje mínimo no encontrado, usando 0');
+        stage.config.minScore = 0;
+    }
+    
+    // El tipo de entrevista ya se guarda automáticamente cuando se selecciona
+    // Verificar que esté presente
+    if (!stage.config.interviewType) {
+        console.warn('⚠️ No se encontró tipo de entrevista, usando valor por defecto');
+        const agentData = AGENTS.find(a => a.id === 'interview-ia');
+        if (agentData && agentData.config.interviewType) {
+            stage.config.interviewType = agentData.config.interviewType.default;
+        }
+    }
+    
+    console.log('📋 Configuración final guardada:', stage.config);
+    
+    // Guardar cambios directamente en el stage (más eficiente que llamar updateAgentStageConfig múltiples veces)
+    // La función updateAgentStageConfig verifica si la plantilla está activa y muestra modal,
+    // pero nosotros ya tenemos el stage, así que actualizamos directamente
+    
+    // Verificar si la plantilla está activa
+    if (currentTemplate && currentTemplate.status === 'active') {
+        showCreateNewVersionModal();
+        closeSerenaConfigDrawer();
+        return;
+    }
+    
+    // Actualizar directamente en el stage (ya lo hicimos arriba, pero asegurémonos)
+    stage.config.interviewType = stage.config.interviewType || 'telefonica';
+    stage.config.voice = stage.config.voice || 'colombia';
+    stage.config.expirationDays = stage.config.expirationDays || 0;
+    stage.config.minScore = stage.config.minScore || 0;
+    
+    console.log('✅ Configuración actualizada en stage:', stage.config);
+    
+    // Marcar como cambios sin guardar
+    markAsUnsaved();
+    
+    // Actualizar la vista del board (re-renderizar las stages)
+    renderStages();
+    
+    // Cerrar drawer
+    closeSerenaConfigDrawer();
+    
+    showToast('success', 'Configuración de Serena guardada correctamente');
 }
 
 function goBackToDashboard() {

@@ -100,6 +100,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 16px;
+            min-height: 400px;
+            align-items: center;
         }
 
         /* Template card usando estructura UBITS */
@@ -154,8 +156,26 @@
 
         .template-status.draft {
             background: var(--ubits-feedback-bg-info-subtle);
-            color: var(--ubits-fg-info-subtle-static-default);
+            color: #20335f;
             border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        .template-status.draft span {
+            color: #20335f !important;
+        }
+        
+        [data-theme="dark"] .template-status.draft {
+            background: #3B3B70;
+            color: #E0E0E0;
+            border: 1.5px solid #C0C0F0;
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
+        }
+        
+        [data-theme="dark"] .template-status.draft span {
+            color: #E0E0E0 !important;
+            font-weight: 500;
         }
 
         .status-dot {
@@ -264,40 +284,49 @@
         }
 
         /* Empty states */
-        .empty-state {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 48px;
-            padding: 48px;
-            background: var(--ubits-bg-1);
-            border: 1px solid var(--ubits-border-1);
-            border-radius: 8px;
-            text-align: left;
-            grid-column: 1 / -1;
-        }
-
-        .empty-state img {
-            width: 200px;
-            height: auto;
-            flex-shrink: 0;
-        }
-
-        .empty-state-content {
-            flex: 1;
+        .board-empty-state-full {
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: center;
-            gap: 16px;
-            align-items: flex-start;
+            padding: 60px 20px;
+            text-align: center;
+            grid-column: 1 / -1;
+            min-height: 400px;
         }
 
-        .empty-state h1 {
-            margin: 0;
+        .empty-icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
         }
 
-        .empty-state p {
-            margin: 0;
+        .empty-icon-circle i {
+            font-size: 32px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .empty-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .empty-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+            max-width: 320px;
         }
 
         /* No results state */
@@ -344,27 +373,27 @@
         }
 
         @media (max-width: 768px) {
-            .empty-state {
-                flex-direction: column;
-                text-align: center;
-                gap: 24px;
-                padding: 32px 24px;
+            .board-empty-state-full {
+                padding: 40px 20px;
             }
 
-            .empty-state-content {
-                align-items: center;
+            .empty-icon-circle {
+                width: 64px;
+                height: 64px;
+                margin-bottom: 20px;
             }
 
-            .empty-state img {
-                width: 150px;
+            .empty-icon-circle i {
+                font-size: 24px;
             }
 
-            .empty-state h1 {
-                font-size: 20px;
+            .empty-title {
+                font-size: 18px;
             }
 
-            .empty-state p {
-                font-size: 14px !important;
+            .empty-description {
+                font-size: 13px;
+                max-width: 100%;
             }
         }
 
@@ -439,7 +468,7 @@
                 <div class="dashboard-plantillas">
                     <!-- Header del dashboard -->
                     <div class="dashboard-header">
-                        <h1 class="dashboard-title">Plantillas de flujos</h1>
+                        <h1 class="dashboard-title">Plantillas de flujos de candidatos</h1>
                         <button class="ubits-button ubits-button--primary ubits-button--md" onclick="openCreateTemplateModal()">
                             <i class="far fa-plus"></i>
                             <span>Crear plantilla</span>

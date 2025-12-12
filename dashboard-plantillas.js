@@ -223,12 +223,17 @@ function applySorting() {
 function renderTemplates() {
     const grid = document.getElementById('templatesGrid');
     const controls = document.querySelector('.templates-controls');
+    const createButton = document.querySelector('.dashboard-header button[onclick*="openCreateTemplateModal"]');
     
     if (filteredTemplates.length === 0) {
         grid.innerHTML = getEmptyStateHTML();
         // Ocultar controles cuando no hay plantillas
         if (controls) {
             controls.style.display = 'none';
+        }
+        // Ocultar botón "Crear plantilla" del header cuando no hay plantillas
+        if (createButton) {
+            createButton.style.display = 'none';
         }
         return;
     }
@@ -240,14 +245,21 @@ function renderTemplates() {
         controls.style.display = 'flex';
     }
     
+    // Mostrar botón "Crear plantilla" del header cuando hay plantillas
+    if (createButton) {
+        createButton.style.display = 'flex';
+    }
+    
     // Agregar event listeners a los botones
     addTemplateCardEventListeners();
 }
 
 function createTemplateCardHTML(template) {
-    const statusClass = template.status === 'active' ? 'active' : 'draft';
-    const statusText = template.status === 'active' ? 'Activa' : 'Borrador';
-    const statusColor = template.status === 'active' ? '#2D5A2D' : 'var(--ubits-fg-info-subtle-static-default)';
+    // Determinar status class y text (solo si hay status)
+    const hasStatus = template.status !== undefined && template.status !== null;
+    const statusClass = hasStatus ? (template.status === 'active' ? 'active' : 'draft') : '';
+    const statusText = hasStatus ? (template.status === 'active' ? 'Activa' : 'Borrador') : '';
+    const statusColor = hasStatus ? (template.status === 'active' ? '#2D5A2D' : 'var(--ubits-fg-info-subtle-static-default)') : '';
     
     // Mapear categoría técnica a texto legible
     const categoryMap = {
@@ -265,20 +277,22 @@ function createTemplateCardHTML(template) {
     const categoryText = categoryMap[template.category] || template.category;
     
     return `
-        <div class="template-card ${statusClass}" data-template-id="${template.id}">
+        <div class="template-card${statusClass ? ' ' + statusClass : ''}" data-template-id="${template.id}">
             <div class="template-header">
+                ${hasStatus ? `
                 <div class="template-status ${statusClass}">
-                    <div class="status-dot"></div>
                     <span>${statusText}</span>
                 </div>
+                ` : ''}
                 <div class="template-actions">
-                    ${template.status === 'active' ? 
+                    ${hasStatus && template.status === 'active' ? 
                         `<button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="convertToDraft('${template.id}')" title="Convertir a borrador">
                             <i class="far fa-edit"></i>
                         </button>` : 
+                        hasStatus && template.status === 'draft' ?
                         `<button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="activateTemplate('${template.id}')" title="Activar">
                             <i class="far fa-play"></i>
-                        </button>`
+                        </button>` : ''
                     }
                     <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="cloneTemplate('${template.id}')" title="Clonar">
                         <i class="far fa-copy"></i>
@@ -327,16 +341,16 @@ function createTemplateCardHTML(template) {
 
 function getEmptyStateHTML() {
     return `
-        <div class="empty-state">
-            <img src="images/empty-states/No-templates-img.svg" alt="Sin plantillas">
-            <div class="empty-state-content">
-                <h1 class="ubits-heading-h1" style="color: var(--ubits-fg-2-high);">Crea tu primera plantilla personalizada</h1>
-                <p class="ubits-body-md-regular" style="color: var(--ubits-fg-2-medium);">Transforma la forma en que reclutas talento. Automatiza procesos, optimiza tiempos y encuentra a los mejores candidatos.</p>
-                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openCreateTemplateModal()">
-                    <i class="far fa-plus"></i>
-                    <span>Crear mi primera plantilla</span>
-                </button>
+        <div class="board-empty-state-full">
+            <div class="empty-icon-circle">
+                <i class="far fa-file-lines"></i>
             </div>
+            <h3 class="empty-title">Crea tu primera plantilla de proceso</h3>
+            <p class="empty-description">Diseña un flujo de reclutamiento que puedas reutilizar en todos tus procesos. Automatiza tareas, ahorra tiempo y evalúa a tus candidatos de forma consistente.</p>
+            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="openCreateTemplateModal()">
+                <i class="far fa-plus"></i>
+                <span>Crear mi primera plantilla</span>
+            </button>
         </div>
     `;
 }

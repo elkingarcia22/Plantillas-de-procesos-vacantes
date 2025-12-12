@@ -118,19 +118,27 @@
         }
 
         .template-status-badge.draft {
-            color: var(--ubits-feedback-fg-info-subtle);
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
         }
         
         .template-status-badge.draft span {
-            color: var(--ubits-feedback-fg-info-subtle) !important;
+            color: #20335f !important;
         }
         
         [data-theme="dark"] .template-status-badge.draft {
-            color: var(--ubits-feedback-accent-info);
+            background: #3B3B70;
+            color: #E0E0E0;
+            border: 1.5px solid #C0C0F0;
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
         }
         
         [data-theme="dark"] .template-status-badge.draft span {
-            color: var(--ubits-feedback-accent-info) !important;
+            color: #E0E0E0 !important;
+            font-weight: 500;
         }
 
         .template-status-badge.active {
@@ -211,20 +219,26 @@
 
         .template-status-badge.draft {
             background: var(--ubits-feedback-bg-info-subtle);
-            color: var(--ubits-feedback-fg-info-subtle);
+            color: #20335f;
             border: 1px solid var(--ubits-feedback-accent-info);
         }
         
         .template-status-badge.draft span {
-            color: var(--ubits-feedback-fg-info-subtle) !important;
+            color: #20335f !important;
         }
         
         [data-theme="dark"] .template-status-badge.draft {
-            color: var(--ubits-feedback-accent-info);
+            background: #3B3B70;
+            color: #E0E0E0;
+            border: 1.5px solid #C0C0F0;
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
         }
         
         [data-theme="dark"] .template-status-badge.draft span {
-            color: var(--ubits-feedback-accent-info) !important;
+            color: #E0E0E0 !important;
+            font-weight: 500;
         }
 
         .template-status-badge.active {
@@ -552,10 +566,26 @@
             position: relative;
         }
         
-        /* Estado cuando tiene filtros aplicados - usar clase active de UBITS */
-        .category-filter-button.has-filters.ubits-button--active {
-            background: var(--ubits-accent-brand-subtle) !important;
-            border-color: var(--ubits-accent-brand) !important;
+        /* Estado cuando tiene filtros aplicados - igual que botones de configuración */
+        .category-filter-button.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+        
+        .category-filter-button.ubits-button--active:hover:not(:disabled) {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+        }
+        
+        .category-filter-button.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+        
+        /* Asegurar que el badge siempre tenga texto blanco, incluso cuando el botón está activo */
+        .category-filter-button.ubits-button--active .category-filter-badge,
+        .category-filter-button .category-filter-badge {
+            color: #ffffff !important;
         }
         
         .category-filter-badge {
@@ -567,10 +597,10 @@
             justify-content: center;
             min-width: 18px;
             height: 18px;
-            padding: 0 5px;
-            background: var(--ubits-feedback-accent-error);
-            color: var(--ubits-fg-1-low);
-            border-radius: 9px;
+            padding: 0 4px;
+            background: var(--ubits-button-badge) !important;
+            color: #ffffff !important;
+            border-radius: 50%;
             font-size: 10px;
             font-weight: 600;
             font-family: 'Noto Sans', sans-serif;
@@ -578,6 +608,10 @@
             flex-shrink: 0;
             z-index: 1;
             box-shadow: 0 0 0 2px var(--ubits-bg-1);
+        }
+        
+        .category-filter-badge * {
+            color: #ffffff !important;
         }
         
         .category-filter-dropdown-menu {
@@ -640,6 +674,7 @@
             position: relative;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            overflow: visible;
         }
         
         .category-filter-item input[type="checkbox"]:hover {
@@ -657,11 +692,12 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(45deg);
-            width: 5px;
-            height: 9px;
-            border: solid var(--ubits-bg-1);
+            width: 4px;
+            height: 8px;
+            border: solid #ffffff;
             border-width: 0 2px 2px 0;
             border-radius: 0;
+            box-sizing: border-box;
         }
         
         .category-filter-item input[type="checkbox"]:focus {
@@ -673,18 +709,9 @@
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 10px;
             cursor: pointer;
             pointer-events: none;
             min-width: 0;
-        }
-        
-        .category-filter-item-label i {
-            font-size: 16px;
-            color: var(--ubits-fg-1-medium);
-            width: 18px;
-            flex-shrink: 0;
-            text-align: center;
         }
         
         .category-filter-item-label span {
@@ -1931,6 +1958,8 @@
             display: flex;
             gap: 12px;
             justify-content: flex-end;
+            align-items: center;
+            width: 100%;
         }
         
         .tests-list {
@@ -2037,6 +2066,299 @@
             font-size: 13px;
             font-weight: 400;
             color: var(--ubits-fg-1-medium);
+        }
+        
+        /* Drawer para configurar entrevista Serena AI */
+        .serena-config-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .serena-config-drawer.active {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+        
+        .serena-config-content {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        
+        /* Sección de tipo de entrevista */
+        .serena-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .serena-section-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+        
+        .serena-section-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        
+        /* Cards de tipo de entrevista */
+        .interview-type-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .interview-type-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 8px;
+            background: var(--ubits-bg-1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .interview-type-card:hover {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand-subtle);
+        }
+        
+        .interview-type-card.selected {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand-subtle);
+        }
+        
+        .interview-type-card .config-radio-label {
+            margin: 0;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        
+        .interview-type-card .config-radio-label span {
+            display: none;
+        }
+        
+        .interview-type-card-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .interview-type-card-icon {
+            font-size: 18px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .interview-type-card.selected .interview-type-card-icon {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .interview-type-card-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .interview-type-card.selected .interview-type-card-label {
+            color: var(--ubits-accent-brand);
+        }
+        
+        /* Preview de voz - Diseño con animación de audio */
+        .serena-voice-preview {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 10px;
+            background: var(--ubits-bg-1);
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .serena-voice-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--ubits-accent-brand);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .serena-voice-preview.playing::before {
+            opacity: 1;
+        }
+        
+        .serena-voice-preview-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: var(--ubits-accent-brand-subtle);
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .serena-voice-preview-icon {
+            font-size: 20px;
+            color: var(--ubits-accent-brand);
+            z-index: 1;
+        }
+        
+        .serena-voice-preview.playing .serena-voice-preview-icon {
+            color: var(--ubits-accent-brand);
+        }
+        
+        /* Animación de ondas de audio */
+        .serena-voice-waves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .serena-voice-preview.playing .serena-voice-waves {
+            opacity: 1;
+        }
+        
+        .serena-voice-wave {
+            width: 3px;
+            background: var(--ubits-accent-brand);
+            border-radius: 2px;
+            animation: waveAnimation 1.2s ease-in-out infinite;
+        }
+        
+        .serena-voice-wave:nth-child(1) {
+            height: 8px;
+            animation-delay: 0s;
+        }
+        
+        .serena-voice-wave:nth-child(2) {
+            height: 16px;
+            animation-delay: 0.2s;
+        }
+        
+        .serena-voice-wave:nth-child(3) {
+            height: 24px;
+            animation-delay: 0.4s;
+        }
+        
+        .serena-voice-wave:nth-child(4) {
+            height: 16px;
+            animation-delay: 0.6s;
+        }
+        
+        .serena-voice-wave:nth-child(5) {
+            height: 8px;
+            animation-delay: 0.8s;
+        }
+        
+        @keyframes waveAnimation {
+            0%, 100% {
+                transform: scaleY(0.3);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+        
+        .serena-voice-preview-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        
+        .serena-voice-preview-name {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .serena-voice-preview-flag {
+            font-size: 18px;
+        }
+        
+        .serena-voice-preview-hint {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 11px;
+            color: var(--ubits-fg-1-medium);
+            font-weight: 400;
+        }
+        
+        .serena-voice-preview-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        
+        /* Campos de configuración */
+        .serena-config-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .serena-config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .serena-config-field-label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .serena-config-field-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
         }
         
         /* Responsive */
@@ -2348,7 +2670,7 @@
             <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
                 <div class="drawer-header">
                     <h3 class="drawer-title" id="drawerTitle">Gestionar pruebas psicotécnicas</h3>
-                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="handleDrawerCloseButton(event); return false;" title="Cerrar">
+                    <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="handleDrawerCloseButton(event); return false;" title="Cerrar">
                         <i class="far fa-times"></i>
                     </button>
                 </div>
@@ -2359,6 +2681,29 @@
                 </div>
                 <div class="drawer-footer">
                     <div class="drawer-footer-actions" id="drawerFooterActions">
+                        <!-- Botones se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Drawer para configurar entrevista Serena AI -->
+        <div class="serena-config-drawer" id="serenaConfigDrawer">
+            <div class="drawer-overlay" onclick="handleSerenaDrawerOverlayClick(event)"></div>
+            <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
+                <div class="drawer-header">
+                    <h3 class="drawer-title" id="serenaDrawerTitle">Configurar entrevista Serena</h3>
+                    <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="closeSerenaConfigDrawer(); return false;" title="Cerrar">
+                        <i class="far fa-times"></i>
+                    </button>
+                </div>
+                <div class="drawer-body">
+                    <div id="serenaConfigContent" class="serena-config-content">
+                        <!-- Contenido se cargará dinámicamente -->
+                    </div>
+                </div>
+                <div class="drawer-footer">
+                    <div class="drawer-footer-actions" id="serenaDrawerFooterActions">
                         <!-- Botones se cargarán dinámicamente -->
                     </div>
                 </div>
@@ -2392,9 +2737,13 @@
                             </div>
                         </div>
                         <div class="header-right">
-                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
+                            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="saveTemplate()">
                                 <i class="far fa-save"></i>
                                 <span>Guardar</span>
+                            </button>
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="finishTemplate()">
+                                <i class="far fa-check-circle"></i>
+                                <span>Terminar</span>
                             </button>
                         </div>
                         
@@ -2412,9 +2761,13 @@
                             <span class="template-status-badge draft" id="templateStatusBadge">
                                 <span>Borrador</span>
                             </span>
-                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveTemplate()">
+                            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="saveTemplate()">
                                 <i class="far fa-save"></i>
                                 <span>Guardar</span>
+                            </button>
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="finishTemplate()">
+                                <i class="far fa-check-circle"></i>
+                                <span>Terminar</span>
                             </button>
                         </div>
                     </div>
