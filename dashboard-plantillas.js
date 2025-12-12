@@ -10,6 +10,7 @@ const TEMPLATES = [];
 let currentTemplates = [];
 let filteredTemplates = [];
 let currentSort = 'recent';
+let isSearching = false;
 
 // Opciones de ordenamiento
 const SORT_OPTIONS = [
@@ -84,12 +85,14 @@ function handleSearch(value) {
     
     if (query === '') {
         filteredTemplates = [...currentTemplates];
+        isSearching = false;
     } else {
+        isSearching = true;
         filteredTemplates = currentTemplates.filter(template => 
             template.name.toLowerCase().includes(query) ||
             template.category.toLowerCase().includes(query) ||
             template.author.toLowerCase().includes(query) ||
-            template.description.toLowerCase().includes(query)
+            (template.description && template.description.toLowerCase().includes(query))
         );
     }
     
@@ -104,8 +107,11 @@ function clearSearch() {
     
     if (searchInput) {
         searchInput.value = '';
+        isSearching = false;
         handleSearch('');
-        clearBtn.style.display = 'none';
+        if (clearBtn) {
+            clearBtn.style.display = 'none';
+        }
     }
 }
 
@@ -226,14 +232,29 @@ function renderTemplates() {
     const createButton = document.querySelector('.dashboard-header button[onclick*="openCreateTemplateModal"]');
     
     if (filteredTemplates.length === 0) {
-        grid.innerHTML = getEmptyStateHTML();
-        // Ocultar controles cuando no hay plantillas
-        if (controls) {
-            controls.style.display = 'none';
+        // Diferenciar entre empty state (sin plantillas) y no results (búsqueda sin resultados)
+        if (isSearching && currentTemplates.length > 0) {
+            grid.innerHTML = getNoResultsHTML();
+        } else {
+            grid.innerHTML = getEmptyStateHTML();
         }
-        // Ocultar botón "Crear plantilla" del header cuando no hay plantillas
-        if (createButton) {
-            createButton.style.display = 'none';
+        
+        // Ocultar controles cuando no hay plantillas (solo en empty state, no en no results)
+        if (!isSearching || currentTemplates.length === 0) {
+            if (controls) {
+                controls.style.display = 'none';
+            }
+            if (createButton) {
+                createButton.style.display = 'none';
+            }
+        } else {
+            // Mostrar controles cuando hay búsqueda sin resultados pero hay plantillas
+            if (controls) {
+                controls.style.display = 'flex';
+            }
+            if (createButton) {
+                createButton.style.display = 'flex';
+            }
         }
         return;
     }
@@ -259,7 +280,6 @@ function createTemplateCardHTML(template) {
     const hasStatus = template.status !== undefined && template.status !== null;
     const statusClass = hasStatus ? (template.status === 'active' ? 'active' : 'draft') : '';
     const statusText = hasStatus ? (template.status === 'active' ? 'Activa' : 'Borrador') : '';
-    const statusColor = hasStatus ? (template.status === 'active' ? '#2D5A2D' : 'var(--ubits-fg-info-subtle-static-default)') : '';
     
     // Mapear categoría técnica a texto legible
     const categoryMap = {
@@ -330,13 +350,22 @@ function createTemplateCardHTML(template) {
                     <div class="stat-value">${template.agents}</div>
                     <div class="stat-label">Agentes</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">v${template.version}</div>
-                    <div class="stat-label">Versión</div>
-                </div>
             </div>
         </div>
     `;
+}
+
+function addTemplateCardEventListeners() {
+    // Click en la tarjeta para abrir el editor
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Solo abrir si NO se hace click en un botón
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                const templateId = card.dataset.templateId;
+                openTemplateEditor(templateId);
+            }
+        });
+    });
 }
 
 function getEmptyStateHTML() {
@@ -369,18 +398,6 @@ function getNoResultsHTML() {
     `;
 }
 
-function addTemplateCardEventListeners() {
-    // Click en la tarjeta para abrir el editor
-    document.querySelectorAll('.template-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            // Solo abrir si NO se hace click en un botón
-            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-                const templateId = card.dataset.templateId;
-                openTemplateEditor(templateId);
-            }
-        });
-    });
-}
 
 // ========================================
 // ACCIONES DE PLANTILLAS
@@ -453,7 +470,7 @@ function cloneTemplate(templateId) {
             const clonedTemplate = {
                 ...template,
                 id: 'template-' + Date.now(),
-                name: template.name + ' (Copia)',
+                name: 'Copia de ' + template.name,
                 version: 1,
                 lastModified: new Date().toISOString().split('T')[0],
                 status: 'draft',

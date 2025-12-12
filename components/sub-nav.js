@@ -103,15 +103,19 @@ function getTopNavHTML(variant = 'template', customTabs = []) {
             tabsHTML = normalTabs + hamburgerMenu;
         } else {
             // Para otras variantes, usar solo tabs normales
-            tabsHTML = tabs.map(tab => `
-                <button class="nav-tab" data-tab="${tab.id}" onclick="navigateToTab('${tab.id}', '${variant}')">
-                    <i class="fa ${tab.icon}"></i>
-                    <span class="ubits-body-sm-regular">${tab.label}</span>
-                </button>
-            `).join('');
+            tabsHTML = tabs.map(tab => {
+                const activeClass = tab.active ? 'active' : '';
+                const iconHTML = tab.icon ? `<i class="fa ${tab.icon}"></i>` : '';
+                return `
+                    <button class="nav-tab ${activeClass}" data-tab="${tab.id}" onclick="navigateToTab('${tab.id}', '${variant}')">
+                        ${iconHTML}
+                        <span class="ubits-body-sm-regular">${tab.label}</span>
+                    </button>
+                `;
+            }).join('');
             
-            // Para la variante template, agregar mensaje de personalización
-            if (variant === 'template') {
+            // Para la variante template, agregar mensaje de personalización solo si no hay customTabs
+            if (variant === 'template' && customTabs.length === 0) {
                 tabsHTML += `
                     <div class="ubits-body-xs-regular" style="color: var(--ubits-fg-1-medium); font-style: italic; margin-left: 16px; margin-top: 4px;">
                         Personalizable - Indica a Cursor cuántos tabs necesitas
@@ -129,8 +133,10 @@ function getTopNavHTML(variant = 'template', customTabs = []) {
     }
 
     // Añadir texto de título para la variante documentacion
-    const titleText = variant === 'documentacion' ? 
-        `<div class="nav-title ubits-heading-h3" style="color: var(--ubits-accent-brand);">DOCUMENTACIÓN</div>` : '';
+    let titleText = '';
+    if (variant === 'documentacion') {
+        titleText = `<div class="nav-title ubits-heading-h3" style="color: var(--ubits-accent-brand);">DOCUMENTACIÓN</div>`;
+    }
 
     // Para documentación, separar hamburger del resto
     let leftContent = titleText + tabsHTML;
@@ -193,7 +199,13 @@ function activateCurrentPageTab(container, variant) {
     };
     
     // Activar tab basado en la página actual
-    if (currentPage === 'home-learn.html') {
+    if (currentPage === 'index.html' || currentPage === '' || currentPage === 'plantillas-de-seleccion') {
+        // Activar tab "plantillas" si existe
+        const plantillasTab = container.querySelector('.nav-tab[data-tab="plantillas"]');
+        if (plantillasTab) {
+            activateTab('plantillas');
+        }
+    } else if (currentPage === 'home-learn.html') {
         activateTab('home');
     } else if (currentPage === 'tipografia.html') {
         activateTab('section6');

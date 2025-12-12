@@ -191,9 +191,9 @@
                 transition: stroke-dashoffset 0.3s ease;
             }
             
-            /* 3 de 5 pasos = 60% */
-            .mobile-progress-circle[data-progress="60"] .mobile-progress-fill {
-                stroke-dashoffset: 55.2; /* 138 * (1 - 0.6) */
+            /* 2 de 5 pasos = 40% */
+            .mobile-progress-circle[data-progress="40"] .mobile-progress-fill {
+                stroke-dashoffset: 82.8; /* 138 * (1 - 0.4) */
             }
             
             .mobile-stepper-text {
@@ -471,6 +471,139 @@
             color: var(--ubits-fg-1-high);
         }
 
+        /* Widget Template Flow */
+        .widget-template-flow {
+            background-color: var(--ubits-bg-1);
+            border-radius: 8px;
+            padding: 20px;
+            border: none;
+        }
+
+        .flow-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+
+        .flow-header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .flow-header-title i {
+            font-size: 20px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .flow-header-title h3 {
+            margin: 0;
+            color: var(--ubits-fg-1-high);
+        }
+
+        .flow-stages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .flow-stage {
+            background-color: var(--ubits-bg-2);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .flow-stage-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--ubits-button-primary-bg-default);
+            color: var(--ubits-btn-primary-fg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .flow-stage-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .flow-stage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .flow-stage-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+
+        .flow-stage-type {
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            background-color: var(--ubits-bg-1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .flow-stage-config {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--ubits-border-1);
+        }
+
+        .flow-config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            gap: 16px;
+        }
+
+        .flow-config-label {
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            flex: 1;
+        }
+
+        .flow-config-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+        .flow-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .flow-empty i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .flow-empty p {
+            margin: 0;
+            font-size: 14px;
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -515,15 +648,13 @@
                                     </div>
                                     <div class="stepper-label">Información básica</div>
                                 </div>
-                                <div class="stepper-item completed">
-                                    <div class="stepper-circle">
-                                        <i class="far fa-check stepper-icon"></i>
-                                    </div>
-                                    <div class="stepper-label">Serena AI</div>
-                                </div>
                                 <div class="stepper-item active">
-                                    <div class="stepper-circle">3</div>
+                                    <div class="stepper-circle">2</div>
                                     <div class="stepper-label">Configurar vacante</div>
+                                </div>
+                                <div class="stepper-item">
+                                    <div class="stepper-circle">3</div>
+                                    <div class="stepper-label">Serena AI</div>
                                 </div>
                                 <div class="stepper-item">
                                     <div class="stepper-circle">4</div>
@@ -539,12 +670,12 @@
                             
                             <!-- Mobile Stepper -->
                             <div class="mobile-stepper">
-                                <div class="mobile-progress-circle" data-progress="60">
+                                <div class="mobile-progress-circle" data-progress="40">
                                     <svg>
                                         <circle class="mobile-progress-bg" cx="24" cy="24" r="22"></circle>
                                         <circle class="mobile-progress-fill" cx="24" cy="24" r="22"></circle>
                                     </svg>
-                                    <span>3/5</span>
+                                    <span>2/5</span>
                                 </div>
                                 <div class="mobile-stepper-text">
                                     <div class="mobile-current-step">Configurar vacante</div>
@@ -588,6 +719,23 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Sección 3: Flujo de la plantilla seleccionada -->
+                    <div class="section-single" id="template-flow-section" style="display: none;">
+                        <div class="widget-template-flow">
+                            <div class="flow-header">
+                                <div class="flow-header-title">
+                                    <i class="far fa-sitemap"></i>
+                                    <h3 class="ubits-heading-h2">Flujo de la plantilla</h3>
+                                </div>
+                                <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openTemplateEditor()">
+                                    <i class="far fa-edit"></i>
+                                    <span>Editar plantilla</span>
+                                </button>
+                            </div>
+                            <div id="template-flow-container"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -627,25 +775,247 @@
             createDaysInput();
         });
 
+        // Estado global
+        let selectedTemplate = null;
+        let allTemplates = [];
+
+        // Agentes disponibles (mismo que en editor-plantillas.js)
+        const AGENTS = [
+            { 
+                id: 'cv-analyzer', 
+                name: 'Analizador CV', 
+                icon: 'fa-file-alt',
+                hasConfig: true,
+                config: {
+                    salaryPercentage: { label: 'Margen sobre salario', suffix: '%' },
+                    minScore: { label: 'Puntaje mínimo del CV', suffix: 'pts' },
+                    acceptExEmployees: { label: 'Acepta ex colaboradores', type: 'radio' }
+                }
+            },
+            { 
+                id: 'interview-ia', 
+                name: 'Entrevista Serena', 
+                icon: 'fa-comments',
+                hasConfig: true,
+                config: {
+                    expirationDays: { label: 'Días para que expire la entrevista', suffix: 'días' },
+                    minScore: { label: 'Puntaje mínimo de la entrevista', suffix: 'pts' }
+                }
+            },
+            { 
+                id: 'psychometric-analyst', 
+                name: 'Analista psicométrico', 
+                icon: 'fa-brain',
+                hasConfig: true,
+                config: {
+                    minCIScore: { label: 'Puntaje CI mínimo', suffix: 'pts' },
+                    testType: { label: 'Tipo de prueba', type: 'select' },
+                    testLanguage: { label: 'Idioma de la prueba', type: 'select' }
+                }
+            },
+            { 
+                id: 'background-check', 
+                name: 'Antecedentes judiciales', 
+                icon: 'fa-shield-alt',
+                hasConfig: false
+            }
+        ];
+
+        // Cargar plantillas desde localStorage
+        function loadTemplates() {
+            const stored = localStorage.getItem('templates');
+            if (stored) {
+                allTemplates = JSON.parse(stored);
+            } else {
+                allTemplates = [];
+            }
+            return allTemplates;
+        }
+
         // Crear selector de plantilla con UBITS Input
         function createTemplateSelect() {
+            const templates = loadTemplates();
+            
+            // Si no hay plantillas, mostrar mensaje
+            if (templates.length === 0) {
+                const container = document.getElementById('template-input-container');
+                container.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: var(--ubits-fg-1-medium);">
+                        <i class="far fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 14px;">No hay plantillas creadas. Ve al dashboard para crear una.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Crear opciones para el selector
+            const selectOptions = templates.map(template => ({
+                value: template.id,
+                text: template.name
+            }));
+
             createInput({
                 containerId: 'template-input-container',
                 type: 'select',
                 placeholder: 'Selecciona una plantilla...',
-                selectOptions: [
-                    {value: 'desarrollo', text: 'Desarrollo de software'},
-                    {value: 'marketing', text: 'Marketing digital'},
-                    {value: 'ventas', text: 'Ventas'},
-                    {value: 'liderazgo', text: 'Liderazgo'},
-                    {value: 'recursos-humanos', text: 'Recursos humanos'},
-                    {value: 'finanzas', text: 'Finanzas'}
-                ],
+                selectOptions: selectOptions,
                 onChange: function(value) {
-                    console.log('Selected template:', value);
+                    if (value) {
+                        selectTemplate(value);
+                    } else {
+                        hideTemplateFlow();
+                    }
                 }
             });
         }
+
+        // Seleccionar plantilla y mostrar su flujo
+        function selectTemplate(templateId) {
+            const template = allTemplates.find(t => t.id === templateId);
+            if (!template) {
+                console.error('Plantilla no encontrada:', templateId);
+                return;
+            }
+
+            selectedTemplate = template;
+            renderTemplateFlow(template);
+        }
+
+        // Renderizar el flujo de la plantilla
+        function renderTemplateFlow(template) {
+            const flowSection = document.getElementById('template-flow-section');
+            const flowContainer = document.getElementById('template-flow-container');
+
+            if (!flowSection || !flowContainer) return;
+
+            // Mostrar la sección
+            flowSection.style.display = 'flex';
+
+            // Verificar si tiene etapas
+            if (!template.realContent || !template.realContent.stages || template.realContent.stages.length === 0) {
+                flowContainer.innerHTML = `
+                    <div class="flow-empty">
+                        <i class="far fa-sitemap"></i>
+                        <p>Esta plantilla no tiene etapas configuradas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Renderizar etapas
+            const stagesHTML = template.realContent.stages.map((stage, index) => {
+                return renderStageCard(stage, index);
+            }).join('');
+
+            flowContainer.innerHTML = `
+                <div class="flow-stages">
+                    ${stagesHTML}
+                </div>
+            `;
+        }
+
+        // Renderizar una tarjeta de etapa
+        function renderStageCard(stage, index) {
+            const stageNumber = index + 1;
+            let stageHTML = '';
+
+            // Si es una etapa de agente
+            if (stage.type === 'agent' && stage.agentId) {
+                const agent = AGENTS.find(a => a.id === stage.agentId);
+                const agentName = agent ? agent.name : stage.name || 'Agente desconocido';
+                const agentIcon = agent ? agent.icon : 'fa-robot';
+
+                // Configuración del agente
+                let configHTML = '';
+                if (stage.config && agent && agent.hasConfig) {
+                    const configItems = Object.entries(stage.config)
+                        .filter(([key]) => key !== 'tests') // Excluir tests del analista psicométrico
+                        .map(([key, value]) => {
+                            const configField = agent.config[key];
+                            if (!configField) return '';
+
+                            const label = configField.label || key;
+                            const suffix = configField.suffix || '';
+                            let displayValue = value;
+
+                            // Formatear valor según tipo
+                            if (configField.type === 'radio') {
+                                displayValue = value === 'si' ? 'Sí' : value === 'no' ? 'No' : value;
+                            } else if (Array.isArray(value)) {
+                                displayValue = value.length > 0 ? `${value.length} prueba(s)` : 'Sin pruebas';
+                            } else {
+                                displayValue = value !== null && value !== undefined ? value : '-';
+                            }
+
+                            return `
+                                <div class="flow-config-item">
+                                    <span class="flow-config-label">${label}</span>
+                                    <span class="flow-config-value">${displayValue}${suffix}</span>
+                                </div>
+                            `;
+                        })
+                        .join('');
+
+                    if (configItems) {
+                        configHTML = `
+                            <div class="flow-stage-config">
+                                ${configItems}
+                            </div>
+                        `;
+                    }
+                }
+
+                stageHTML = `
+                    <div class="flow-stage">
+                        <div class="flow-stage-number">${stageNumber}</div>
+                        <div class="flow-stage-content">
+                            <div class="flow-stage-header">
+                                <div>
+                                    <h4 class="flow-stage-name">
+                                        <i class="far ${agentIcon}" style="margin-right: 8px;"></i>
+                                        ${agentName}
+                                    </h4>
+                                </div>
+                                <span class="flow-stage-type">Agente IA</span>
+                            </div>
+                            ${configHTML}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Etapa personalizada
+                const stageName = stage.name || 'Etapa sin nombre';
+                stageHTML = `
+                    <div class="flow-stage">
+                        <div class="flow-stage-number">${stageNumber}</div>
+                        <div class="flow-stage-content">
+                            <div class="flow-stage-header">
+                                <h4 class="flow-stage-name">${stageName}</h4>
+                                <span class="flow-stage-type">Etapa personalizada</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return stageHTML;
+        }
+
+        // Ocultar el flujo de la plantilla
+        function hideTemplateFlow() {
+            const flowSection = document.getElementById('template-flow-section');
+            if (flowSection) {
+                flowSection.style.display = 'none';
+            }
+            selectedTemplate = null;
+        }
+
+        // Abrir editor de plantillas (disponible globalmente)
+        window.openTemplateEditor = function() {
+            if (selectedTemplate) {
+                window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
+            }
+        };
 
         // Crear input de días con UBITS Input
         function createDaysInput() {
@@ -663,15 +1033,6 @@
 
 
 
-        // Template Selection Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const templateSelect = document.getElementById('templateSelect');
-            if (templateSelect) {
-                templateSelect.addEventListener('change', function() {
-                    console.log('Selected template:', this.value);
-                });
-            }
-        });
     </script>
 </body>
 </html>

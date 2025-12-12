@@ -23,6 +23,52 @@
     <link rel="stylesheet" href="profile.css">
     
     <style>
+        /* FORZAR SIN BORDES - Máxima especificidad */
+        .dashboard-plantillas .templates-grid .template-card,
+        .templates-grid .template-card,
+        .template-card {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        .dashboard-plantillas .templates-grid .template-card:hover,
+        .templates-grid .template-card:hover,
+        .template-card:hover {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .template-meta,
+        .template-content .template-meta,
+        .template-meta {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .meta-item,
+        .template-meta .meta-item,
+        .meta-item {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .template-stats,
+        .template-card .template-stats,
+        .template-stats {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
         /* Estilos específicos para el dashboard de plantillas */
         .dashboard-plantillas {
             display: flex;
@@ -35,9 +81,10 @@
             max-height: none;
         }
 
-        /* Ocultar sub-nav en el dashboard de plantillas */
+        /* Mostrar sub-nav en el dashboard de plantillas */
         #top-nav-container {
-            display: none !important;
+            display: block;
+            margin-bottom: 16px;
         }
 
         /* Header del dashboard */
@@ -105,20 +152,31 @@
         }
 
         /* Template card usando estructura UBITS */
-        .template-card {
-            background: var(--ubits-bg-1);
-            border: 1px solid var(--ubits-border-1);
+        .template-card,
+        .templates-grid .template-card,
+        .dashboard-plantillas .template-card {
+            background: var(--ubits-bg-1) !important;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
             border-radius: 8px;
             padding: 16px;
             transition: all 0.2s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            box-shadow: none !important;
         }
 
-        .template-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: var(--ubits-accent-brand);
+        .template-card:hover,
+        .templates-grid .template-card:hover,
+        .dashboard-plantillas .template-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
         }
 
         .template-card.active::before {
@@ -221,13 +279,23 @@
             margin: 0 0 8px 0;
         }
 
-        .template-meta {
+        .template-meta,
+        .template-content .template-meta,
+        .dashboard-plantillas .template-meta {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
-        .meta-item {
+        .meta-item,
+        .template-meta .meta-item,
+        .dashboard-plantillas .meta-item {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -235,6 +303,12 @@
             color: var(--ubits-fg-1-medium);
             font-family: 'Noto Sans', sans-serif;
             line-height: 1.3;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .meta-item i {
@@ -252,13 +326,21 @@
         }
 
         /* Template stats */
-        .template-stats {
+        .template-stats,
+        .template-card .template-stats,
+        .dashboard-plantillas .template-stats {
             display: flex;
             justify-content: space-between;
             padding: 8px 12px;
             background: var(--ubits-bg-2);
             border-radius: 6px;
             margin-top: 12px;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .stat-item {
@@ -468,7 +550,7 @@
                 <div class="dashboard-plantillas">
                     <!-- Header del dashboard -->
                     <div class="dashboard-header">
-                        <h1 class="dashboard-title">Plantillas de flujos de candidatos</h1>
+                        <h1 class="dashboard-title">Flujos de candidatos</h1>
                         <button class="ubits-button ubits-button--primary ubits-button--md" onclick="openCreateTemplateModal()">
                             <i class="far fa-plus"></i>
                             <span>Crear plantilla</span>
@@ -623,7 +705,13 @@
         // Cargar componentes UBITS dinámicamente
         document.addEventListener('DOMContentLoaded', function() {
             loadSidebarReclutamiento('plantillas');
-            loadSubNav('top-nav-container', 'template');
+            
+            // Configurar SubNav con sección "Plantillas"
+            const plantillasTabs = [
+                { id: 'plantillas', label: 'Plantillas', active: true }
+            ];
+            loadSubNav('top-nav-container', 'template', plantillasTabs);
+            
             loadTabBarReclutamiento('tab-bar-container');
             loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
             loadProfileMenu('profile-menu-container');
