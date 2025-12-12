@@ -14,14 +14,14 @@ const AGENTS = [
         hasConfig: true,
         config: {
             salaryPercentage: { 
-                label: 'Porcentaje sobre el rango salarial', 
+                label: 'Margen sobre salario', 
                 type: 'number', 
                 default: 25, 
                 suffix: '%',
                 tooltip: 'Define qué tanto puede superar el candidato el salario máximo del puesto y seguir siendo considerado. Ejemplo: si el tope es $1.000 y pones 10%, se aceptan candidatos hasta $1.100.'
             },
             minScore: { 
-                label: 'Puntaje mínimo de evaluación', 
+                label: 'Puntaje mínimo del CV', 
                 type: 'number', 
                 default: 70, 
                 suffix: 'pts',
@@ -71,23 +71,24 @@ const AGENTS = [
         hasConfig: true,
         config: {
             minIQ: { 
-                label: 'Puntaje CI mínimo', 
+                label: 'Puntaje mínimo psicométrico', 
                 type: 'number', 
                 default: 0, 
                 suffix: 'pts',
                 tooltip: 'Puntaje mínimo que el candidato debe lograr en la prueba psicométrica para considerarse aprobado en esta etapa.'
             },
             testType: { 
-                label: 'Tipo de prueba (CI/CA)', 
+                label: 'Tipo de prueba psicométrica', 
                 type: 'select', 
-                default: 'ci-ca',
+                default: 'cognicion',
                 tooltip: 'Selecciona el tipo de prueba psicométrica que se aplicará al candidato. Cada opción evalúa habilidades o aspectos distintos según la configuración de tu plataforma.',
                 options: [
-                    { value: 'ci-ca', text: 'CI/CA' },
-                    { value: '16pf', text: '16PF' },
-                    { value: 'disc', text: 'DISC' },
-                    { value: 'mbti', text: 'MBTI' },
-                    { value: 'cleaver', text: 'Cleaver' }
+                    { value: 'cognicion', text: 'Cognición (inteligencia)' },
+                    { value: 'perfil-motivacion', text: 'Perfil de motivación' },
+                    { value: 'dominancia-cerebral', text: 'Dominancia Cerebral' },
+                    { value: 'estilo-social', text: 'Estilo Social' },
+                    { value: 'inventario-valores', text: 'Inventario de valores organizacionales (Corta)' },
+                    { value: 'personalidad-16', text: 'Personalidad 16' }
                 ]
             },
             testLanguage: { 
@@ -136,7 +137,7 @@ let agentConfigStates = {}; // Guardar estados de expandido/contraído de agente
 // INICIALIZACIÓN
 // ========================================
 
-function initializeEditor() {
+window.initializeEditor = function() {
     // Obtener ID de plantilla de la URL o crear nueva
     const urlParams = new URLSearchParams(window.location.search);
     const templateId = urlParams.get('id');
@@ -1206,7 +1207,7 @@ function renderAvailableStages() {
             stagesList.innerHTML = `
                 <div class="empty-stages-visual">
                     <div class="empty-icon">
-                        <i class="far fa-sitemap"></i>
+                        <i class="far fa-timeline-arrow"></i>
                     </div>
                     <p class="empty-text">Crea tu primera etapa y comienza a diseñar tus procesos</p>
                     <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openCreateStageModal();">
@@ -1407,6 +1408,10 @@ function renderAgentStageCard(stage, index) {
             ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
             <div class="agent-stage-config" id="agent-config-${stage.id}" style="display: ${configDisplay};">
                 ${Object.entries(agentData.config).map(([key, field]) => {
+                    // Asegurar que el campo tenga todas las propiedades necesarias
+                    if (!field.options && field.type === 'select') {
+                        console.warn('⚠️ Campo select sin opciones:', key, field);
+                    }
                     const value = stage.config?.[key] ?? field.default;
                     
                     if (field.type === 'number') {
@@ -1415,9 +1420,10 @@ function renderAgentStageCard(stage, index) {
                                 <label class="config-label">
                                     ${field.label}
                                     ${field.tooltip ? `
-                                        <button class="config-info-btn" 
+                                        <button type="button" class="config-info-btn" 
                                                 data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
-                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                aria-label="Información sobre ${field.label}">
                                             <i class="far fa-circle-info"></i>
                                         </button>
                                     ` : ''}
@@ -1435,28 +1441,30 @@ function renderAgentStageCard(stage, index) {
                             </div>
                         `;
                     } else if (field.type === 'select') {
+                        // Usar componente Input UBITS para todos los selects
+                        const containerId = `config-${stage.id}-${key}`;
+                        console.log('🔧 Renderizando campo select:', {
+                            stageId: stage.id,
+                            configKey: key,
+                            containerId: containerId,
+                            label: field.label,
+                            hasOptions: !!field.options,
+                            optionsCount: field.options ? field.options.length : 0
+                        });
                         return `
                             <div class="config-field">
                                 <label class="config-label">
                                     ${field.label}
                                     ${field.tooltip ? `
-                                        <button class="config-info-btn" 
+                                        <button type="button" class="config-info-btn" 
                                                 data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
-                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                aria-label="Información sobre ${field.label}">
                                             <i class="far fa-circle-info"></i>
                                         </button>
                                     ` : ''}
                                 </label>
-                                <select 
-                                    class="config-select" 
-                                    onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
-                                >
-                                    ${field.options.map(opt => `
-                                        <option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>
-                                            ${opt.text}
-                                        </option>
-                                    `).join('')}
-                                </select>
+                                <div id="${containerId}" class="config-input-container" data-stage-id="${stage.id}" data-config-key="${key}"></div>
                             </div>
                         `;
                     } else if (field.type === 'radio') {
@@ -1465,9 +1473,10 @@ function renderAgentStageCard(stage, index) {
                                 <label class="config-label">
                                     ${field.label}
                                     ${field.tooltip ? `
-                                        <button class="config-info-btn" 
+                                        <button type="button" class="config-info-btn" 
                                                 data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
-                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                aria-label="Información sobre ${field.label}">
                                             <i class="far fa-circle-info"></i>
                                         </button>
                                     ` : ''}
@@ -1494,6 +1503,15 @@ function renderAgentStageCard(stage, index) {
             </div>
         `;
     }
+    
+    console.log('🎨 Renderizando card de agente:', {
+        stageId: stage.id,
+        agentId: stage.agentId,
+        agentName: agentData.name,
+        hasConfig: agentData.hasConfig,
+        configFields: agentData.config ? Object.keys(agentData.config) : [],
+        configHTML: configHTML ? configHTML.substring(0, 200) : 'vacío'
+    });
     
     return `
         <div class="stage-item agent-stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="agent">
@@ -1671,6 +1689,181 @@ function renderStages() {
         btn.addEventListener('mouseenter', handleConfigInfoHover);
         btn.addEventListener('mouseleave', handleConfigInfoLeave);
     });
+    
+    // Crear inputs UBITS para campos select después de renderizar
+    // Usar setTimeout con mayor delay para asegurar que el DOM esté completamente renderizado
+    console.log('🚀 Iniciando creación de inputs UBITS para selects...');
+    setTimeout(() => {
+        console.log('🔍 Verificando disponibilidad de createInput:', typeof createInput);
+        
+        if (typeof createInput === 'function') {
+            // Buscar contenedores en todo el documento, no solo en stagesContainer
+            const containers = document.querySelectorAll('.config-input-container');
+            console.log('📦 Contenedores encontrados:', containers.length);
+            
+            if (containers.length === 0) {
+                console.warn('⚠️ No se encontraron contenedores .config-input-container');
+                // Intentar buscar de otra manera
+                const allContainers = document.querySelectorAll('[id^="config-"]');
+                console.log('🔍 Contenedores con ID que empiezan con "config-":', allContainers.length);
+            }
+            
+            containers.forEach((container, index) => {
+                console.log(`\n📋 Procesando contenedor ${index + 1}/${containers.length}:`);
+                const containerId = container.id;
+                const dataStageId = container.getAttribute('data-stage-id');
+                const dataConfigKey = container.getAttribute('data-config-key');
+                
+                console.log('  - ID:', containerId);
+                console.log('  - data-stage-id:', dataStageId);
+                console.log('  - data-config-key:', dataConfigKey);
+                console.log('  - Visible:', container.offsetParent !== null);
+                console.log('  - Display:', window.getComputedStyle(container).display);
+                console.log('  - Width:', container.offsetWidth);
+                
+                if (!containerId) {
+                    console.warn('  ⚠️ Contenedor sin ID:', container);
+                    return;
+                }
+                
+                // Usar data attributes si están disponibles (método preferido)
+                let stageId, configKey;
+                if (dataStageId && dataConfigKey) {
+                    stageId = dataStageId;
+                    configKey = dataConfigKey;
+                    console.log('  ✅ Usando data attributes:', { stageId, configKey });
+                } else {
+                    // Fallback: Extraer del ID usando regex mejorado
+                    // El regex busca el último guion para separar stageId y configKey
+                    // Formato: config-{stageId}-{configKey}
+                    // Usamos un regex que captura todo hasta el último guion como stageId
+                    const parts = containerId.split('-');
+                    if (parts.length >= 3 && parts[0] === 'config') {
+                        // Reconstruir: config-{stageId}-{configKey}
+                        // parts[0] = 'config', parts[1..n-1] = stageId, parts[n] = configKey
+                        configKey = parts[parts.length - 1]; // Último elemento es configKey
+                        stageId = parts.slice(1, -1).join('-'); // Todo lo demás es stageId
+                        console.log('  ✅ Usando regex del ID:', { stageId, configKey });
+                    } else {
+                        console.warn('  ⚠️ ID de contenedor no coincide con patrón:', containerId);
+                        return;
+                    }
+                }
+                
+                // Verificar si ya tiene un input creado
+                const existingInput = container.querySelector('.ubits-input');
+                if (existingInput) {
+                    console.log('  ✅ Input ya existe para:', containerId);
+                    return;
+                }
+                
+                // Buscar el stage y el campo de configuración
+                const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+                if (!stage) {
+                    console.warn('  ⚠️ No se encontró stage con ID:', stageId);
+                    console.log('  📋 Stages disponibles:', currentTemplate.realContent.stages.map(s => s.id));
+                    return;
+                }
+                
+                console.log('  ✅ Stage encontrado:', stage.id, 'agentId:', stage.agentId);
+                
+                const agentData = AGENTS.find(a => a.id === stage.agentId);
+                if (!agentData) {
+                    console.warn('  ⚠️ No se encontró agente con ID:', stage.agentId);
+                    console.log('  📋 Agentes disponibles:', AGENTS.map(a => a.id));
+                    return;
+                }
+                
+                if (!agentData.config || !agentData.config[configKey]) {
+                    console.warn('  ⚠️ No se encontró configuración para:', configKey, 'en agente:', stage.agentId);
+                    console.log('  📋 Configuraciones disponibles:', Object.keys(agentData.config || {}));
+                    return;
+                }
+                
+                const field = agentData.config[configKey];
+                console.log('  ✅ Campo encontrado:', {
+                    type: field.type,
+                    label: field.label,
+                    hasOptions: !!field.options,
+                    optionsCount: field.options ? field.options.length : 0
+                });
+                
+                if (field.type === 'select' && field.options && field.options.length > 0) {
+                    const currentValue = stage.config && stage.config[configKey] ? stage.config[configKey] : field.default;
+                    
+                    console.log('  📝 Creando input UBITS:', {
+                        containerId: containerId,
+                        currentValue: currentValue,
+                        optionsCount: field.options.length,
+                        options: field.options.map(opt => opt.text)
+                    });
+                    
+                    // Limpiar contenedor antes de crear
+                    container.innerHTML = '';
+                    
+                    // Asegurar que el contenedor sea visible
+                    container.style.display = 'block';
+                    container.style.width = '100%';
+                    container.style.maxWidth = '100%';
+                    container.style.position = 'relative';
+                    container.style.minHeight = '40px'; // Altura mínima para que sea visible
+                    
+                    // Crear el input UBITS
+                    try {
+                        console.log('  🔨 Llamando a createInput...');
+                        createInput({
+                            containerId: containerId,
+                            type: 'select',
+                            placeholder: 'Selecciona una opción...',
+                            selectOptions: field.options,
+                            size: 'md',
+                            showLabel: false,
+                            value: currentValue || '',
+                            onChange: function(value) {
+                                console.log('  🔄 onChange llamado para', containerId, 'con valor:', value);
+                                updateAgentStageConfig(stageId, configKey, value);
+                            }
+                        });
+                        console.log('  ✅ createInput llamado para:', containerId);
+                        
+                        // Verificar que se creó correctamente después de un breve delay
+                        setTimeout(() => {
+                            const input = container.querySelector('.ubits-input');
+                            const inputWrapper = container.querySelector('[style*="position: relative"]');
+                            console.log('  🔍 Verificando creación del input para:', containerId);
+                            console.log('    - Input encontrado:', !!input);
+                            console.log('    - Wrapper encontrado:', !!inputWrapper);
+                            console.log('    - Contenedor HTML:', container.innerHTML.substring(0, 200));
+                            
+                            if (input) {
+                                console.log('  ✅ Input creado exitosamente para:', containerId);
+                                // Asegurar que el input sea visible
+                                input.style.display = 'block';
+                                input.style.width = '100%';
+                            } else {
+                                console.error('  ❌ Input no se creó para:', containerId);
+                                console.error('    - HTML del contenedor:', container.innerHTML);
+                            }
+                        }, 200);
+                    } catch (e) {
+                        console.error('  ❌ Error creando input para', containerId, ':', e);
+                        console.error('    - Stack:', e.stack);
+                    }
+                } else {
+                    console.warn('  ⚠️ Campo select sin opciones o inválido:', {
+                        configKey: configKey,
+                        type: field.type,
+                        hasOptions: !!field.options,
+                        optionsCount: field.options ? field.options.length : 0
+                    });
+                }
+    });
+        } else {
+            console.error('❌ createInput no está disponible');
+            console.log('  - typeof createInput:', typeof createInput);
+            console.log('  - window.createInput:', typeof window.createInput);
+        }
+    }, 300);
     
     // ========================================
     // LOGS DETALLADOS PARA DETECTAR EXPANSIÓN HORIZONTAL
@@ -2467,25 +2660,31 @@ function handleConfigInfoHover(e) {
         <div style="font-size: 13px; line-height: 1.4; color: var(--ubits-fg-1-high-static-inverted);">${tooltipText}</div>
     `;
     
-    // Mostrar tooltip
-    tooltip.style.opacity = '1';
+    // Mostrar tooltip temporalmente para obtener dimensiones reales
+    tooltip.style.opacity = '0';
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.display = 'block';
+    tooltip.style.position = 'fixed';
     
-    // Posicionar tooltip arriba del botón
+    // Obtener dimensiones reales del tooltip
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const tooltipWidth = tooltipRect.width;
+    const tooltipHeight = tooltipRect.height;
+    
+    // Obtener posición del botón
     const rect = btn.getBoundingClientRect();
+    const btnCenterX = rect.left + (rect.width / 2);
+    const btnTop = rect.top;
     
     // Calcular espacio disponible
-    const spaceLeft = rect.left;
-    const spaceRight = window.innerWidth - rect.right;
     const spaceTop = rect.top;
     const spaceBottom = window.innerHeight - rect.bottom;
+    const spaceLeft = rect.left;
+    const spaceRight = window.innerWidth - rect.right;
     
-    // Estimar ancho del tooltip
-    const estimatedTooltipWidth = 300;
-    const estimatedTooltipHeight = 80;
-    
-    // Posicionar tooltip arriba del botón
-    let finalLeft = rect.left + (rect.width / 2) - (estimatedTooltipWidth / 2);
-    let finalTop = rect.top - estimatedTooltipHeight - 8;
+    // Posicionar tooltip centrado arriba del botón
+    let finalLeft = btnCenterX - (tooltipWidth / 2);
+    let finalTop = btnTop - tooltipHeight - 8; // 8px de espacio entre botón y tooltip
     
     // Ajustar si se sale por la izquierda
     if (finalLeft < 8) {
@@ -2493,18 +2692,21 @@ function handleConfigInfoHover(e) {
     }
     
     // Ajustar si se sale por la derecha
-    if (finalLeft + estimatedTooltipWidth > window.innerWidth - 8) {
-        finalLeft = window.innerWidth - estimatedTooltipWidth - 8;
+    if (finalLeft + tooltipWidth > window.innerWidth - 8) {
+        finalLeft = window.innerWidth - tooltipWidth - 8;
     }
     
     // Si no hay espacio arriba, mostrar abajo
-    if (spaceTop < estimatedTooltipHeight + 8) {
+    if (spaceTop < tooltipHeight + 8) {
         finalTop = rect.bottom + 8;
     }
     
+    // Aplicar posición final
     tooltip.style.left = finalLeft + 'px';
     tooltip.style.top = finalTop + 'px';
     tooltip.style.transform = 'none';
+    tooltip.style.visibility = 'visible';
+    tooltip.style.opacity = '1';
 }
 
 function handleConfigInfoLeave(e) {
@@ -4395,6 +4597,136 @@ window.toggleAgentStageConfig = function(stageId) {
         requestAnimationFrame(() => {
             // fixBoardContainerWidth() ya calcula el ancho correcto, no necesitamos establecer savedWidth
             fixBoardContainerWidth();
+            
+            // Recrear inputs UBITS para campos select después de expandir/contraer
+            if (typeof createInput === 'function') {
+                const stagesContainer = document.getElementById('stagesContainer');
+                if (stagesContainer) {
+                    setTimeout(() => {
+                        const containers = document.querySelectorAll('.config-input-container');
+                        console.log('🔄 Recreando inputs UBITS después de expandir/contraer:', containers.length);
+                        
+                        containers.forEach((container, index) => {
+                            console.log(`\n🔄 Procesando contenedor ${index + 1}/${containers.length} después de expandir/contraer:`);
+                            const containerId = container.id;
+                            const dataStageId = container.getAttribute('data-stage-id');
+                            const dataConfigKey = container.getAttribute('data-config-key');
+                            
+                            console.log('  - ID:', containerId);
+                            console.log('  - data-stage-id:', dataStageId);
+                            console.log('  - data-config-key:', dataConfigKey);
+                            
+                            if (!containerId) {
+                                console.warn('  ⚠️ Contenedor sin ID');
+                                return;
+                            }
+                            
+                            // Usar data attributes si están disponibles (método preferido)
+                            let stageId, configKey;
+                            if (dataStageId && dataConfigKey) {
+                                stageId = dataStageId;
+                                configKey = dataConfigKey;
+                                console.log('  ✅ Usando data attributes:', { stageId, configKey });
+                            } else {
+                                // Fallback: Extraer del ID usando split
+                                const parts = containerId.split('-');
+                                if (parts.length >= 3 && parts[0] === 'config') {
+                                    configKey = parts[parts.length - 1]; // Último elemento es configKey
+                                    stageId = parts.slice(1, -1).join('-'); // Todo lo demás es stageId
+                                    console.log('  ✅ Usando split del ID:', { stageId, configKey });
+                                } else {
+                                    console.warn('  ⚠️ ID de contenedor no coincide con patrón:', containerId);
+                                    return;
+                                }
+                            }
+                            
+                            // Verificar si ya tiene un input creado
+                            if (container.querySelector('.ubits-input')) {
+                                console.log('  ✅ Input ya existe para:', containerId);
+                                return;
+                            }
+                            
+                            const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
+                            if (!stage) {
+                                console.warn('  ⚠️ No se encontró stage con ID:', stageId);
+                                console.log('  📋 Stages disponibles:', currentTemplate.realContent.stages.map(s => s.id));
+                                return;
+                            }
+                            
+                            console.log('  ✅ Stage encontrado:', stage.id, 'agentId:', stage.agentId);
+                            
+                            const agentData = AGENTS.find(a => a.id === stage.agentId);
+                            if (!agentData) {
+                                console.warn('  ⚠️ No se encontró agente con ID:', stage.agentId);
+                                return;
+                            }
+                            
+                            if (!agentData.config || !agentData.config[configKey]) {
+                                console.warn('  ⚠️ No se encontró configuración para:', configKey, 'en agente:', stage.agentId);
+                                return;
+                            }
+                            
+                            const field = agentData.config[configKey];
+                            if (field.type === 'select' && field.options && field.options.length > 0) {
+                                const currentValue = stage.config && stage.config[configKey] ? stage.config[configKey] : field.default;
+
+                                console.log('  📝 Creando input UBITS:', {
+                                    containerId: containerId,
+                                    currentValue: currentValue,
+                                    optionsCount: field.options.length
+                                });
+
+                                // Limpiar contenedor antes de crear
+                                container.innerHTML = '';
+
+                                // Asegurar que el contenedor sea visible
+                                container.style.display = 'block';
+                                container.style.width = '100%';
+                                container.style.maxWidth = '100%';
+                                container.style.position = 'relative';
+                                container.style.minHeight = '40px';
+
+                                try {
+                                    console.log('  🔨 Llamando a createInput...');
+                                    createInput({
+                                        containerId: containerId,
+                                        type: 'select',
+                                        placeholder: 'Selecciona una opción...',
+                                        selectOptions: field.options,
+                                        size: 'md',
+                                        showLabel: false,
+                                        value: currentValue || '',
+                                        onChange: function(value) {
+                                            console.log('  🔄 onChange llamado para', containerId, 'con valor:', value);
+                                            updateAgentStageConfig(stageId, configKey, value);
+                                        }
+                                    });
+                                    console.log('  ✅ createInput llamado para:', containerId);
+
+                                    // Verificar que se creó correctamente
+                                    setTimeout(() => {
+                                        const input = container.querySelector('.ubits-input');
+                                        if (input) {
+                                            console.log('  ✅ Input creado exitosamente para:', containerId);
+                                            // Asegurar que el input sea visible
+                                            input.style.display = 'block';
+                                            input.style.width = '100%';
+                                        } else {
+                                            console.error('  ❌ Input no se creó para:', containerId);
+                                            console.error('    - HTML del contenedor:', container.innerHTML);
+                                        }
+                                    }, 200);
+                                } catch (e) {
+                                    console.error('  ❌ Error creando input para', containerId, ':', e);
+                                    console.error('    - Stack:', e.stack);
+                                }
+                            } else {
+                                console.warn('  ⚠️ Campo select sin opciones o inválido:', configKey);
+                            }
+                        });
+                    }, 150);
+                }
+            }
         });
     });
     

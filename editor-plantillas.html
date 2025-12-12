@@ -1263,6 +1263,22 @@
             margin-top: 8px;
         }
         
+        /* Contenedor para inputs UBITS en configuración de agentes */
+        .config-input-container {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            position: relative;
+            display: block;
+        }
+        
+        /* Asegurar que los inputs UBITS dentro de config-input-container se muestren */
+        .config-input-container .ubits-input {
+            width: 100%;
+            max-width: 100%;
+        }
+        
         .agent-stage-config {
             width: 100%;
             max-width: 100%;
@@ -1577,9 +1593,9 @@
             cursor: default;
         }
 
+        /* Quitar hover - solo cambiar cuando está en drag-over */
         .board-drop-slot:hover {
-            border-color: var(--ubits-feedback-accent-info);
-            background: var(--ubits-feedback-bg-info-subtle);
+            /* Sin cambios en hover - mantener estilos por defecto */
         }
 
         .board-container.drag-over .board-drop-slot {
@@ -2016,7 +2032,7 @@
                             <!-- Tabs -->
                             <div class="sidebar-tabs">
                                 <button class="tab-button active" data-tab="stages">
-                                    <i class="far fa-sitemap"></i>
+                                    <i class="far fa-timeline-arrow"></i>
                                     <span>Etapas</span>
                                 </button>
                                 <button class="tab-button" data-tab="agents">
