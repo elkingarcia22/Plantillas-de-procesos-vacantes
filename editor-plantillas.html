@@ -118,7 +118,19 @@
         }
 
         .template-status-badge.draft {
-            color: var(--ubits-fg-1-medium);
+            color: var(--ubits-feedback-fg-info-subtle);
+        }
+        
+        .template-status-badge.draft span {
+            color: var(--ubits-feedback-fg-info-subtle) !important;
+        }
+        
+        [data-theme="dark"] .template-status-badge.draft {
+            color: var(--ubits-feedback-accent-info);
+        }
+        
+        [data-theme="dark"] .template-status-badge.draft span {
+            color: var(--ubits-feedback-accent-info) !important;
         }
 
         .template-status-badge.active {
@@ -199,12 +211,20 @@
 
         .template-status-badge.draft {
             background: var(--ubits-feedback-bg-info-subtle);
-            color: var(--ubits-fg-1-high);
+            color: var(--ubits-feedback-fg-info-subtle);
             border: 1px solid var(--ubits-feedback-accent-info);
         }
         
         .template-status-badge.draft span {
-            color: var(--ubits-fg-1-high) !important;
+            color: var(--ubits-feedback-fg-info-subtle) !important;
+        }
+        
+        [data-theme="dark"] .template-status-badge.draft {
+            color: var(--ubits-feedback-accent-info);
+        }
+        
+        [data-theme="dark"] .template-status-badge.draft span {
+            color: var(--ubits-feedback-accent-info) !important;
         }
 
         .template-status-badge.active {
@@ -1636,6 +1656,14 @@
             min-width: 0;
             max-width: 100%;
             box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+            font-size: 13px;
+            text-align: center;
+            padding: 0 8px;
+            font-family: 'Noto Sans', sans-serif;
         }
 
         /* Responsive */
@@ -2011,7 +2039,7 @@
                         </div>
                         <div class="version-info-container">
                             <div class="version-info">
-                                <span id="templateLastModified">Modificado hoy</span>
+                                <span id="templateLastModified">Modificado: hoy</span>
                             </div>
                         </div>
                     </div>
@@ -2025,8 +2053,8 @@
                         <div class="agents-sidebar">
                             <!-- Título y descripción de la sección -->
                             <div class="agents-header-section">
-                                <h3 class="agents-title">Lista de etapas y agentes IA</h3>
-                                <p class="agents-description-main">Gestiona las etapas y selecciona los agentes de IA que harán parte de tu proceso</p>
+                                <h3 class="agents-title">Biblioteca de etapas y agentes IA</h3>
+                                <p class="agents-description-main">Crea y gestiona las etapas y agentes de IA que podrás usar en el flujo del candidato.</p>
                             </div>
                             
                             <!-- Tabs -->
@@ -2100,12 +2128,12 @@
                                     
                                     <!-- Empty state cuando no hay etapas -->
                                     <div class="board-header-section" id="emptyState" style="display: none;">
-                                        <h3 class="board-empty-title">Pasos del proceso</h3>
-                                        <p class="board-empty-instruction">Arrasta y suelta las etapas aquí</p>
+                                        <h3 class="board-empty-title">Flujo del candidato</h3>
+                                        <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
                                         <div class="board-drop-slots">
                                             <div class="board-drop-slot" data-slot-number="1">
                                                 <div class="slot-number">1</div>
-                                                <div class="slot-placeholder"></div>
+                                                <div class="slot-placeholder">Arrastra una etapa o agente IA desde la biblioteca</div>
                                             </div>
                                         </div>
                                     </div>

@@ -1209,7 +1209,7 @@ function renderAvailableStages() {
                     <div class="empty-icon">
                         <i class="far fa-timeline-arrow"></i>
                     </div>
-                    <p class="empty-text">Crea tu primera etapa y comienza a diseñar tus procesos</p>
+                    <p class="empty-text">Crea tu primera etapa y empieza a diseñar el recorrido de tu candidato.</p>
                     <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openCreateStageModal();">
                         <i class="far fa-plus"></i>
                         <span>Crear etapa</span>
@@ -1569,13 +1569,13 @@ function renderStages() {
     if (!currentTemplate.realContent.stages || currentTemplate.realContent.stages.length === 0) {
         stagesContainer.innerHTML = `
             <div class="board-header-section">
-                <h3 class="board-empty-title">Pasos del proceso</h3>
-                <p class="board-empty-instruction">Añade o arrastra aquí las etapas o agentes IA que irán en tu proceso</p>
+                <h3 class="board-empty-title">Flujo del candidato</h3>
+                <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
             </div>
             <div class="board-drop-slots">
                 <div class="board-drop-slot" data-slot-number="1">
                     <div class="slot-number">1</div>
-                    <div class="slot-placeholder"></div>
+                    <div class="slot-placeholder">Arrastra una etapa o agente IA desde la biblioteca</div>
                 </div>
             </div>
         `;
@@ -1653,7 +1653,7 @@ function renderStages() {
         <div class="board-drop-slots">
             <div class="board-drop-slot" data-slot-number="${nextSlotNumber}">
                 <div class="slot-number">${nextSlotNumber}</div>
-                <div class="slot-placeholder"></div>
+                <div class="slot-placeholder">Arrastra una etapa o agente IA desde la izquierda</div>
             </div>
         </div>
     `;
@@ -1662,8 +1662,8 @@ function renderStages() {
     // Agregar header y luego las etapas
     stagesContainer.innerHTML = `
         <div class="board-header-section">
-            <h3 class="board-empty-title">Pasos del proceso</h3>
-            <p class="board-empty-instruction">Añade o arrastra etapas o agentes de IA a tu proceso</p>
+            <h3 class="board-empty-title">Flujo del candidato</h3>
+            <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
         </div>
         ${stagesHTML}
         ${nextSlotHTML}
@@ -2543,7 +2543,7 @@ function updateTemplateInfo() {
         if (templateStatusBadge) {
             const status = currentTemplate.status || 'draft';
             const statusText = status === 'active' ? 'Activa' : 'Borrador';
-            templateStatusBadge.innerHTML = `<div class="status-dot"></div><span>${statusText}</span>`;
+            templateStatusBadge.innerHTML = `<span>${statusText}</span>`;
             templateStatusBadge.className = 'template-status-badge ' + (status === 'active' ? 'active' : 'draft');
         }
         
@@ -2568,7 +2568,7 @@ function updateTemplateInfo() {
         
         // Actualizar fecha de modificación
         if (templateLastModified && currentTemplate.lastModified) {
-            templateLastModified.textContent = `Modificado ${formatDate(currentTemplate.lastModified)}`;
+            templateLastModified.textContent = `Modificado: ${formatDate(currentTemplate.lastModified)}`;
         }
         
         // Actualizar versión
