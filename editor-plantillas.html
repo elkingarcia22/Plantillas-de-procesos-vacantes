@@ -388,18 +388,38 @@
 
         .agents-title {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             color: var(--ubits-fg-1-high);
             margin: 0;
+            line-height: 1.2;
         }
-
+        
         .agents-description {
             font-family: 'Noto Sans', sans-serif;
             font-size: 14px;
             color: var(--ubits-fg-1-medium);
             margin: 0;
             line-height: 1.4;
+        }
+        
+        .agents-description-main {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.4;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Contenedor de título y descripción para mantener consistencia con board */
+        .agents-header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         /* Tabs del sidebar */
@@ -455,6 +475,16 @@
             flex-direction: column;
             gap: 16px;
         }
+        
+        /* Cuando no hay controles, reducir el gap */
+        .tab-content.active:has(.stages-controls-row[style*="display: none"]) {
+            gap: 0;
+        }
+        
+        /* Alternativa sin :has() para compatibilidad */
+        .tab-content.active.no-controls {
+            gap: 0;
+        }
 
         /* Botón crear etapa */
         .create-stage-btn {
@@ -500,6 +530,7 @@
             justify-content: center;
             padding: 40px 20px;
             text-align: center;
+            margin-top: 0;
         }
 
         .empty-stages-visual .empty-icon {
@@ -528,6 +559,15 @@
         
         .empty-stages-visual .ubits-button {
             margin-top: 4px;
+        }
+        
+        /* Empty state para búsqueda y filtrado - usa los mismos estilos que empty-stages-visual */
+        #stagesEmptyState {
+            display: none !important;
+        }
+        
+        #stagesEmptyState.show {
+            display: flex !important;
         }
 
         /* Item de etapa en sidebar (columna izquierda) */
@@ -703,32 +743,46 @@
             pointer-events: none;
         }
 
+        /* Contenedor de controles de etapas en una línea */
+        .stages-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
         /* Search input wrapper para etapas */
         .search-input-wrapper {
             position: relative;
             display: flex;
             align-items: center;
+            flex: 1;
+            min-width: 150px;
         }
 
         .search-icon {
             position: absolute;
             left: 12px;
-            color: var(--ubits-fg-1-low);
+            color: var(--ubits-fg-1-medium);
             font-size: 14px;
-            z-index: 1;
+            z-index: 2;
+            pointer-events: none;
         }
 
         .search-input {
             width: 100%;
-            padding: 8px 12px 8px 36px;
+            padding: 10px 12px 10px 36px;
             border: 1px solid var(--ubits-border-1);
             border-radius: 6px;
             background: var(--ubits-bg-1);
             color: var(--ubits-fg-1-high);
             font-family: 'Noto Sans', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
             transition: border-color 0.2s ease;
+            box-sizing: border-box;
         }
 
         .search-input:focus {
@@ -949,7 +1003,13 @@
             background: var(--ubits-bg-3);
             border-color: var(--ubits-accent-brand);
         }
-
+        
+        /* Quitar hover de cards de agentes en el board (pasos del proceso) */
+        .agent-stage-item:hover {
+            background: var(--ubits-bg-2);
+            border-color: var(--ubits-border-1);
+        }
+        
         .stage-item:active {
             cursor: grabbing;
         }
@@ -1198,6 +1258,11 @@
             overflow-x: hidden;
         }
         
+        .config-field-radio {
+            margin-bottom: 16px;
+            margin-top: 8px;
+        }
+        
         .agent-stage-config {
             width: 100%;
             max-width: 100%;
@@ -1321,6 +1386,87 @@
 
         .config-select:hover {
             border-color: var(--ubits-accent-brand);
+        }
+        
+        .config-radio-group {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            min-width: 120px;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex: 1;
+        }
+        
+        .config-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+            user-select: none;
+            position: relative;
+            padding: 4px 0;
+        }
+        
+        .config-radio-label input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 50%;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .config-radio-label input[type="radio"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+        
+        .config-radio-label input[type="radio"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+        
+        .config-radio-label input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ubits-bg-1);
+        }
+        
+        .config-radio-label input[type="radio"]:focus {
+            outline: 2px solid var(--ubits-accent-brand);
+            outline-offset: 2px;
+        }
+        
+        .config-radio-label span {
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+        
+        .config-radio-label:hover span {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .config-radio-label:has(input[type="radio"]:checked) span {
+            color: var(--ubits-accent-brand);
+            font-weight: 500;
         }
 
         .stage-actions {
@@ -1509,6 +1655,27 @@
             .create-stage-btn {
                 padding: 8px 12px;
                 font-size: 12px;
+            }
+            
+            .stages-controls-row {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            
+            .stages-controls-row .create-stage-btn {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .search-input-wrapper {
+                min-width: 120px;
+                width: 100%;
+            }
+            
+            #stageCategoryFilterContainer {
+                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
             }
 
             #stagesList .stage-item {
@@ -1840,6 +2007,12 @@
                     <div class="editor-layout">
                         <!-- Sidebar con tabs -->
                         <div class="agents-sidebar">
+                            <!-- Título y descripción de la sección -->
+                            <div class="agents-header-section">
+                                <h3 class="agents-title">Lista de etapas y agentes IA</h3>
+                                <p class="agents-description-main">Gestiona las etapas y selecciona los agentes de IA que harán parte de tu proceso</p>
+                            </div>
+                            
                             <!-- Tabs -->
                             <div class="sidebar-tabs">
                                 <button class="tab-button active" data-tab="stages">
@@ -1854,27 +2027,39 @@
                             
                             <!-- Tab Etapas -->
                             <div class="tab-content active" id="stages-tab">
-                                <p class="agents-description" id="stagesDescription">Crea y gestiona las etapas del proceso de selección</p>
-                                
-                                <!-- Botón crear etapa -->
-                                <button class="create-stage-btn" id="createStageBtn" onclick="openCreateStageModal();">
-                                    <i class="far fa-plus"></i>
-                                    <span>Crear etapa</span>
-                                </button>
-                                
-                                <!-- Buscador de etapas (solo visible cuando hay más de 6) -->
-                                <div class="search-input-wrapper" id="stageSearchWrapper" style="display: none;">
-                                    <i class="far fa-search search-icon"></i>
-                                    <input 
-                                        type="text" 
-                                        id="stageSearch" 
-                                        placeholder="Buscar etapas" 
-                                        class="search-input"
-                                        aria-label="Buscar etapas"
-                                    >
-                                    <button type="button" id="clearStageSearch" class="clear-search-icon" style="display: none;">
-                                        <i class="far fa-times"></i>
+                                <!-- Contenedor de controles en una sola línea -->
+                                <div class="stages-controls-row">
+                                    <!-- Buscador de etapas -->
+                                    <div class="search-input-wrapper" id="stageSearchWrapper">
+                                        <i class="far fa-search search-icon"></i>
+                                        <input 
+                                            type="text" 
+                                            id="stageSearch" 
+                                            placeholder="Buscar etapas" 
+                                            class="search-input"
+                                            aria-label="Buscar etapas"
+                                        >
+                                        <button type="button" id="clearStageSearch" class="clear-search-icon" style="display: none;">
+                                            <i class="far fa-times"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Filtro de categorías -->
+                                    <div id="stageCategoryFilterContainer"></div>
+                                    
+                                    <!-- Botón crear etapa (al final) -->
+                                    <button class="create-stage-btn" id="createStageBtn" onclick="openCreateStageModal();">
+                                        <i class="far fa-plus"></i>
+                                        <span>Crear etapa</span>
                                     </button>
+                                </div>
+                                
+                                <!-- Empty state para búsqueda/filtrado -->
+                                <div class="empty-stages-visual" id="stagesEmptyState" style="display: none;">
+                                    <div class="empty-icon">
+                                        <i class="far fa-search"></i>
+                                    </div>
+                                    <p class="empty-text" id="stagesEmptyStateText">No se encontraron etapas</p>
                                 </div>
                                 
                                 <!-- Lista de etapas -->
@@ -1885,8 +2070,6 @@
                             
                             <!-- Tab Agentes IA -->
                             <div class="tab-content" id="agents-tab">
-                                <p class="agents-description">Arrastra y suelta los agentes IA para automatizar etapas del flujo</p>
-                                
                                 <div class="agents-list" id="agentsList">
                                     <!-- Los agentes se cargarán dinámicamente -->
                                 </div>

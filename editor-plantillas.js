@@ -16,16 +16,25 @@ const AGENTS = [
             salaryPercentage: { 
                 label: 'Porcentaje sobre el rango salarial', 
                 type: 'number', 
-                default: 0, 
+                default: 25, 
                 suffix: '%',
                 tooltip: 'Define qué tanto puede superar el candidato el salario máximo del puesto y seguir siendo considerado. Ejemplo: si el tope es $1.000 y pones 10%, se aceptan candidatos hasta $1.100.'
             },
             minScore: { 
                 label: 'Puntaje mínimo de evaluación', 
                 type: 'number', 
-                default: 0, 
+                default: 70, 
                 suffix: 'pts',
                 tooltip: 'Puntaje mínimo que el CV debe obtener para pasar a la siguiente etapa. Si lo dejas en 0, todos los candidatos avanzan sin filtro por puntaje.'
+            },
+            acceptExEmployees: {
+                label: 'Acepta ex colaboradores',
+                type: 'radio',
+                default: 'si',
+                options: [
+                    { value: 'si', text: 'Sí' },
+                    { value: 'no', text: 'No' }
+                ]
             }
         }
     },
@@ -319,16 +328,42 @@ function setupTabs() {
 }
 
 function setupStageSearch() {
-    const searchInput = document.getElementById('stageSearch');
-    const clearButton = document.getElementById('clearStageSearch');
-    const stagesList = document.getElementById('stagesList');
+    try {
+        const searchInput = document.getElementById('stageSearch');
+        const clearButton = document.getElementById('clearStageSearch');
+        const stagesList = document.getElementById('stagesList');
+        const emptyState = document.getElementById('stagesEmptyState');
+        const emptyStateText = document.getElementById('stagesEmptyStateText');
+        
+        if (!searchInput || !clearButton || !stagesList) {
+            console.warn('setupStageSearch: Elementos no encontrados, reintentando más tarde');
+            return;
+        }
+        
+        // Asegurar que el empty state esté oculto al inicio
+        if (emptyState) {
+            emptyState.classList.remove('show');
+            emptyState.style.display = 'none';
+        }
+        
+        // Si emptyState no existe, crear uno temporal
+        if (!emptyState || !emptyStateText) {
+            console.warn('setupStageSearch: Empty state no encontrado, continuando sin él');
+        }
     
-    if (!searchInput || !clearButton || !stagesList) return;
-    
-    // Función de búsqueda
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
+    // Función para aplicar filtros (búsqueda + categoría) y mostrar empty state
+    function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        
+        // Obtener categoría seleccionada del input UBITS
+        let selectedCategory = '';
+        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
+        if (categoryInput) {
+            selectedCategory = categoryInput.dataset.selectedValue || '';
+        }
+        
         const stageItems = stagesList.querySelectorAll('.stage-item');
+        let visibleCount = 0;
         
         // Mostrar/ocultar botón de limpiar
         clearButton.style.display = searchTerm ? 'block' : 'none';
@@ -336,29 +371,95 @@ function setupStageSearch() {
         // Filtrar etapas
         stageItems.forEach(item => {
             const stageName = item.getAttribute('data-stage-name').toLowerCase();
-            const stageCategory = item.getAttribute('data-stage-category').toLowerCase();
+            const stageCategory = item.getAttribute('data-stage-category');
             
-            if (stageName.includes(searchTerm) || stageCategory.includes(searchTerm)) {
+            // Filtro por búsqueda
+            const matchesSearch = !searchTerm || 
+                stageName.includes(searchTerm) || 
+                stageCategory.toLowerCase().includes(searchTerm);
+            
+            // Filtro por categoría
+            const matchesCategory = !selectedCategory || stageCategory === selectedCategory;
+            
+            // Mostrar si cumple ambos filtros
+            if (matchesSearch && matchesCategory) {
                 item.style.display = 'flex';
+                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
-    });
-    
-    // Botón limpiar búsqueda
-    clearButton.addEventListener('click', function() {
-        searchInput.value = '';
-        this.style.display = 'none';
         
-        // Mostrar todas las etapas
-        const stageItems = stagesList.querySelectorAll('.stage-item');
-        stageItems.forEach(item => {
-            item.style.display = 'flex';
+        // Mostrar/ocultar empty state SOLO cuando hay búsqueda/filtro activo y no hay resultados
+        if (visibleCount === 0 && (searchTerm || selectedCategory)) {
+            // Hay filtros activos pero no hay resultados - mostrar empty state
+            if (emptyState) {
+                emptyState.classList.add('show');
+                emptyState.style.display = 'flex';
+            }
+            if (stagesList) {
+                stagesList.style.display = 'none';
+            }
+            
+            // Texto según el tipo de filtro
+            if (emptyStateText) {
+                if (searchTerm && selectedCategory) {
+                    emptyStateText.textContent = 'No se encontraron etapas con esa búsqueda y categoría';
+                } else if (searchTerm) {
+                    emptyStateText.textContent = 'No se encontraron etapas con esa búsqueda';
+                } else if (selectedCategory) {
+                    emptyStateText.textContent = 'No hay etapas en esta categoría';
+                }
+            }
+        } else {
+            // Hay resultados o no hay filtros activos - ocultar empty state
+            if (emptyState) {
+                emptyState.classList.remove('show');
+                emptyState.style.display = 'none';
+            }
+            if (stagesList) {
+                stagesList.style.display = 'flex';
+            }
+        }
+    }
+    
+        // Función de búsqueda
+        searchInput.addEventListener('input', applyFilters);
+        
+        // Botón limpiar búsqueda
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            this.style.display = 'none';
+            applyFilters();
+            searchInput.focus();
         });
         
-        searchInput.focus();
-    });
+        // Exponer función para que pueda ser llamada desde el filtro de categorías
+        window.applyStageFilters = applyFilters;
+        
+        // Aplicar filtros inicialmente para asegurar estado correcto
+        applyFilters();
+    } catch (e) {
+        console.error('Error en setupStageSearch:', e);
+    }
+}
+
+// Función para filtrar por categoría (llamada desde el select UBITS)
+window.filterStagesByCategory = function(categoryId) {
+    try {
+        // Guardar el valor seleccionado en el dataset del input
+        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
+        if (categoryInput) {
+            categoryInput.dataset.selectedValue = categoryId || '';
+        }
+        
+        // Llamar a la función de aplicar filtros que ya maneja todo
+        if (window.applyStageFilters && typeof window.applyStageFilters === 'function') {
+            window.applyStageFilters();
+        }
+    } catch (e) {
+        console.error('Error en filterStagesByCategory:', e);
+    }
 }
 
 // ========================================
@@ -1046,8 +1147,57 @@ function renderAvailableStages() {
     
     // Obtener referencias a elementos que se mostrarán/ocultarán
     const createStageBtn = document.getElementById('createStageBtn');
-    const stagesDescription = document.getElementById('stagesDescription');
     const searchWrapper = document.getElementById('stageSearchWrapper');
+    const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+    
+    // Crear filtro de categorías con componente Input UBITS (solo si hay etapas disponibles)
+    // Verificar primero si hay etapas antes de crear el filtro
+    const hasStages = availableStages.length > 0;
+    
+    try {
+        if (categoryFilterContainer && typeof createInput === 'function' && hasStages) {
+            // Limpiar contenedor primero
+            categoryFilterContainer.innerHTML = '';
+            
+            // Preparar opciones del select
+            const categoryOptions = [
+                { value: '', text: 'Todas las categorías' },
+                ...STAGE_CATEGORIES.map(cat => ({ value: cat.id, text: cat.name }))
+            ];
+            
+            // Crear el input select UBITS
+            createInput({
+                containerId: 'stageCategoryFilterContainer',
+                type: 'select',
+                placeholder: 'Todas las categorías',
+                selectOptions: categoryOptions,
+                size: 'md',
+                showLabel: false,
+                value: '', // Valor inicial: todas las categorías
+                onChange: function(value) {
+                    try {
+                        // Guardar el valor en el dataset del input
+                        const categoryInput = document.querySelector('#stageCategoryFilterContainer .ubits-input');
+                        if (categoryInput) {
+                            categoryInput.dataset.selectedValue = value || '';
+                        }
+                        // Aplicar filtros
+                        if (window.filterStagesByCategory) {
+                            window.filterStagesByCategory(value);
+                        }
+                    } catch (e) {
+                        console.error('Error en onChange del filtro:', e);
+                    }
+                }
+            });
+        } else if (categoryFilterContainer && !hasStages) {
+            // Si no hay etapas, ocultar el contenedor del filtro
+            categoryFilterContainer.innerHTML = '';
+            categoryFilterContainer.style.display = 'none';
+        }
+    } catch (e) {
+        console.error('Error creando filtro de categorías:', e);
+    }
     
     // Si no hay etapas disponibles, mostrar empty state según el caso
     if (availableStagesForThisTemplate.length === 0) {
@@ -1066,10 +1216,24 @@ function renderAvailableStages() {
                 </div>
             `;
             
-            // Ocultar botón crear etapa y descripción cuando no hay etapas
+            // Ocultar botón crear etapa cuando no hay etapas
             if (createStageBtn) createStageBtn.style.display = 'none';
-            if (stagesDescription) stagesDescription.style.display = 'none';
+            // Ocultar buscador y filtro cuando no hay etapas creadas
             if (searchWrapper) searchWrapper.style.display = 'none';
+            const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+            if (categoryFilterContainer) {
+                categoryFilterContainer.style.display = 'none';
+            }
+            // Ocultar el contenedor completo de controles para eliminar el espacio
+            const controlsRow = document.querySelector('.stages-controls-row');
+            if (controlsRow) {
+                controlsRow.style.display = 'none';
+            }
+            // Agregar clase al tab-content para reducir el gap
+            const stagesTab = document.getElementById('stages-tab');
+            if (stagesTab) {
+                stagesTab.classList.add('no-controls');
+            }
         } else {
             // Caso 2: Todas las etapas están en uso en esta plantilla
             stagesList.innerHTML = `
@@ -1081,25 +1245,73 @@ function renderAvailableStages() {
                 </div>
             `;
             
-            // Mostrar botón crear etapa y descripción cuando todas están en uso
+            // Mostrar botón crear etapa cuando todas están en uso
             if (createStageBtn) createStageBtn.style.display = 'flex';
-            if (stagesDescription) stagesDescription.style.display = 'block';
-            if (searchWrapper) searchWrapper.style.display = 'none';
+            // Mostrar buscador y filtro cuando hay etapas (aunque estén todas en uso)
+            if (searchWrapper) searchWrapper.style.display = 'flex';
+            const categoryFilterContainer2 = document.getElementById('stageCategoryFilterContainer');
+            if (categoryFilterContainer2) {
+                categoryFilterContainer2.style.display = 'block';
+            }
+            // Mostrar el contenedor completo de controles
+            const controlsRow2 = document.querySelector('.stages-controls-row');
+            if (controlsRow2) {
+                controlsRow2.style.display = 'flex';
+            }
+            // Remover clase del tab-content para restaurar el gap normal
+            const stagesTab2 = document.getElementById('stages-tab');
+            if (stagesTab2) {
+                stagesTab2.classList.remove('no-controls');
+            }
         }
         
         return;
     }
     
-    // Si hay etapas, mostrar botón y descripción
+    // Si hay etapas, mostrar botón, buscador y filtro
     if (createStageBtn) createStageBtn.style.display = 'flex';
-    if (stagesDescription) stagesDescription.style.display = 'block';
     
-    // Mostrar/ocultar buscador según cantidad de etapas
+    // El buscador siempre está visible cuando hay etapas
     if (searchWrapper) {
-        searchWrapper.style.display = availableStagesForThisTemplate.length > 6 ? 'flex' : 'none';
+        searchWrapper.style.display = 'flex';
     }
     
-    stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
+    // El filtro siempre está visible cuando hay etapas
+    const categoryFilterContainer3 = document.getElementById('stageCategoryFilterContainer');
+    if (categoryFilterContainer3) {
+        categoryFilterContainer3.style.display = 'block';
+    }
+    
+    // Mostrar el contenedor completo de controles
+    const controlsRow3 = document.querySelector('.stages-controls-row');
+    if (controlsRow3) {
+        controlsRow3.style.display = 'flex';
+    }
+    
+    // Remover clase del tab-content para restaurar el gap normal
+    const stagesTab3 = document.getElementById('stages-tab');
+    if (stagesTab3) {
+        stagesTab3.classList.remove('no-controls');
+    }
+    
+    // Ocultar empty state inicialmente
+    try {
+        const emptyState = document.getElementById('stagesEmptyState');
+        if (emptyState) emptyState.classList.remove('show');
+        if (stagesList) stagesList.style.display = 'flex';
+    } catch (e) {
+        console.warn('Error ocultando empty state:', e);
+    }
+    
+    // Verificar que stagesList existe antes de renderizar
+    if (!stagesList) {
+        console.error('stagesList no encontrado');
+        return;
+    }
+    
+    // Renderizar etapas disponibles
+    try {
+        stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
             <div class="stage-item" 
@@ -1137,13 +1349,27 @@ function renderAvailableStages() {
                 </div>
             </div>
         `;
-    }).join('');
-    
-    // Agregar event listeners para drag and drop
-    stagesList.querySelectorAll('.stage-item').forEach(item => {
-        item.addEventListener('dragstart', handleStageTemplateDragStart);
-        item.addEventListener('dragend', handleStageTemplateDragEnd);
-    });
+        }).join('');
+        
+        // Agregar event listeners para drag and drop
+        if (stagesList) {
+            stagesList.querySelectorAll('.stage-item').forEach(item => {
+                item.addEventListener('dragstart', handleStageTemplateDragStart);
+                item.addEventListener('dragend', handleStageTemplateDragEnd);
+            });
+        }
+        
+        // Re-inicializar el setup de búsqueda después de renderizar
+        setTimeout(() => {
+            try {
+                setupStageSearch();
+            } catch (e) {
+                console.error('Error inicializando búsqueda:', e);
+            }
+        }, 100);
+    } catch (e) {
+        console.error('Error renderizando etapas:', e);
+    }
 }
 
 // ========================================
@@ -1233,6 +1459,35 @@ function renderAgentStageCard(stage, index) {
                                 </select>
                             </div>
                         `;
+                    } else if (field.type === 'radio') {
+                        return `
+                            <div class="config-field config-field-radio">
+                                <label class="config-label">
+                                    ${field.label}
+                                    ${field.tooltip ? `
+                                        <button class="config-info-btn" 
+                                                data-tooltip="${field.tooltip.replace(/"/g, '&quot;')}"
+                                                title="${field.tooltip.replace(/"/g, '&quot;')}">
+                                            <i class="far fa-circle-info"></i>
+                                        </button>
+                                    ` : ''}
+                                </label>
+                                <div class="config-radio-group">
+                                    ${field.options.map(opt => `
+                                        <label class="config-radio-label">
+                                            <input 
+                                                type="radio" 
+                                                name="config-${stage.id}-${key}"
+                                                value="${opt.value}"
+                                                ${value === opt.value ? 'checked' : ''}
+                                                onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
+                                            >
+                                            <span>${opt.text}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
                     }
                     return '';
                 }).join('')}
@@ -1297,7 +1552,7 @@ function renderStages() {
         stagesContainer.innerHTML = `
             <div class="board-header-section">
                 <h3 class="board-empty-title">Pasos del proceso</h3>
-                <p class="board-empty-instruction">Añade o arrastra etapas o agentes de IA a tu proceso</p>
+                <p class="board-empty-instruction">Añade o arrastra aquí las etapas o agentes IA que irán en tu proceso</p>
             </div>
             <div class="board-drop-slots">
                 <div class="board-drop-slot" data-slot-number="1">
@@ -3167,7 +3422,13 @@ function updateAgentConfig(stageId, configKey, value) {
     const agentData = AGENTS.find(a => a.id === agent.id);
     if (agentData && agentData.config && agentData.config[configKey]) {
         const field = agentData.config[configKey];
-        agent.config[configKey] = field.type === 'number' ? parseFloat(value) || 0 : value;
+        if (field.type === 'number') {
+            agent.config[configKey] = parseFloat(value) || 0;
+        } else if (field.type === 'radio') {
+            agent.config[configKey] = value;
+        } else {
+            agent.config[configKey] = value;
+        }
     } else {
         agent.config[configKey] = value;
     }
@@ -4161,6 +4422,8 @@ window.updateAgentStageConfig = function(stageId, configKey, value) {
         const field = agentData.config[configKey];
         if (field.type === 'number') {
             stage.config[configKey] = parseInt(value) || 0;
+        } else if (field.type === 'radio') {
+            stage.config[configKey] = value;
         } else {
             stage.config[configKey] = value;
         }
