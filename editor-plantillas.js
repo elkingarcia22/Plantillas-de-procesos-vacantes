@@ -6300,13 +6300,9 @@ function renderSerenaConfigView() {
             <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="closeSerenaConfigDrawer(); return false;">
                 <span>Cancelar</span>
             </button>
-            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="saveSerenaConfig(); return false;">
+            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveSerenaConfig(); return false;">
                 <i class="far fa-save"></i>
                 <span>Guardar</span>
-            </button>
-            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="finishTemplate(); return false;">
-                <i class="far fa-check-circle"></i>
-                <span>Terminar</span>
             </button>
         `;
     }

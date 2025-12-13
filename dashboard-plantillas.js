@@ -39,12 +39,216 @@ function loadTemplatesFromStorage() {
     const stored = localStorage.getItem('templates');
     if (stored) {
         currentTemplates = JSON.parse(stored);
+        console.log('📋 [loadTemplatesFromStorage] Plantillas cargadas:', currentTemplates.length);
+        // Verificar si ya existen las plantillas por defecto
+        const hasDefaultTemplates = currentTemplates.some(t => t.isDefault === true);
+        console.log('📋 [loadTemplatesFromStorage] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
+        if (!hasDefaultTemplates) {
+            console.log('📋 [loadTemplatesFromStorage] Creando plantillas por defecto...');
+            // Agregar plantillas por defecto si no existen
+            const defaultTemplates = createDefaultTemplates();
+            console.log('📋 [loadTemplatesFromStorage] Plantillas por defecto creadas:', defaultTemplates.length);
+            currentTemplates = [...defaultTemplates, ...currentTemplates];
+            saveTemplatesToStorage();
+            console.log('📋 [loadTemplatesFromStorage] Plantillas guardadas. Total:', currentTemplates.length);
+        }
     } else {
-        // Sistema en blanco - sin plantillas por defecto
-        currentTemplates = [];
+        console.log('📋 [loadTemplatesFromStorage] No hay plantillas guardadas. Creando plantillas por defecto...');
+        // Crear plantillas por defecto
+        currentTemplates = createDefaultTemplates();
+        console.log('📋 [loadTemplatesFromStorage] Plantillas por defecto creadas:', currentTemplates.length);
+        saveTemplatesToStorage();
+        console.log('📋 [loadTemplatesFromStorage] Plantillas guardadas.');
     }
     
     filteredTemplates = [...currentTemplates];
+    console.log('📋 [loadTemplatesFromStorage] Plantillas filtradas:', filteredTemplates.length);
+}
+
+function createDefaultTemplates() {
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
+    
+    // Plantilla 1: Flujo estándar de selección con IA
+    const template1 = {
+        id: 'default-template-ia',
+        name: 'Plantilla por defecto – Flujo estándar de selección con IA',
+        category: 'reclutamiento',
+        status: 'active',
+        createdAt: now,
+        lastModified: today,
+        author: 'Sistema',
+        avatar: 'images/Profile-image.jpg',
+        version: 1,
+        stages: 8,
+        agents: 5,
+        isDefault: true,
+        realContent: {
+            stages: [
+                {
+                    id: 'stage-1',
+                    type: 'agent',
+                    agentId: 'cv-analyzer',
+                    name: 'Analizador de CV',
+                    category: 'evaluacion-inicial',
+                    config: {
+                        salaryPercentage: 25,
+                        minScore: 70,
+                        acceptExEmployees: 'si'
+                    }
+                },
+                {
+                    id: 'stage-2',
+                    type: 'custom',
+                    name: 'Preguntas de filtro / formulario',
+                    category: 'evaluacion-inicial',
+                    description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
+                    templateId: 'default-pre-filter-requirements'
+                },
+                {
+                    id: 'stage-3',
+                    type: 'agent',
+                    agentId: 'psychometric-analyst',
+                    name: 'Analista psicométrico',
+                    category: 'evaluacion-psicometrica',
+                    config: {
+                        minScore: 0,
+                        tests: []
+                    }
+                },
+                {
+                    id: 'stage-4',
+                    type: 'agent',
+                    agentId: 'interview-ia',
+                    name: 'Entrevista Serena',
+                    category: 'entrevistas',
+                    config: {
+                        interviewType: 'telefonica',
+                        voice: 'colombia',
+                        expirationDays: 0,
+                        minScore: 0
+                    }
+                },
+                {
+                    id: 'stage-5',
+                    type: 'custom',
+                    name: 'Entrevista con el reclutador',
+                    category: 'entrevistas',
+                    description: 'Etapa manual para las personas que pasaron todos los filtros automáticos.',
+                    templateId: 'default-interview-recruiter'
+                },
+                {
+                    id: 'stage-6',
+                    type: 'custom',
+                    name: 'Entrevista con el hiring manager',
+                    category: 'entrevistas',
+                    description: 'Validación final del área.',
+                    templateId: 'default-interview-hiring-manager'
+                },
+                {
+                    id: 'stage-7',
+                    type: 'agent',
+                    agentId: 'background-check',
+                    name: 'Verificación de antecedentes judiciales',
+                    category: 'verificacion'
+                },
+                {
+                    id: 'stage-8',
+                    type: 'custom',
+                    name: 'Cierre del proceso',
+                    category: 'decision-final',
+                    description: 'Última etapa para registrar la decisión final sobre el candidato: aprobado, no aprobado o en espera.',
+                    templateId: 'default-final-review'
+                }
+            ]
+        }
+    };
+    
+    // Plantilla 2: Flujo estándar de selección (sin IA)
+    const template2 = {
+        id: 'default-template-standard',
+        name: 'Plantilla por defecto – Flujo estándar de selección',
+        category: 'reclutamiento',
+        status: 'active',
+        createdAt: now,
+        lastModified: today,
+        author: 'Sistema',
+        avatar: 'images/Profile-image.jpg',
+        version: 1,
+        stages: 8,
+        agents: 0,
+        isDefault: true,
+        realContent: {
+            stages: [
+                {
+                    id: 'stage-1',
+                    type: 'custom',
+                    name: 'Revisión de CV',
+                    category: 'evaluacion-inicial',
+                    description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
+                    templateId: 'default-review-cv'
+                },
+                {
+                    id: 'stage-2',
+                    type: 'custom',
+                    name: 'Preguntas de filtro / formulario inicial',
+                    category: 'evaluacion-inicial',
+                    description: 'Cuestionario con preguntas knockout: disponibilidad, ubicación, experiencia mínima, etc.',
+                    templateId: 'default-pre-filter-requirements'
+                },
+                {
+                    id: 'stage-3',
+                    type: 'custom',
+                    name: 'Evaluación psicométrica',
+                    category: 'evaluacion-psicometrica',
+                    description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
+                    templateId: 'default-psychometric-general'
+                },
+                {
+                    id: 'stage-4',
+                    type: 'custom',
+                    name: 'Entrevista inicial',
+                    category: 'entrevistas',
+                    description: 'Primera entrevista estructurada para evaluar motivación y competencias básicas.',
+                    templateId: 'default-interview-pre-screening'
+                },
+                {
+                    id: 'stage-5',
+                    type: 'custom',
+                    name: 'Entrevista con el reclutador',
+                    category: 'entrevistas',
+                    description: 'Entrevista más profunda para validar encaje con la empresa y el proceso.',
+                    templateId: 'default-interview-recruiter'
+                },
+                {
+                    id: 'stage-6',
+                    type: 'custom',
+                    name: 'Entrevista con el hiring manager / área',
+                    category: 'entrevistas',
+                    description: 'Entrevista técnica o funcional para evaluar el ajuste al rol específico.',
+                    templateId: 'default-interview-hiring-manager'
+                },
+                {
+                    id: 'stage-7',
+                    type: 'custom',
+                    name: 'Verificación de antecedentes judiciales',
+                    category: 'verificacion',
+                    description: 'Revisión de antecedentes del candidato según la normativa vigente y las políticas internas.',
+                    templateId: 'default-verify-background'
+                },
+                {
+                    id: 'stage-8',
+                    type: 'custom',
+                    name: 'Cierre del proceso',
+                    category: 'decision-final',
+                    description: 'Registro de la decisión final sobre el candidato: aprobado, no aprobado o en espera.',
+                    templateId: 'default-final-review'
+                }
+            ]
+        }
+    };
+    
+    return [template1, template2];
 }
 
 function saveTemplatesToStorage() {

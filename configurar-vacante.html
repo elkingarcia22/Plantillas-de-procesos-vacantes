@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="components/profile-menu.css">
     <link rel="stylesheet" href="components/input.css">
     <link rel="stylesheet" href="components/button.css">
+    <link rel="stylesheet" href="components/modal.css">
+    <link rel="stylesheet" href="components/toast.css">
     <link rel="stylesheet" href="profile.css">
     <style>
         /* Estilos específicos para content-sections */
@@ -91,6 +93,25 @@
 
         .section-dual > div {
             flex: 1;
+        }
+
+        /* Widget de biblioteca en section-dual */
+        .section-dual > .widget-library {
+            flex: 0 0 40%;
+            max-width: 40%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 600px;
+        }
+
+        /* Widget de flujo en section-dual */
+        .section-dual > .widget-template-flow {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .section-triple > div {
@@ -471,7 +492,7 @@
             color: var(--ubits-fg-1-high);
         }
 
-        /* Widget Template Flow */
+        /* Widget Template Flow - Estilos del editor */
         .widget-template-flow {
             background-color: var(--ubits-bg-1);
             border-radius: 8px;
@@ -504,105 +525,1553 @@
             color: var(--ubits-fg-1-high);
         }
 
-        .flow-stages {
+        .flow-header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .agent-stage-config {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .agent-stage-config.expanded {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        /* Editor Layout - Igual que en el editor */
+        .editor-layout {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-y: visible;
+        }
+
+        /* Sidebar de agentes */
+        .agents-sidebar {
+            width: 100%;
+            height: 100%;
+            background: var(--ubits-bg-1);
+            border: none;
+            border-width: 0;
+            border-color: transparent;
+            border-style: none;
+            border-image: none;
+            border-radius: 8px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            box-sizing: border-box;
+            overflow-x: visible;
+            overflow-y: visible;
+            min-height: 0;
+            flex: 1;
         }
 
-        .flow-stage {
-            background-color: var(--ubits-bg-2);
+        /* Asegurar que las listas dentro de tabs tengan scroll si es necesario */
+        .agents-sidebar .agents-list,
+        .agents-sidebar .stages-list {
+            overflow-y: auto;
+            overflow-x: visible;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Asegurar que los tabs no corten el badge */
+        .tab-content {
+            overflow: visible !important;
+        }
+        
+        #stages-tab {
+            overflow: visible !important;
+        }
+        
+        /* Controles de etapas */
+        .stages-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: visible !important;
+        }
+        
+        /* Search input wrapper para etapas */
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--ubits-fg-1-medium);
+            font-size: 14px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            background: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .clear-search-icon {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--ubits-fg-1-low);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-search-icon:hover {
+            background: var(--ubits-bg-2);
+            color: var(--ubits-fg-1-high);
+        }
+
+        /* Botón crear etapa */
+        .create-stage-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .create-stage-btn:hover {
+            background: var(--ubits-bg-2);
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .create-stage-btn i {
+            font-size: 12px;
+        }
+        
+        /* Dropdown de categorías */
+        #stageCategoryFilterContainer {
+            position: relative;
+            width: auto;
+            min-width: auto;
+            max-width: none;
+        }
+        
+        .category-filter-dropdown {
+            position: relative;
+            display: inline-block;
+            overflow: visible !important;
+        }
+        
+        .category-filter-button {
+            position: relative;
+            overflow: visible !important;
+        }
+        
+        .category-filter-button.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+        
+        .category-filter-button.ubits-button--active:hover:not(:disabled) {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+        }
+        
+        .category-filter-button.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+        
+        /* Asegurar que el badge no se corte */
+        .category-filter-dropdown {
+            position: relative;
+            display: inline-block;
+            overflow: visible !important;
+        }
+        
+        .category-filter-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0;
+            background: var(--ubits-button-badge) !important;
+            color: #ffffff !important;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 18px;
+            flex-shrink: 0;
+            z-index: 10 !important;
+            box-shadow: 0 0 0 2px var(--ubits-bg-1);
+            overflow: visible !important;
+            white-space: nowrap;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        .category-filter-badge,
+        .category-filter-badge *,
+        .category-filter-badge::before,
+        .category-filter-badge::after {
+            color: #ffffff !important;
+        }
+        
+        /* Forzar color blanco en todos los casos */
+        .category-filter-button .category-filter-badge {
+            color: #ffffff !important;
+        }
+        
+        .category-filter-button.ubits-button--active .category-filter-badge {
+            color: #ffffff !important;
+        }
+        
+        /* Para números de dos dígitos, ajustar ancho y hacer más ovalado */
+        .category-filter-badge.badge-double-digit {
+            min-width: 20px !important;
+            width: auto !important;
+            padding: 0 5px !important;
+            border-radius: 9px !important;
+        }
+        
+        .category-filter-dropdown-menu {
+            position: fixed;
+            min-width: 280px;
+            max-width: 320px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            padding: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .category-filter-dropdown-menu.show {
+            display: flex;
+        }
+        
+        .category-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--ubits-fg-1-high);
+            user-select: none;
+            margin: 0;
+        }
+        
+        .category-filter-item:hover {
+            background: var(--ubits-bg-2);
+        }
+        
+        .category-filter-item input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 4px;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .category-filter-item input[type="checkbox"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+        
+        .category-filter-item input[type="checkbox"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+        
+        .category-filter-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+        }
+
+        /* Empty state para etapas */
+        .empty-stages-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .empty-stages-visual .empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-low);
+        }
+
+        .empty-stages-visual .empty-icon i {
+            font-size: 24px;
+        }
+
+        .empty-stages-visual .empty-text {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+        }
+
+        /* Estilos para items de etapas en la lista */
+        #stagesList .stage-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            font-family: 'Noto Sans', sans-serif;
+            overflow: visible;
+            position: relative;
+        }
+
+        #stagesList .stage-item:hover {
+            background: var(--ubits-bg-2);
+            border-color: var(--ubits-accent-brand);
+        }
+
+        #stagesList .stage-item:active {
+            cursor: grabbing;
+        }
+
+        #stagesList .stage-item .stage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            border-bottom: none;
+            width: 100%;
+        }
+        
+        #stagesList .stage-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #stagesList .stage-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+
+        #stagesList .stage-category {
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+        }
+
+        #stagesList .stage-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 1;
+            align-items: center;
+        }
+        
+        .stage-menu {
+            position: relative;
+            overflow: visible;
+        }
+        
+        .stage-menu-dropdown {
+            position: fixed;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            padding: 4px;
+            z-index: 10000;
+            display: none;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            overflow: visible;
+        }
+        
+        .stage-menu-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .stage-menu-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+            text-align: left;
+            transition: background 0.15s ease;
+        }
+        
+        .stage-menu-item:hover {
+            background: var(--ubits-bg-2);
+        }
+        
+        .stage-menu-item i {
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .stage-menu-item--danger {
+            color: var(--ubits-feedback-accent-error);
+        }
+        
+        .stage-menu-item--danger i {
+            color: var(--ubits-feedback-accent-error);
+        }
+        
+        .stage-menu-item--danger:hover {
+            background: var(--ubits-feedback-bg-error-subtle);
+        }
+
+        /* Board principal */
+        .board-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: visible;
+        }
+
+        .agents-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .agents-description-main {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.4;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .agents-header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* Tabs del sidebar */
+        .sidebar-tabs {
+            display: flex;
+            background: var(--ubits-bg-2);
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .tab-button {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: var(--ubits-fg-1-medium);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button:hover {
+            background: var(--ubits-bg-3);
+            color: var(--ubits-fg-1-high);
+        }
+
+        .tab-button.active {
+            background: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button i {
+            font-size: 12px;
+        }
+
+        /* Contenido de tabs */
+        .tab-content {
+            display: none;
+            overflow-x: visible;
+            overflow-y: visible;
+            position: relative;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: visible;
+        }
+
+        .agents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .agent-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            padding: 12px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .agent-item:hover {
+            background: var(--ubits-bg-3);
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .agent-item:active {
+            cursor: grabbing;
+        }
+
+        .agent-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+        }
+        
+        .agent-title-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .agent-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--ubits-fg-1-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .agent-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+        .agent-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .agent-help {
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            line-height: 1.3;
+            margin-left: 0;
+            margin-top: 8px;
+        }
+
+        /* Empty state para agentes */
+        .empty-stages-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .empty-stages-visual .empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .empty-stages-visual .empty-icon i {
+            font-size: 24px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .empty-stages-visual .empty-text {
+            margin: 0 0 20px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-medium);
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        /* ========================================
+           DRAWERS PARA CONFIGURACIÓN
+           ======================================== */
+
+        /* Drawer para gestionar pruebas psicotécnicas */
+        .psychometric-tests-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .psychometric-tests-drawer.active {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+        
+        .drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+        }
+        
+        .drawer-content {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 480px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--ubits-bg-1);
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            z-index: 10001;
+            animation: slideInRight 0.3s ease;
+            pointer-events: auto;
+        }
+        
+        .drawer-content * {
+            pointer-events: auto;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ubits-border-1);
+        }
+        
+        .drawer-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+        
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--ubits-border-1);
+            background: var(--ubits-bg-1);
+        }
+        
+        .drawer-footer:has(.drawer-footer-actions:empty) {
+            display: none;
+        }
+        
+        .drawer-footer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .tests-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+        
+        .test-item {
+            background: transparent;
             border: 1px solid var(--ubits-border-1);
             border-radius: 8px;
             padding: 16px;
             display: flex;
-            align-items: flex-start;
-            gap: 16px;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .test-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .test-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .test-item-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .test-item-subtitle {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .test-item-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .test-item-field label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-item-field-value {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .test-form-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .test-form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .test-form-field label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
         }
 
-        .flow-stage-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: var(--ubits-button-primary-bg-default);
-            color: var(--ubits-btn-primary-fg);
+        /* Drawer para configurar entrevista Serena AI */
+        .serena-config-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .serena-config-drawer.active {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+        
+        .serena-config-content {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        
+        .serena-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .serena-section-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+        
+        .serena-section-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .interview-type-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .interview-type-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 8px;
+            background: var(--ubits-bg-1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .interview-type-card:hover {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand-subtle);
+        }
+        
+        .interview-type-card.selected {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand-subtle);
+        }
+        
+        .interview-type-card .config-radio-label {
+            margin: 0;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        
+        .interview-type-card .config-radio-label span {
+            display: none;
+        }
+        
+        .interview-type-card-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .interview-type-card-icon {
+            font-size: 18px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .interview-type-card.selected .interview-type-card-icon {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .interview-type-card-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .interview-type-card.selected .interview-type-card-label {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .serena-voice-preview {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 10px;
+            background: var(--ubits-bg-1);
+            margin-top: 12px;
+        }
+        
+        .serena-voice-preview-icon-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: var(--ubits-accent-brand-subtle);
             flex-shrink: 0;
         }
+        
+        .serena-voice-preview-icon {
+            font-size: 20px;
+            color: var(--ubits-accent-brand);
+        }
+        
+        .serena-voice-preview-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        
+        .serena-voice-preview-name {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .serena-voice-preview-flag {
+            font-size: 18px;
+        }
+        
+        .serena-voice-preview-hint {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 11px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .serena-voice-preview-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .serena-config-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .serena-config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .serena-config-field-label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .serena-config-field-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
 
-        .flow-stage-content {
+        /* Board Container - Igual que en el editor */
+        .board-container {
+            flex: 1;
+            background: var(--ubits-bg-1);
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            height: fit-content;
+            box-sizing: border-box;
+            overflow-x: hidden !important;
+            overflow-y: auto;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .stages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 200px;
+            min-width: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .stage-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--ubits-bg-2);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .agent-stage-item:hover {
+            background: var(--ubits-bg-2);
+            border-color: var(--ubits-border-1);
+        }
+
+        .stage-number {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+            flex-shrink: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 50% !important;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        .stage-drag-handle {
+            color: var(--ubits-fg-1-medium);
+            font-size: 14px;
+            flex-shrink: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .stage-drag-handle.editing-mode {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .stage-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .stage-content .stage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+            border-bottom: none;
+            min-width: 0;
+        }
+
+        .stage-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
             flex: 1;
             min-width: 0;
         }
 
-        .flow-stage-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            gap: 12px;
-        }
-
-        .flow-stage-name {
-            font-size: 16px;
+        .stage-name {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
             font-weight: 600;
             color: var(--ubits-fg-1-high);
             margin: 0;
         }
 
-        .flow-stage-type {
-            font-size: 12px;
-            color: var(--ubits-fg-1-medium);
-            background-color: var(--ubits-bg-1);
-            padding: 4px 8px;
-            border-radius: 4px;
+        .stage-name h4 {
+            margin: 0;
         }
 
-        .flow-stage-config {
-            margin-top: 12px;
-            padding-top: 12px;
+        .stage-category-badge {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            background: transparent;
+            padding: 0;
+            border: none;
+            margin: 0;
+        }
+
+        .stage-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-medium);
+            line-height: 1.5;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid var(--ubits-border-1);
         }
 
-        .flow-config-item {
+        .stage-config-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+
+        .config-summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            gap: 16px;
-        }
-
-        .flow-config-label {
-            font-size: 14px;
+            font-size: 12px;
             color: var(--ubits-fg-1-medium);
-            flex: 1;
         }
 
-        .flow-config-value {
-            font-size: 14px;
+        .config-summary-label {
+            font-weight: 400;
+        }
+
+        .config-summary-value {
             font-weight: 600;
             color: var(--ubits-fg-1-high);
         }
 
-        .flow-empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--ubits-fg-1-medium);
+        .stage-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            align-items: center;
+            flex-shrink: 0;
+            min-width: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        .flow-empty i {
-            font-size: 48px;
+        .stage-actions.editing-mode {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Agent Stage Config */
+        .agent-stage-config {
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .agent-stage-divider {
+            height: 1px;
+            background: var(--ubits-border-1);
+            margin: 12px 0;
+        }
+
+        .config-field {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+            width: 100%;
+        }
+
+        .config-field-radio {
             margin-bottom: 16px;
-            opacity: 0.5;
+            margin-top: 8px;
         }
 
-        .flow-empty p {
+        .config-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+            white-space: nowrap;
+            width: 200px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .config-info-btn {
+            background: none;
+            border: none;
+            padding: 0;
             margin: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .config-info-btn:hover {
+            color: var(--ubits-accent-brand);
+        }
+
+        .config-info-btn i {
+            font-size: 12px;
+        }
+
+        .config-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .config-input {
+            width: 100px;
+            max-width: 100px;
+            padding: 6px 10px;
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            background: var(--ubits-bg-2);
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .config-input:focus {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .config-suffix {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            white-space: nowrap;
+        }
+
+        .config-radio-group {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            min-width: 120px;
+            flex: 1;
+        }
+
+        .config-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            color: var(--ubits-fg-1-high);
+            user-select: none;
+            padding: 4px 0;
+        }
+
+        .config-radio-label input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 50%;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .config-radio-label input[type="radio"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .config-radio-label input[type="radio"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+
+        .config-radio-label input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ubits-bg-1);
+        }
+
+        .config-input-container {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            position: relative;
+            display: block;
+        }
+
+        /* Board Header Section */
+        .board-header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .board-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .board-empty-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        .board-empty-instruction {
+            font-family: 'Noto Sans', sans-serif;
             font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.4;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Board Drop Slots */
+        .board-drop-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+        }
+
+        .board-drop-slots.editing-mode {
+            opacity: 1;
+            max-height: 200px;
+        }
+
+        .board-drop-slot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            min-height: 48px;
+            max-height: 48px;
+            border: 2px dashed var(--ubits-border-1);
+            border-radius: 8px;
+            background: var(--ubits-bg-2);
+        }
+
+        .slot-number {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            max-width: 24px !important;
+            flex-shrink: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--ubits-bg-1);
+            color: var(--ubits-fg-1-high);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 50% !important;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        .slot-placeholder {
+            flex: 1;
+            height: 32px;
+            border-radius: 4px;
+            background: transparent;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ubits-fg-1-medium);
+            font-size: 13px;
+            text-align: center;
+            padding: 0 8px;
+            font-family: 'Noto Sans', sans-serif;
         }
 
         /* Responsive */
@@ -650,7 +2119,7 @@
                                 </div>
                                 <div class="stepper-item active">
                                     <div class="stepper-circle">2</div>
-                                    <div class="stepper-label">Configurar vacante</div>
+                                    <div class="stepper-label">Flujo del candidato</div>
                                 </div>
                                 <div class="stepper-item">
                                     <div class="stepper-circle">3</div>
@@ -678,7 +2147,7 @@
                                     <span>2/5</span>
                                 </div>
                                 <div class="mobile-stepper-text">
-                                    <div class="mobile-current-step">Configurar vacante</div>
+                                    <div class="mobile-current-step">Flujo del candidato</div>
                                     <button class="ubits-button ubits-button--primary ubits-button--sm mobile-next-button">
                                         <span>Siguiente</span>
                                     </button>
@@ -693,7 +2162,7 @@
                         <div class="widget-template-selector">
                             <div class="selector-header">
                                 <div class="selector-icon">
-                                    <i class="far fa-layer-group"></i>
+                                    <i class="far fa-square-list"></i>
                                 </div>
                                 <div class="selector-title">Seleccionar plantilla</div>
                             </div>
@@ -721,19 +2190,87 @@
                     </div>
 
                     <!-- Sección 3: Flujo de la plantilla seleccionada -->
-                    <div class="section-single" id="template-flow-section" style="display: none;">
-                        <div class="widget-template-flow">
-                            <div class="flow-header">
-                                <div class="flow-header-title">
-                                    <i class="far fa-sitemap"></i>
-                                    <h3 class="ubits-heading-h2">Flujo de la plantilla</h3>
+                    <div class="section-dual" id="template-flow-section">
+                        <!-- Biblioteca (solo visible en modo edición) -->
+                        <div class="widget-library" id="library-widget">
+                            <div class="agents-sidebar" id="agents-sidebar">
+                                <!-- Título y descripción de la sección -->
+                                <div class="agents-header-section">
+                                    <h3 class="agents-title">Biblioteca de etapas y agentes IA</h3>
+                                    <p class="agents-description-main">Crea y gestiona las etapas y agentes de IA que podrás usar en el flujo del candidato.</p>
                                 </div>
-                                <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openTemplateEditor()">
-                                    <i class="far fa-edit"></i>
-                                    <span>Editar plantilla</span>
-                                </button>
+                                
+                                <!-- Tabs -->
+                                <div class="sidebar-tabs">
+                                    <button class="tab-button active" data-tab="stages" onclick="switchTab('stages')">
+                                        <i class="far fa-timeline-arrow"></i>
+                                        <span>Etapas</span>
+                                    </button>
+                                    <button class="tab-button" data-tab="agents" onclick="switchTab('agents')">
+                                        <i class="far fa-users"></i>
+                                        <span>Agentes IA</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Tab Etapas -->
+                                <div class="tab-content active" id="stages-tab">
+                                    <!-- Contenedor de controles en una sola línea -->
+                                    <div class="stages-controls-row">
+                                        <!-- Buscador de etapas -->
+                                        <div class="search-input-wrapper" id="stageSearchWrapper">
+                                            <i class="far fa-search search-icon"></i>
+                                            <input 
+                                                type="text" 
+                                                id="stageSearch" 
+                                                placeholder="Buscar etapas" 
+                                                class="search-input"
+                                                aria-label="Buscar etapas"
+                                            >
+                                            <button type="button" id="clearStageSearch" class="clear-search-icon" style="display: none;">
+                                                <i class="far fa-times"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Filtro de categorías -->
+                                        <div id="stageCategoryFilterContainer"></div>
+                                        
+                                        <!-- Botón crear etapa (al final) -->
+                                        <button class="create-stage-btn" id="createStageBtn" onclick="openCreateStageModal();">
+                                            <i class="far fa-plus"></i>
+                                            <span>Crear etapa</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Empty state para búsqueda/filtrado -->
+                                    <div class="empty-stages-visual" id="stagesEmptyState" style="display: none;">
+                                        <div class="empty-icon">
+                                            <i class="far fa-search"></i>
+                                        </div>
+                                        <p class="empty-text" id="stagesEmptyStateText">No se encontraron etapas</p>
+                                    </div>
+                                    
+                                    <!-- Lista de etapas -->
+                                    <div class="stages-list" id="stagesList">
+                                        <!-- Las etapas se cargarán dinámicamente -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Tab Agentes IA -->
+                                <div class="tab-content" id="agents-tab">
+                                    <div class="agents-list" id="agentsList">
+                                        <!-- Los agentes se cargarán dinámicamente -->
+                                    </div>
+                                </div>
                             </div>
-                            <div id="template-flow-container"></div>
+                        </div>
+
+                        <!-- Flujo del candidato -->
+                        <div class="widget-template-flow">
+                            <div class="board-container">
+                                <div class="stages-container" id="template-flow-container">
+                                    <!-- Las etapas se cargarán dinámicamente -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -750,12 +2287,63 @@
     <!-- Profile Menu Container -->
     <div id="profile-menu-container"></div>
 
+    <!-- Toast Container -->
+    <div id="ubits-toast-container"></div>
+
+    <!-- Drawer para gestionar pruebas psicotécnicas -->
+    <div class="psychometric-tests-drawer" id="psychometricTestsDrawer">
+        <div class="drawer-overlay" onclick="handleDrawerOverlayClick(event)"></div>
+        <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
+            <div class="drawer-header">
+                <h3 class="drawer-title" id="drawerTitle">Gestionar pruebas psicotécnicas</h3>
+                <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="handleDrawerCloseButton(event); return false;" title="Cerrar">
+                    <i class="far fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <div id="psychometricTestsList" class="tests-list">
+                    <!-- Las pruebas se cargarán dinámicamente -->
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <div class="drawer-footer-actions" id="drawerFooterActions">
+                    <!-- Botones se cargarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Drawer para configurar entrevista Serena AI -->
+    <div class="serena-config-drawer" id="serenaConfigDrawer">
+        <div class="drawer-overlay" onclick="handleSerenaDrawerOverlayClick(event)"></div>
+        <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
+            <div class="drawer-header">
+                <h3 class="drawer-title" id="serenaDrawerTitle">Configurar entrevista Serena</h3>
+                <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="closeSerenaConfigDrawer(); return false;" title="Cerrar">
+                    <i class="far fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <div id="serenaConfigContent" class="serena-config-content">
+                    <!-- Contenido se cargará dinámicamente -->
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <div class="drawer-footer-actions" id="serenaDrawerFooterActions">
+                    <!-- Botones se cargarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="components/sidebar-reclutamiento.js"></script>
     <script src="components/sub-nav.js"></script>
     <script src="components/tab-bar-reclutamiento.js"></script>
     <script src="components/floating-menu.js"></script>
     <script src="components/profile-menu.js"></script>
     <script src="components/input.js"></script>
+    <script src="components/modal.js"></script>
+    <script src="components/toast.js"></script>
     <script src="script.js"></script>
     <script>
         // Cargar componentes dinámicamente
@@ -765,6 +2353,28 @@
             loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
             loadProfileMenu('profile-menu-container');
             
+            // Cargar etapas disponibles
+            loadAvailableStages();
+            
+            // Asegurar que las plantillas por defecto existan
+            const stored = localStorage.getItem('templates');
+            if (stored) {
+                const templates = JSON.parse(stored);
+                const hasDefaultTemplates = templates.some(t => t.isDefault === true);
+                if (!hasDefaultTemplates) {
+                    console.log('📋 [DOMContentLoaded] Creando plantillas por defecto...');
+                    const defaultTemplates = createDefaultTemplates();
+                    templates.push(...defaultTemplates);
+                    localStorage.setItem('templates', JSON.stringify(templates));
+                    console.log('📋 [DOMContentLoaded] Plantillas por defecto creadas y guardadas');
+                }
+            } else {
+                console.log('📋 [DOMContentLoaded] No hay plantillas. Creando plantillas por defecto...');
+                const defaultTemplates = createDefaultTemplates();
+                localStorage.setItem('templates', JSON.stringify(defaultTemplates));
+                console.log('📋 [DOMContentLoaded] Plantillas por defecto creadas y guardadas');
+            }
+            
             // Activar vacantes en el floating menu
             setTimeout(() => {
                 setActiveDirectLinkReclutamiento('vacantes');
@@ -773,11 +2383,71 @@
             // Crear inputs UBITS
             createTemplateSelect();
             createDaysInput();
+            
+            // Inicializar flujo vacío por defecto para que puedan crear su flujo
+            initializeEmptyFlow();
         });
+        
+        // Inicializar flujo vacío por defecto
+        function initializeEmptyFlow() {
+            // Solo inicializar si no hay una plantilla seleccionada
+            if (!localTemplateCopy) {
+                localTemplateCopy = {
+                    id: 'new-vacancy-flow',
+                    name: 'Nuevo flujo de vacante',
+                    category: 'reclutamiento',
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'Usuario',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Asegurar que estamos en modo edición
+                isEditMode = true;
+                
+                // Mostrar la sección de flujo
+                const flowSection = document.getElementById('template-flow-section');
+                const libraryWidget = document.getElementById('library-widget');
+                
+                if (flowSection) {
+                    flowSection.style.display = 'flex';
+                    flowSection.className = 'section-dual';
+                }
+                
+                if (libraryWidget) {
+                    libraryWidget.style.display = 'flex';
+                }
+                
+                // Renderizar el flujo vacío
+                renderTemplateFlow(localTemplateCopy);
+                
+                // Aplicar modo edición
+                applyEditMode();
+                
+                // Renderizar contenido de la biblioteca
+                setTimeout(() => {
+                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                    if (activeTab && activeTab.dataset.tab === 'stages') {
+                        renderStages();
+                    } else {
+                        renderAgents();
+                    }
+                }, 100);
+            }
+        }
 
         // Estado global
         let selectedTemplate = null;
+        let localTemplateCopy = null; // Copia local para editar sin modificar la original
         let allTemplates = [];
+        let isEditMode = true; // Modo edición activo por defecto
 
         // Agentes disponibles (mismo que en editor-plantillas.js)
         const AGENTS = [
@@ -787,9 +2457,29 @@
                 icon: 'fa-file-alt',
                 hasConfig: true,
                 config: {
-                    salaryPercentage: { label: 'Margen sobre salario', suffix: '%' },
-                    minScore: { label: 'Puntaje mínimo del CV', suffix: 'pts' },
-                    acceptExEmployees: { label: 'Acepta ex colaboradores', type: 'radio' }
+                    salaryPercentage: { 
+                        label: 'Margen sobre salario', 
+                        type: 'number',
+                        default: 25, 
+                        suffix: '%',
+                        tooltip: 'Define qué tanto puede superar el candidato el salario máximo del puesto y seguir siendo considerado.'
+                    },
+                    minScore: { 
+                        label: 'Puntaje mínimo del CV', 
+                        type: 'number',
+                        default: 70, 
+                        suffix: 'pts',
+                        tooltip: 'Puntaje mínimo que el CV debe obtener para pasar a la siguiente etapa.'
+                    },
+                    acceptExEmployees: { 
+                        label: 'Acepta ex colaboradores', 
+                        type: 'radio',
+                        default: 'si',
+                        options: [
+                            { value: 'si', text: 'Sí' },
+                            { value: 'no', text: 'No' }
+                        ]
+                    }
                 }
             },
             { 
@@ -798,9 +2488,53 @@
                 icon: 'fa-comments',
                 hasConfig: true,
                 config: {
-                    expirationDays: { label: 'Días para que expire la entrevista', suffix: 'días' },
-                    minScore: { label: 'Puntaje mínimo de la entrevista', suffix: 'pts' }
-                }
+                    interviewType: {
+                        label: 'Tipo de entrevista',
+                        type: 'radio',
+                        default: 'telefonica',
+                        options: [
+                            { value: 'telefonica', text: 'Telefónica' },
+                            { value: 'virtual', text: 'Virtual' }
+                        ]
+                    },
+                    voice: {
+                        label: 'Voz de Serena',
+                        type: 'select',
+                        default: 'colombia',
+                        options: [
+                            { value: 'peru', text: 'Perú 🇵🇪' },
+                            { value: 'costa-rica', text: 'Costa Rica 🇨🇷' },
+                            { value: 'honduras', text: 'Honduras 🇭🇳' },
+                            { value: 'argentina', text: 'Argentina 🇦🇷' },
+                            { value: 'chile', text: 'Chile 🇨🇱' },
+                            { value: 'mexico', text: 'México 🇲🇽' },
+                            { value: 'colombia', text: 'Colombia 🇨🇴' }
+                        ]
+                    },
+                    expirationDays: { 
+                        label: 'Días para que expire la entrevista', 
+                        type: 'number',
+                        default: 0, 
+                        suffix: 'días',
+                        tooltip: 'Cantidad de días que el candidato tiene para completar la entrevista desde que recibe la invitación.'
+                    },
+                    minScore: { 
+                        label: 'Puntaje mínimo de la entrevista', 
+                        type: 'number',
+                        default: 0, 
+                        suffix: 'pts',
+                        tooltip: 'Puntaje mínimo que el candidato debe obtener en la entrevista para avanzar a la siguiente etapa.'
+                    }
+                },
+                voices: [
+                    { id: 'peru', name: 'Perú', flag: '🇵🇪' },
+                    { id: 'costa-rica', name: 'Costa Rica', flag: '🇨🇷' },
+                    { id: 'honduras', name: 'Honduras', flag: '🇭🇳' },
+                    { id: 'argentina', name: 'Argentina', flag: '🇦🇷' },
+                    { id: 'chile', name: 'Chile', flag: '🇨🇱' },
+                    { id: 'mexico', name: 'México', flag: '🇲🇽' },
+                    { id: 'colombia', name: 'Colombia', flag: '🇨🇴' }
+                ]
             },
             { 
                 id: 'psychometric-analyst', 
@@ -808,10 +2542,26 @@
                 icon: 'fa-brain',
                 hasConfig: true,
                 config: {
-                    minCIScore: { label: 'Puntaje CI mínimo', suffix: 'pts' },
-                    testType: { label: 'Tipo de prueba', type: 'select' },
-                    testLanguage: { label: 'Idioma de la prueba', type: 'select' }
-                }
+                    minScore: { 
+                        label: 'Puntaje mínimo global', 
+                        type: 'number',
+                        default: 0, 
+                        suffix: 'pts' 
+                    },
+                    tests: {
+                        label: 'Pruebas psicotécnicas',
+                        type: 'psychometric-tests-manager',
+                        default: []
+                    }
+                },
+                testTypes: [
+                    { value: 'cognicion', text: 'Cognición (inteligencia)' },
+                    { value: 'perfil-motivacion', text: 'Perfil de motivación' },
+                    { value: 'dominancia-cerebral', text: 'Dominancia Cerebral' },
+                    { value: 'estilo-social', text: 'Estilo Social' },
+                    { value: 'inventario-valores', text: 'Inventario de valores organizacionales (Corta)' },
+                    { value: 'personalidad-16', text: 'Personalidad 16' }
+                ]
             },
             { 
                 id: 'background-check', 
@@ -821,14 +2571,234 @@
             }
         ];
 
+        // Categorías fijas de etapas
+        const STAGE_CATEGORIES = [
+            { id: 'evaluacion-inicial', name: 'Evaluación inicial', icon: 'fa-clipboard-check' },
+            { id: 'entrevistas', name: 'Entrevistas', icon: 'fa-comments' },
+            { id: 'evaluacion-psicometrica', name: 'Evaluación psicométrica', icon: 'fa-brain' },
+            { id: 'pruebas-tecnicas', name: 'Pruebas técnicas', icon: 'fa-code' },
+            { id: 'verificacion', name: 'Verificación', icon: 'fa-shield-check' },
+            { id: 'decision-final', name: 'Decisión final', icon: 'fa-gavel' }
+        ];
+
+        // Etapas creadas disponibles para arrastrar
+        let availableStages = [];
+
+        // Crear plantillas por defecto (misma función que en dashboard-plantillas.js)
+        function createDefaultTemplates() {
+            const now = new Date().toISOString();
+            const today = now.split('T')[0];
+            
+            // Plantilla 1: Flujo estándar de selección con IA
+            const template1 = {
+                id: 'default-template-ia',
+                name: 'Plantilla por defecto – Flujo estándar de selección con IA',
+                category: 'reclutamiento',
+                status: 'active',
+                createdAt: now,
+                lastModified: today,
+                author: 'Sistema',
+                avatar: 'images/Profile-image.jpg',
+                version: 1,
+                stages: 8,
+                agents: 5,
+                isDefault: true,
+                realContent: {
+                    stages: [
+                        {
+                            id: 'stage-1',
+                            type: 'agent',
+                            agentId: 'cv-analyzer',
+                            name: 'Analizador de CV',
+                            category: 'evaluacion-inicial',
+                            config: {
+                                salaryPercentage: 25,
+                                minScore: 70,
+                                acceptExEmployees: 'si'
+                            }
+                        },
+                        {
+                            id: 'stage-2',
+                            type: 'custom',
+                            name: 'Preguntas de filtro / formulario',
+                            category: 'evaluacion-inicial',
+                            description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
+                            templateId: 'default-pre-filter-requirements'
+                        },
+                        {
+                            id: 'stage-3',
+                            type: 'agent',
+                            agentId: 'psychometric-analyst',
+                            name: 'Analista psicométrico',
+                            category: 'evaluacion-psicometrica',
+                            config: {
+                                minScore: 0,
+                                tests: []
+                            }
+                        },
+                        {
+                            id: 'stage-4',
+                            type: 'agent',
+                            agentId: 'interview-ia',
+                            name: 'Entrevista Serena',
+                            category: 'entrevistas',
+                            config: {
+                                interviewType: 'telefonica',
+                                voice: 'colombia',
+                                expirationDays: 0,
+                                minScore: 0
+                            }
+                        },
+                        {
+                            id: 'stage-5',
+                            type: 'custom',
+                            name: 'Entrevista con el reclutador',
+                            category: 'entrevistas',
+                            description: 'Etapa manual para las personas que pasaron todos los filtros automáticos.',
+                            templateId: 'default-interview-recruiter'
+                        },
+                        {
+                            id: 'stage-6',
+                            type: 'custom',
+                            name: 'Entrevista con el hiring manager',
+                            category: 'entrevistas',
+                            description: 'Validación final del área.',
+                            templateId: 'default-interview-hiring-manager'
+                        },
+                        {
+                            id: 'stage-7',
+                            type: 'agent',
+                            agentId: 'background-check',
+                            name: 'Verificación de antecedentes judiciales',
+                            category: 'verificacion'
+                        },
+                        {
+                            id: 'stage-8',
+                            type: 'custom',
+                            name: 'Cierre del proceso',
+                            category: 'decision-final',
+                            description: 'Última etapa para registrar la decisión final sobre el candidato: aprobado, no aprobado o en espera.',
+                            templateId: 'default-final-review'
+                        }
+                    ]
+                }
+            };
+            
+            // Plantilla 2: Flujo estándar de selección (sin IA)
+            const template2 = {
+                id: 'default-template-standard',
+                name: 'Plantilla por defecto – Flujo estándar de selección',
+                category: 'reclutamiento',
+                status: 'active',
+                createdAt: now,
+                lastModified: today,
+                author: 'Sistema',
+                avatar: 'images/Profile-image.jpg',
+                version: 1,
+                stages: 8,
+                agents: 0,
+                isDefault: true,
+                realContent: {
+                    stages: [
+                        {
+                            id: 'stage-1',
+                            type: 'custom',
+                            name: 'Revisión de CV',
+                            category: 'evaluacion-inicial',
+                            description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
+                            templateId: 'default-review-cv'
+                        },
+                        {
+                            id: 'stage-2',
+                            type: 'custom',
+                            name: 'Preguntas de filtro / formulario inicial',
+                            category: 'evaluacion-inicial',
+                            description: 'Cuestionario con preguntas knockout: disponibilidad, ubicación, experiencia mínima, etc.',
+                            templateId: 'default-pre-filter-requirements'
+                        },
+                        {
+                            id: 'stage-3',
+                            type: 'custom',
+                            name: 'Evaluación psicométrica',
+                            category: 'evaluacion-psicometrica',
+                            description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
+                            templateId: 'default-psychometric-general'
+                        },
+                        {
+                            id: 'stage-4',
+                            type: 'custom',
+                            name: 'Entrevista inicial',
+                            category: 'entrevistas',
+                            description: 'Primera entrevista estructurada para evaluar motivación y competencias básicas.',
+                            templateId: 'default-interview-pre-screening'
+                        },
+                        {
+                            id: 'stage-5',
+                            type: 'custom',
+                            name: 'Entrevista con el reclutador',
+                            category: 'entrevistas',
+                            description: 'Entrevista más profunda para validar encaje con la empresa y el proceso.',
+                            templateId: 'default-interview-recruiter'
+                        },
+                        {
+                            id: 'stage-6',
+                            type: 'custom',
+                            name: 'Entrevista con el hiring manager / área',
+                            category: 'entrevistas',
+                            description: 'Entrevista técnica o funcional para evaluar el ajuste al rol específico.',
+                            templateId: 'default-interview-hiring-manager'
+                        },
+                        {
+                            id: 'stage-7',
+                            type: 'custom',
+                            name: 'Verificación de antecedentes judiciales',
+                            category: 'verificacion',
+                            description: 'Revisión de antecedentes del candidato según la normativa vigente y las políticas internas.',
+                            templateId: 'default-verify-background'
+                        },
+                        {
+                            id: 'stage-8',
+                            type: 'custom',
+                            name: 'Cierre del proceso',
+                            category: 'decision-final',
+                            description: 'Registro de la decisión final sobre el candidato: aprobado, no aprobado o en espera.',
+                            templateId: 'default-final-review'
+                        }
+                    ]
+                }
+            };
+            
+            return [template1, template2];
+        }
+
         // Cargar plantillas desde localStorage
         function loadTemplates() {
             const stored = localStorage.getItem('templates');
             if (stored) {
                 allTemplates = JSON.parse(stored);
+                console.log('📋 [loadTemplates] Plantillas cargadas:', allTemplates.length);
+                console.log('📋 [loadTemplates] Plantillas:', allTemplates.map(t => ({ id: t.id, name: t.name, isDefault: t.isDefault })));
+                // Verificar si ya existen las plantillas por defecto
+                const hasDefaultTemplates = allTemplates.some(t => t.isDefault === true);
+                console.log('📋 [loadTemplates] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
+                if (!hasDefaultTemplates) {
+                    console.log('📋 [loadTemplates] Creando plantillas por defecto...');
+                    // Agregar plantillas por defecto si no existen
+                    const defaultTemplates = createDefaultTemplates();
+                    console.log('📋 [loadTemplates] Plantillas por defecto creadas:', defaultTemplates.length);
+                    allTemplates = [...defaultTemplates, ...allTemplates];
+                    localStorage.setItem('templates', JSON.stringify(allTemplates));
+                    console.log('📋 [loadTemplates] Plantillas guardadas. Total:', allTemplates.length);
+                }
             } else {
-                allTemplates = [];
+                console.log('📋 [loadTemplates] No hay plantillas guardadas. Creando plantillas por defecto...');
+                // Crear plantillas por defecto
+                allTemplates = createDefaultTemplates();
+                console.log('📋 [loadTemplates] Plantillas por defecto creadas:', allTemplates.length);
+                localStorage.setItem('templates', JSON.stringify(allTemplates));
+                console.log('📋 [loadTemplates] Plantillas guardadas.');
             }
+            console.log('📋 [loadTemplates] Retornando plantillas:', allTemplates.map(t => t.name));
             return allTemplates;
         }
 
@@ -878,10 +2848,95 @@
             }
 
             selectedTemplate = template;
-            renderTemplateFlow(template);
+            // Crear copia local profunda para editar sin modificar la original
+            localTemplateCopy = JSON.parse(JSON.stringify(template));
+            
+            // Inicializar configuraciones faltantes para agentes existentes
+            if (localTemplateCopy.realContent && localTemplateCopy.realContent.stages) {
+                localTemplateCopy.realContent.stages.forEach(stage => {
+                    if (stage.type === 'agent' && stage.agentId) {
+                        const agentData = AGENTS.find(a => a.id === stage.agentId);
+                        if (agentData && agentData.config) {
+                            // Asegurar que stage.config existe
+                            if (!stage.config) {
+                                stage.config = {};
+                            }
+                            // Inicializar valores por defecto si faltan
+                            Object.entries(agentData.config).forEach(([key, field]) => {
+                                if (stage.config[key] === undefined || stage.config[key] === null) {
+                                    stage.config[key] = field.default;
+                                }
+                            });
+                            // Inicializar tests para psicométrico si no existe
+                            if (stage.agentId === 'psychometric-analyst' && !stage.config.tests) {
+                                stage.config.tests = [];
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Asegurar que iniciamos en modo edición para mostrar biblioteca
+            isEditMode = true;
+            const libraryWidget = document.getElementById('library-widget');
+            const flowSection = document.getElementById('template-flow-section');
+            if (libraryWidget) {
+                libraryWidget.style.display = 'flex';
+            }
+            if (flowSection) {
+                flowSection.className = 'section-dual';
+            }
+            
+            renderTemplateFlow(localTemplateCopy);
+        }
+        
+        // Inicializar flujo vacío por defecto
+        function initializeEmptyFlow() {
+            localTemplateCopy = {
+                id: 'new-vacancy-flow',
+                name: 'Nuevo flujo de vacante',
+                category: 'reclutamiento',
+                status: 'draft',
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString().split('T')[0],
+                author: 'Usuario',
+                avatar: 'images/Profile-image.jpg',
+                version: 1,
+                stages: 0,
+                agents: 0,
+                realContent: {
+                    stages: []
+                }
+            };
+            
+            // Mostrar la sección de flujo
+            const flowSection = document.getElementById('template-flow-section');
+            const libraryWidget = document.getElementById('library-widget');
+            
+            if (flowSection) {
+                flowSection.style.display = 'flex';
+                flowSection.className = 'section-dual';
+            }
+            
+            if (libraryWidget) {
+                libraryWidget.style.display = 'flex';
+            }
+            
+            // Renderizar el flujo vacío
+            renderTemplateFlow(localTemplateCopy);
+            
+            // Renderizar contenido de la biblioteca
+            setTimeout(() => {
+                const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                if (activeTab && activeTab.dataset.tab === 'stages') {
+                    renderStages();
+                } else {
+                    renderAgents();
+                }
+            }, 100);
         }
 
-        // Renderizar el flujo de la plantilla
+        // Renderizar el flujo de la plantilla (igual que en el editor)
         function renderTemplateFlow(template) {
             const flowSection = document.getElementById('template-flow-section');
             const flowContainer = document.getElementById('template-flow-container');
@@ -893,112 +2948,515 @@
 
             // Verificar si tiene etapas
             if (!template.realContent || !template.realContent.stages || template.realContent.stages.length === 0) {
-                flowContainer.innerHTML = `
-                    <div class="flow-empty">
-                        <i class="far fa-sitemap"></i>
-                        <p>Esta plantilla no tiene etapas configuradas.</p>
+                // Header con título y botones (solo si hay plantilla seleccionada)
+                const headerHTML = selectedTemplate ? `
+                    <div class="board-header-section">
+                        <div class="board-header-top">
+                            <h3 class="board-header-title">Flujo del candidato</h3>
+                            <div class="board-header-actions">
+                                <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()">
+                                    <i class="far fa-external-link"></i>
+                                    <span>Ir a la plantilla</span>
+                                </button>
+                                <button class="ubits-button ubits-button--primary ubits-button--sm" id="editFlowBtn" onclick="toggleEditMode()">
+                                    <i class="far fa-edit"></i>
+                                    <span>Editar flujo</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="board-header-section">
+                        <div class="board-header-top">
+                            <h3 class="board-header-title">Flujo del candidato</h3>
+                        </div>
                     </div>
                 `;
+                
+                flowContainer.innerHTML = headerHTML + `
+                    <div class="board-empty-state">
+                        <div class="board-empty-icon">
+                            <i class="far fa-timeline-arrow"></i>
+                        </div>
+                        <h4 class="board-empty-title">Comienza a construir tu flujo</h4>
+                        <p class="board-empty-instruction">Arrastra etapas o agentes IA desde la biblioteca de la izquierda para crear tu flujo de selección.</p>
+                    </div>
+                    <div class="board-drop-slots ${isEditMode ? 'editing-mode' : ''}">
+                        <div class="board-drop-slot" data-slot-number="1">
+                            <div class="slot-number">1</div>
+                            <div class="slot-placeholder">Arrastra una etapa o agente IA desde la izquierda</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Aplicar modo edición después de renderizar
+                setTimeout(() => {
+                    applyEditMode();
+                }, 100);
+                
                 return;
             }
 
-            // Renderizar etapas
+            // Crear HTML de las etapas (igual que en el editor)
             const stagesHTML = template.realContent.stages.map((stage, index) => {
-                return renderStageCard(stage, index);
+                if (stage.type === 'agent' && stage.agentId) {
+                    return renderAgentStageCard(stage, index, template);
+                } else {
+                    return renderCustomStageCard(stage, index, template);
+                }
             }).join('');
 
-            flowContainer.innerHTML = `
-                <div class="flow-stages">
-                    ${stagesHTML}
+            // Calcular el número del siguiente slot
+            const nextSlotNumber = template.realContent.stages.length + 1;
+
+            // Crear el slot adicional para la siguiente etapa (solo visible en modo edición)
+            const nextSlotHTML = `
+                <div class="board-drop-slots ${isEditMode ? 'editing-mode' : ''}">
+                    <div class="board-drop-slot" data-slot-number="${nextSlotNumber}">
+                        <div class="slot-number">${nextSlotNumber}</div>
+                        <div class="slot-placeholder">Arrastra una etapa o agente IA desde la izquierda</div>
+                    </div>
                 </div>
             `;
+
+            // Header con botones solo si hay plantilla seleccionada
+            const headerActionsHTML = selectedTemplate ? `
+                <div class="flow-header-actions">
+                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
+                        <i class="far fa-external-link"></i>
+                        <span>Ir a la plantilla</span>
+                    </button>
+                    <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
+                        <i class="far fa-edit"></i>
+                        <span>Editar flujo</span>
+                    </button>
+                </div>
+            ` : '';
+            
+            // Mostrar las etapas con el slot adicional (igual que en el editor)
+            flowContainer.innerHTML = `
+                <div class="board-header-section">
+                    <div class="board-header-top">
+                        <h3 class="board-header-title">Flujo del candidato</h3>
+                        ${headerActionsHTML}
+                    </div>
+                    <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
+                </div>
+                ${stagesHTML}
+                ${nextSlotHTML}
+            `;
+
+            // Aplicar modo vista/edición según el estado
+            applyEditMode();
+
+            // Crear inputs UBITS para campos select después de renderizar (solo en modo edición)
+            if (isEditMode) {
+                setTimeout(() => {
+                    createConfigInputs(template);
+                }, 100);
+            }
         }
 
-        // Renderizar una tarjeta de etapa
-        function renderStageCard(stage, index) {
-            const stageNumber = index + 1;
-            let stageHTML = '';
+        // Aplicar modo edición/vista
+        function applyEditMode() {
+            const stageActions = document.querySelectorAll('.stage-actions');
+            const stageDragHandles = document.querySelectorAll('.stage-drag-handle');
+            const editFlowBtn = document.getElementById('editFlowBtn');
+            const dropSlots = document.querySelector('.board-drop-slots');
+            
+            if (isEditMode) {
+                // Modo edición: mostrar botones y iconos de arrastrar
+                stageActions.forEach(actions => {
+                    actions.classList.add('editing-mode');
+                });
+                stageDragHandles.forEach(handle => {
+                    handle.classList.add('editing-mode');
+                });
+                if (dropSlots) {
+                    dropSlots.classList.add('editing-mode');
+                }
+                if (editFlowBtn) {
+                    editFlowBtn.innerHTML = '<i class="far fa-eye"></i><span>Ver flujo</span>';
+                }
+            } else {
+                // Modo vista: ocultar botones y iconos de arrastrar
+                stageActions.forEach(actions => {
+                    actions.classList.remove('editing-mode');
+                });
+                stageDragHandles.forEach(handle => {
+                    handle.classList.remove('editing-mode');
+                });
+                if (dropSlots) {
+                    dropSlots.classList.remove('editing-mode');
+                }
+                if (editFlowBtn) {
+                    editFlowBtn.innerHTML = '<i class="far fa-edit"></i><span>Editar flujo</span>';
+                }
+            }
+        }
 
-            // Si es una etapa de agente
-            if (stage.type === 'agent' && stage.agentId) {
-                const agent = AGENTS.find(a => a.id === stage.agentId);
-                const agentName = agent ? agent.name : stage.name || 'Agente desconocido';
-                const agentIcon = agent ? agent.icon : 'fa-robot';
+        // Toggle modo edición
+        window.toggleEditMode = function() {
+            isEditMode = !isEditMode;
+            
+            // Mostrar/ocultar biblioteca
+            const libraryWidget = document.getElementById('library-widget');
+            if (libraryWidget) {
+                if (isEditMode) {
+                    libraryWidget.style.display = 'flex';
+                    // Renderizar contenido según el tab activo cuando se muestra
+                    setTimeout(() => {
+                        const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                        if (activeTab && activeTab.dataset.tab === 'stages') {
+                            renderStages();
+                        } else {
+                            renderAgents();
+                        }
+                    }, 100);
+                } else {
+                    libraryWidget.style.display = 'none';
+                }
+            }
+            
+            // Cambiar de section-single a section-dual cuando se activa edición
+            const flowSection = document.getElementById('template-flow-section');
+            if (flowSection) {
+                if (isEditMode) {
+                    flowSection.className = 'section-dual';
+                } else {
+                    flowSection.className = 'section-single';
+                }
+            }
+            
+            // Re-renderizar para mostrar/ocultar botones de edición
+            if (localTemplateCopy) {
+                renderTemplateFlow(localTemplateCopy);
+            }
+        };
 
-                // Configuración del agente
-                let configHTML = '';
-                if (stage.config && agent && agent.hasConfig) {
-                    const configItems = Object.entries(stage.config)
-                        .filter(([key]) => key !== 'tests') // Excluir tests del analista psicométrico
-                        .map(([key, value]) => {
-                            const configField = agent.config[key];
-                            if (!configField) return '';
+        // Ir a la plantilla
+        window.goToTemplate = function() {
+            if (selectedTemplate) {
+                window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
+            }
+        };
 
-                            const label = configField.label || key;
-                            const suffix = configField.suffix || '';
-                            let displayValue = value;
+        // Renderizar tarjeta de agente (igual que en el editor)
+        function renderAgentStageCard(stage, index, template) {
+            const agentData = AGENTS.find(a => a.id === stage.agentId);
+            if (!agentData) {
+                return '';
+            }
 
-                            // Formatear valor según tipo
-                            if (configField.type === 'radio') {
-                                displayValue = value === 'si' ? 'Sí' : value === 'no' ? 'No' : value;
-                            } else if (Array.isArray(value)) {
-                                displayValue = value.length > 0 ? `${value.length} prueba(s)` : 'Sin pruebas';
-                            } else {
-                                displayValue = value !== null && value !== undefined ? value : '-';
-                            }
+            const agentDescriptions = {
+                'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
+                'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
+                'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
+                'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
+            };
+            const agentDescription = agentDescriptions[stage.agentId] || agentData.description;
 
-                            return `
-                                <div class="flow-config-item">
-                                    <span class="flow-config-label">${label}</span>
-                                    <span class="flow-config-value">${displayValue}${suffix}</span>
+            // Obtener categoría
+            const categoryName = stage.category || 'Sin categoría';
+
+            // Estado de expandido/contraído
+            const isExpanded = stage.expanded || false;
+            const configClass = isExpanded ? 'expanded' : '';
+            const chevronIcon = isExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
+
+            // Descripción y resumen de configuración para modo vista
+            let viewModeDescription = '';
+            if (!isEditMode) {
+                // Descripción del agente
+                viewModeDescription = `
+                    <div class="stage-description">
+                        ${agentDescription}
+                    </div>
+                `;
+
+                // Resumen de configuración si tiene config
+                if (agentData.hasConfig && agentData.config && stage.config) {
+                    let configSummary = '';
+
+                    // Caso especial: Analista psicométrico - mostrar cantidad y tipos de pruebas
+                    if (stage.agentId === 'psychometric-analyst') {
+                        const tests = stage.config.tests || [];
+                        const testsCount = tests.length;
+                        const testsTypes = tests.map(test => {
+                            const testType = agentData.testTypes?.find(t => t.value === test.type);
+                            return testType ? testType.text : test.type;
+                        }).join(', ');
+
+                        configSummary = `
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">Cantidad de pruebas:</span>
+                                <span class="config-summary-value">${testsCount}</span>
+                            </div>
+                        `;
+
+                        if (testsTypes) {
+                            configSummary += `
+                                <div class="config-summary-item">
+                                    <span class="config-summary-label">Tipos de pruebas:</span>
+                                    <span class="config-summary-value">${testsTypes}</span>
                                 </div>
                             `;
-                        })
-                        .join('');
+                        }
 
-                    if (configItems) {
-                        configHTML = `
-                            <div class="flow-stage-config">
-                                ${configItems}
+                        // Puntaje mínimo global
+                        const minScore = stage.config.minScore ?? agentData.config.minScore?.default ?? 0;
+                        configSummary += `
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">${agentData.config.minScore?.label || 'Puntaje mínimo global'}:</span>
+                                <span class="config-summary-value">${minScore}${agentData.config.minScore?.suffix || 'pts'}</span>
+                            </div>
+                        `;
+                    }
+                    // Caso especial: Entrevista Serena - mostrar tipo de entrevista y voz
+                    else if (stage.agentId === 'interview-ia') {
+                        // Tipo de entrevista
+                        const interviewType = stage.config.interviewType ?? agentData.config.interviewType?.default ?? 'telefonica';
+                        const interviewTypeOption = agentData.config.interviewType?.options?.find(opt => opt.value === interviewType);
+                        const interviewTypeText = interviewTypeOption ? interviewTypeOption.text : interviewType;
+
+                        configSummary = `
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">${agentData.config.interviewType?.label || 'Tipo de entrevista'}:</span>
+                                <span class="config-summary-value">${interviewTypeText}</span>
+                            </div>
+                        `;
+
+                        // Voz de Serena
+                        const voice = stage.config.voice ?? agentData.config.voice?.default ?? 'colombia';
+                        const voiceOption = agentData.voices?.find(v => v.id === voice);
+                        const voiceText = voiceOption ? `${voiceOption.flag} ${voiceOption.name}` : voice;
+
+                        configSummary += `
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">${agentData.config.voice?.label || 'Voz de Serena'}:</span>
+                                <span class="config-summary-value">${voiceText}</span>
+                            </div>
+                        `;
+
+                        // Días de expiración y puntaje mínimo
+                        const expirationDays = stage.config.expirationDays ?? agentData.config.expirationDays?.default ?? 0;
+                        const minScore = stage.config.minScore ?? agentData.config.minScore?.default ?? 0;
+
+                        configSummary += `
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">${agentData.config.expirationDays?.label || 'Días para que expire la entrevista'}:</span>
+                                <span class="config-summary-value">${expirationDays}${agentData.config.expirationDays?.suffix || 'días'}</span>
+                            </div>
+                            <div class="config-summary-item">
+                                <span class="config-summary-label">${agentData.config.minScore?.label || 'Puntaje mínimo de la entrevista'}:</span>
+                                <span class="config-summary-value">${minScore}${agentData.config.minScore?.suffix || 'pts'}</span>
+                            </div>
+                        `;
+                    }
+                    // Otros agentes - resumen normal
+                    else {
+                        configSummary = Object.entries(agentData.config)
+                            .filter(([key]) => key !== 'tests')
+                            .map(([key, field]) => {
+                                const value = stage.config[key] ?? field.default;
+                                let displayValue = value;
+
+                                if (field.type === 'radio') {
+                                    const option = field.options?.find(opt => opt.value === value);
+                                    displayValue = option ? option.text : value;
+                                } else if (field.type === 'number') {
+                                    displayValue = value !== null && value !== undefined ? value : field.default || 0;
+                                } else if (field.type === 'select') {
+                                    const option = field.options?.find(opt => opt.value === value);
+                                    displayValue = option ? option.text : value;
+                                } else {
+                                    displayValue = value !== null && value !== undefined ? value : '-';
+                                }
+
+                                return `
+                                    <div class="config-summary-item">
+                                        <span class="config-summary-label">${field.label}:</span>
+                                        <span class="config-summary-value">${displayValue}${field.suffix || ''}</span>
+                                    </div>
+                                `;
+                            })
+                            .join('');
+                    }
+
+                    if (configSummary) {
+                        viewModeDescription += `
+                            <div class="stage-config-summary">
+                                ${configSummary}
                             </div>
                         `;
                     }
                 }
+            }
 
-                stageHTML = `
-                    <div class="flow-stage">
-                        <div class="flow-stage-number">${stageNumber}</div>
-                        <div class="flow-stage-content">
-                            <div class="flow-stage-header">
-                                <div>
-                                    <h4 class="flow-stage-name">
-                                        <i class="far ${agentIcon}" style="margin-right: 8px;"></i>
-                                        ${agentName}
-                                    </h4>
-                                </div>
-                                <span class="flow-stage-type">Agente IA</span>
-                            </div>
-                            ${configHTML}
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Etapa personalizada
-                const stageName = stage.name || 'Etapa sin nombre';
-                stageHTML = `
-                    <div class="flow-stage">
-                        <div class="flow-stage-number">${stageNumber}</div>
-                        <div class="flow-stage-content">
-                            <div class="flow-stage-header">
-                                <h4 class="flow-stage-name">${stageName}</h4>
-                                <span class="flow-stage-type">Etapa personalizada</span>
-                            </div>
-                        </div>
+            // Renderizar configuración si el agente tiene config (solo en modo edición)
+            // Excluir psychometric-analyst (tiene drawer) e interview-ia (tiene drawer)
+            let configHTML = '';
+            if (isEditMode && agentData.hasConfig && agentData.config && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia') {
+                configHTML = `
+                    ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
+                    <div class="agent-stage-config ${configClass}" id="agent-config-${stage.id}">
+                        ${Object.entries(agentData.config).map(([key, field]) => {
+                            const value = stage.config?.[key] ?? field.default;
+                            
+                            if (field.type === 'number') {
+                                return `
+                                    <div class="config-field">
+                                        <label class="config-label">
+                                            ${field.label}
+                                            ${field.tooltip ? `
+                                                <button type="button" class="config-info-btn" 
+                                                        data-tooltip="${(field.tooltip || '').replace(/"/g, '&quot;')}"
+                                                        title="${(field.tooltip || '').replace(/"/g, '&quot;')}">
+                                                    <i class="far fa-circle-info"></i>
+                                                </button>
+                                            ` : ''}
+                                        </label>
+                                        <div class="config-input-group">
+                                            <input 
+                                                type="number" 
+                                                class="config-input" 
+                                                value="${value}"
+                                                min="0"
+                                                onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
+                                            >
+                                            ${field.suffix ? `<span class="config-suffix">${field.suffix}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (field.type === 'radio') {
+                                return `
+                                    <div class="config-field config-field-radio">
+                                        <label class="config-label">
+                                            ${field.label}
+                                        </label>
+                                        <div class="config-radio-group">
+                                            ${field.options ? field.options.map(opt => `
+                                                <label class="config-radio-label">
+                                                    <input 
+                                                        type="radio" 
+                                                        name="config-${stage.id}-${key}"
+                                                        value="${opt.value}"
+                                                        ${value === opt.value ? 'checked' : ''}
+                                                        onchange="updateAgentStageConfig('${stage.id}', '${key}', this.value)"
+                                                    >
+                                                    <span>${opt.text}</span>
+                                                </label>
+                                            `).join('') : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            return '';
+                        }).join('')}
                     </div>
                 `;
             }
 
-            return stageHTML;
+            return `
+                <div class="stage-item agent-stage-item" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="agent">
+                    <i class="far fa-grip-vertical stage-drag-handle"></i>
+                    <div class="stage-content">
+                        <div class="stage-header agent-stage-header">
+                            <div class="stage-title-section">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="stage-number">${index + 1}</div>
+                                    <div>
+                                        <h4 class="stage-name">${stage.name} (IA)</h4>
+                                        <span class="stage-category-badge">Categoría de etapa: ${categoryName}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stage-actions">
+                                ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
+                                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Gestionar pruebas psicotécnicas">
+                                        <i class="far fa-list"></i>
+                                        <span>Gestionar pruebas (${stage.config?.tests?.length || 0})</span>
+                                    </button>
+                                ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
+                                        <i class="far fa-gear"></i>
+                                    </button>
+                                ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia' ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only ${isExpanded ? 'ubits-button--active' : ''}" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
+                                        <i class="far fa-gear" id="chevron-${stage.id}"></i>
+                                    </button>
+                                ` : ''}
+                                ${index > 0 ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="moveAgentStageUp('${stage.id}')" title="Subir">
+                                        <i class="far fa-arrow-up"></i>
+                                    </button>
+                                ` : ''}
+                                ${index < template.realContent.stages.length - 1 ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="moveAgentStageDown('${stage.id}')" title="Bajar">
+                                        <i class="far fa-arrow-down"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar agente" style="color: var(--ubits-feedback-accent-error);">
+                                    <i class="far fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${viewModeDescription}
+                        ${configHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar tarjeta de etapa personalizada
+        function renderCustomStageCard(stage, index, template) {
+            const stageName = stage.name || 'Etapa sin nombre';
+            const categoryName = stage.category || 'Sin categoría';
+            
+            // Descripción para modo vista
+            let viewModeDescription = '';
+            if (!isEditMode && stage.description) {
+                viewModeDescription = `
+                    <div class="stage-description">
+                        ${stage.description}
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="stage-item custom-stage-item" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="custom">
+                    <i class="far fa-grip-vertical stage-drag-handle"></i>
+                    <div class="stage-content">
+                        <div class="stage-header">
+                            <div class="stage-title-section">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="stage-number">${index + 1}</div>
+                                    <div>
+                                        <h4 class="stage-name">${stageName}</h4>
+                                        <span class="stage-category-badge">Categoría de etapa: ${categoryName}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stage-actions">
+                                ${index > 0 ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="moveAgentStageUp('${stage.id}')" title="Subir">
+                                        <i class="far fa-arrow-up"></i>
+                                    </button>
+                                ` : ''}
+                                ${index < template.realContent.stages.length - 1 ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="moveAgentStageDown('${stage.id}')" title="Bajar">
+                                        <i class="far fa-arrow-down"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar etapa" style="color: var(--ubits-feedback-accent-error);">
+                                    <i class="far fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${viewModeDescription}
+                    </div>
+                </div>
+            `;
         }
 
         // Ocultar el flujo de la plantilla
@@ -1008,12 +3466,147 @@
                 flowSection.style.display = 'none';
             }
             selectedTemplate = null;
+            localTemplateCopy = null;
         }
 
-        // Abrir editor de plantillas (disponible globalmente)
-        window.openTemplateEditor = function() {
-            if (selectedTemplate) {
-                window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
+        // Crear inputs UBITS para campos select en configuración
+        function createConfigInputs(template) {
+            template.realContent.stages.forEach(stage => {
+                if (stage.type === 'agent' && stage.agentId) {
+                    const agentData = AGENTS.find(a => a.id === stage.agentId);
+                    if (agentData && agentData.config) {
+                        Object.entries(agentData.config).forEach(([key, field]) => {
+                            if (field.type === 'select') {
+                                const containerId = `config-${stage.id}-${key}`;
+                                const container = document.getElementById(containerId);
+                                if (container) {
+                                    const value = stage.config?.[key] ?? field.default;
+                                    createInput({
+                                        containerId: containerId,
+                                        type: 'select',
+                                        placeholder: field.placeholder || 'Selecciona...',
+                                        selectOptions: field.options || [],
+                                        value: value,
+                                        onChange: function(newValue) {
+                                            updateAgentStageConfig(stage.id, key, newValue);
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // Funciones de edición (disponibles globalmente)
+        window.toggleAgentStageConfig = function(stageId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
+            if (!stage) return;
+
+            stage.expanded = !stage.expanded;
+            
+            // Actualizar visualmente sin re-renderizar todo
+            const configDiv = document.getElementById(`agent-config-${stageId}`);
+            const chevron = document.getElementById(`chevron-${stageId}`);
+            
+            if (configDiv) {
+                if (stage.expanded) {
+                    configDiv.classList.add('expanded');
+                    // Agregar divider si no existe
+                    if (!configDiv.previousElementSibling || !configDiv.previousElementSibling.classList.contains('agent-stage-divider')) {
+                        const divider = document.createElement('div');
+                        divider.className = 'agent-stage-divider';
+                        configDiv.parentNode.insertBefore(divider, configDiv);
+                    }
+                } else {
+                    configDiv.classList.remove('expanded');
+                    // Remover divider
+                    const divider = configDiv.previousElementSibling;
+                    if (divider && divider.classList.contains('agent-stage-divider')) {
+                        divider.remove();
+                    }
+                }
+            }
+            
+            if (chevron) {
+                // El icono siempre es fa-gear, solo cambia el estado activo del botón
+                chevron.className = 'far fa-gear';
+            }
+        };
+
+        window.updateAgentStageConfig = function(stageId, configKey, value) {
+            if (!localTemplateCopy || !isEditMode) return;
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
+            if (!stage || !stage.config) return;
+
+            const agentData = AGENTS.find(a => a.id === stage.agentId);
+            if (agentData && agentData.config && agentData.config[configKey]) {
+                const field = agentData.config[configKey];
+                if (field.type === 'number') {
+                    stage.config[configKey] = parseFloat(value) || 0;
+                } else {
+                    stage.config[configKey] = value;
+                }
+            } else {
+                stage.config[configKey] = value;
+            }
+
+            // Re-renderizar solo la configuración de este stage
+            const configDiv = document.getElementById(`agent-config-${stageId}`);
+            if (configDiv && stage.expanded) {
+                // Actualizar el valor en el input sin re-renderizar todo
+                const input = configDiv.querySelector(`input[onchange*="${configKey}"]`);
+                if (input) {
+                    input.value = value;
+                }
+            }
+        };
+
+        window.deleteAgentStage = function(stageId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: 'Eliminar etapa',
+                    message: '¿Estás seguro de que quieres eliminar esta etapa del flujo?',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar',
+                    variant: 'primary',
+                    onConfirm: () => {
+                        localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
+                        renderTemplateFlow(localTemplateCopy);
+                        if (typeof showToast === 'function') {
+                            showToast('success', 'Etapa eliminada del flujo');
+                        }
+                    }
+                });
+            } else {
+                if (confirm('¿Estás seguro de que quieres eliminar esta etapa del flujo?')) {
+                    localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
+                    renderTemplateFlow(localTemplateCopy);
+                }
+            }
+        };
+
+        window.moveAgentStageUp = function(stageId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            const stages = localTemplateCopy.realContent.stages;
+            const index = stages.findIndex(s => s.id === stageId);
+            if (index > 0) {
+                [stages[index - 1], stages[index]] = [stages[index], stages[index - 1]];
+                renderTemplateFlow(localTemplateCopy);
+            }
+        };
+
+        window.moveAgentStageDown = function(stageId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            const stages = localTemplateCopy.realContent.stages;
+            const index = stages.findIndex(s => s.id === stageId);
+            if (index < stages.length - 1) {
+                [stages[index], stages[index + 1]] = [stages[index + 1], stages[index]];
+                renderTemplateFlow(localTemplateCopy);
             }
         };
 
@@ -1029,6 +3622,1507 @@
                     console.log('Days value:', value);
                 }
             });
+        }
+
+        // Renderizar etapas en la biblioteca
+        // Etapas por defecto
+        const DEFAULT_STAGES = [
+            // Categoría: Evaluación inicial
+            {
+                id: 'default-review-cv',
+                name: 'Revisión de CV',
+                category: 'evaluacion-inicial',
+                type: 'custom',
+                description: 'Revisión del currículum para validar experiencia, formación y requisitos mínimos del cargo.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-pre-filter-requirements',
+                name: 'Pre-filtro de requisitos mínimos',
+                category: 'evaluacion-inicial',
+                type: 'custom',
+                description: 'Validación rápida de criterios excluyentes: años de experiencia, nivel educativo, idioma, país/ciudad, etc.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-pre-filter-salary',
+                name: 'Pre-filtro salarial',
+                category: 'evaluacion-inicial',
+                type: 'custom',
+                description: 'Comparación entre la expectativa salarial del candidato y el rango definido para la vacante.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-pre-filter-availability',
+                name: 'Pre-filtro de disponibilidad',
+                category: 'evaluacion-inicial',
+                type: 'custom',
+                description: 'Verifica horario, fecha de ingreso, modalidad de trabajo (remoto/presencial/mixto) u otros aspectos logísticos básicos.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            // Categoría: Entrevistas
+            {
+                id: 'default-interview-pre-screening',
+                name: 'Entrevista de pre-screening',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Primera conversación breve (teléfono o videollamada) para validar interés, motivación y puntos clave del perfil.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-interview-recruiter',
+                name: 'Entrevista con reclutador',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Entrevista más profunda para evaluar competencias blandas, expectativas y encaje general con la empresa.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-interview-hiring-manager',
+                name: 'Entrevista con el área / hiring manager',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Entrevista técnica o funcional con el responsable del área para evaluar ajuste al rol.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-interview-technical',
+                name: 'Entrevista técnica',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Conversación enfocada en conocimientos técnicos, metodologías de trabajo y experiencia práctica.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-interview-culture',
+                name: 'Entrevista de cultura y valores',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Etapa centrada en cultura organizacional, valores y forma de trabajo en equipo.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-interview-final',
+                name: 'Entrevista final',
+                category: 'entrevistas',
+                type: 'custom',
+                description: 'Última entrevista con dirección o stakeholders clave antes de la decisión definitiva.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            // Categoría: Evaluación psicométrica
+            {
+                id: 'default-psychometric-general',
+                name: 'Evaluación psicométrica general',
+                category: 'evaluacion-psicometrica',
+                type: 'custom',
+                description: 'Batería estándar de pruebas para medir habilidades cognitivas y rasgos de personalidad relevantes.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-test-cognitive',
+                name: 'Test de habilidades cognitivas',
+                category: 'evaluacion-psicometrica',
+                type: 'custom',
+                description: 'Mide razonamiento lógico, numérico, verbal u otras capacidades cognitivas.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-test-personality',
+                name: 'Test de personalidad laboral',
+                category: 'evaluacion-psicometrica',
+                type: 'custom',
+                description: 'Evalúa rasgos de personalidad vinculados al estilo de trabajo, liderazgo y trabajo en equipo.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-test-soft-skills',
+                name: 'Test de competencias blandas',
+                category: 'evaluacion-psicometrica',
+                type: 'custom',
+                description: 'Mide competencias como comunicación, resolución de problemas, organización, manejo del estrés, etc.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            // Categoría: Pruebas técnicas
+            {
+                id: 'default-technical-general',
+                name: 'Prueba técnica general',
+                category: 'pruebas-tecnicas',
+                type: 'custom',
+                description: 'Evaluación de conocimientos técnicos básicos requeridos para el rol.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-case-practical',
+                name: 'Caso práctico / Challenge',
+                category: 'pruebas-tecnicas',
+                type: 'custom',
+                description: 'Ejercicio aplicado (ej. resolver un caso, diseñar una solución, elaborar una propuesta) para ver cómo trabaja la persona.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-test-specific-skills',
+                name: 'Prueba de habilidades específicas',
+                category: 'pruebas-tecnicas',
+                type: 'custom',
+                description: 'Prueba focalizada en una herramienta o skill concreta (por ejemplo: Excel avanzado, un CRM, un lenguaje de programación).',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-test-languages',
+                name: 'Prueba de idiomas',
+                category: 'pruebas-tecnicas',
+                type: 'custom',
+                description: 'Evaluación de comprensión y expresión oral/escrita en el idioma requerido por el puesto.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            // Categoría: Verificación
+            {
+                id: 'default-verify-references',
+                name: 'Verificación de referencias laborales',
+                category: 'verificacion',
+                type: 'custom',
+                description: 'Contacto y validación de referencias con jefes o empleadores anteriores.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-verify-background',
+                name: 'Verificación de antecedentes judiciales',
+                category: 'verificacion',
+                type: 'custom',
+                description: 'Revisión de antecedentes según la normativa del país y las políticas internas.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-verify-studies',
+                name: 'Verificación de estudios y certificados',
+                category: 'verificacion',
+                type: 'custom',
+                description: 'Confirmación de títulos académicos, cursos y certificaciones declaradas.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-verify-employment',
+                name: 'Verificación de datos laborales',
+                category: 'verificacion',
+                type: 'custom',
+                description: 'Validación de cargos, fechas y responsabilidades en empleos anteriores.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-verify-documents',
+                name: 'Verificación de documentación',
+                category: 'verificacion',
+                type: 'custom',
+                description: 'Revisión de documentos de identidad, permisos de trabajo u otros requisitos legales.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            // Categoría: Decisión final
+            {
+                id: 'default-final-review',
+                name: 'Revisión final de candidatura',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Etapa donde se consolidan evaluaciones y se define si el candidato avanza a oferta o se descarta.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-approval-offer',
+                name: 'Aprobación para oferta',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Marca al candidato como aprobado internamente y listo para recibir una propuesta.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-offer-sent',
+                name: 'Oferta laboral enviada',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Registro de que se envió la oferta formal (contrato, condiciones, salario, etc.).',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-offer-accepted',
+                name: 'Oferta aceptada',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Candidato acepta la oferta y se confirma su incorporación.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-process-closed',
+                name: 'Proceso cerrado – no seleccionado',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Cierre formal de candidatos descartados en cualquier etapa.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            },
+            {
+                id: 'default-talent-pool',
+                name: 'Banco de talento',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Candidatos que no fueron seleccionados para esta vacante, pero quedan guardados como potenciales para futuras posiciones.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
+            }
+        ];
+
+        // Cargar etapas desde localStorage
+        function loadAvailableStages() {
+            const stored = localStorage.getItem('availableStages');
+            if (stored) {
+                const parsedStages = JSON.parse(stored);
+                // Si hay etapas guardadas, verificar si ya se inicializaron las por defecto
+                const hasDefaultStages = parsedStages.some(s => s.isDefault);
+                if (!hasDefaultStages) {
+                    // Si no hay etapas por defecto, agregarlas al inicio
+                    availableStages = [...DEFAULT_STAGES, ...parsedStages];
+                    saveAvailableStages();
+                } else {
+                    availableStages = parsedStages;
+                }
+            } else {
+                // Si no hay etapas guardadas, usar las por defecto
+                availableStages = [...DEFAULT_STAGES];
+                saveAvailableStages();
+            }
+        }
+
+        // Renderizar etapas disponibles
+        function renderAvailableStages() {
+            const stagesList = document.getElementById('stagesList');
+            if (!stagesList) return;
+            
+            // Cargar etapas si no están cargadas
+            if (availableStages.length === 0) {
+                loadAvailableStages();
+            }
+            
+            // Filtrar etapas que ya están en uso en esta plantilla
+            const usedStageIds = localTemplateCopy?.realContent?.stages?.map(stage => stage.templateId).filter(id => id) || [];
+            const availableStagesForThisTemplate = availableStages.filter(stage => !usedStageIds.includes(stage.id));
+            
+            // Obtener referencias a elementos que se mostrarán/ocultarán
+            const createStageBtn = document.getElementById('createStageBtn');
+            const searchWrapper = document.getElementById('stageSearchWrapper');
+            const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+            const emptyState = document.getElementById('stagesEmptyState');
+            
+            // Mostrar/ocultar controles según si hay etapas
+            const hasStages = availableStages.length > 0;
+            // Ocultar botón de crear etapa de la fila de controles cuando no hay etapas (se mostrará en el empty state)
+            if (createStageBtn) createStageBtn.style.display = hasStages ? 'flex' : 'none';
+            if (searchWrapper) searchWrapper.style.display = hasStages ? 'flex' : 'none';
+            
+            // Crear filtro de categorías con componente Input UBITS (solo si hay etapas disponibles)
+            try {
+                if (categoryFilterContainer && hasStages) {
+                    // Limpiar contenedor primero
+                    categoryFilterContainer.innerHTML = '';
+                    
+                    // Estado de categorías seleccionadas (almacenado en el contenedor)
+                    if (!categoryFilterContainer.dataset.selectedCategories) {
+                        categoryFilterContainer.dataset.selectedCategories = JSON.stringify([]);
+                    }
+                    
+                    // Crear el dropdown de categorías
+                    const dropdownHTML = `
+                        <div class="category-filter-dropdown">
+                            <button type="button" class="category-filter-button ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" id="categoryFilterButton" onclick="toggleCategoryDropdown(event)" title="Filtrar por categorías">
+                                <i class="far fa-filter"></i>
+                                <span class="category-filter-badge" id="categoryFilterBadge" style="display: none; visibility: hidden;"></span>
+                            </button>
+                            <div class="category-filter-dropdown-menu" id="categoryFilterMenu">
+                                ${STAGE_CATEGORIES.map(cat => `
+                                    <label class="category-filter-item" for="category-${cat.id}">
+                                        <input type="checkbox" id="category-${cat.id}" value="${cat.id}" onchange="updateCategoryFilter()">
+                                        <span class="category-filter-item-label">
+                                            <span>${cat.name}</span>
+                                        </span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    categoryFilterContainer.innerHTML = dropdownHTML;
+                } else if (categoryFilterContainer) {
+                    categoryFilterContainer.innerHTML = '';
+                }
+            } catch (e) {
+                console.error('Error creando filtro de categorías:', e);
+            }
+            
+            // Renderizar empty state si no hay etapas
+            if (availableStages.length === 0) {
+                // Ocultar botón de crear etapa de la fila de controles
+                if (createStageBtn) createStageBtn.style.display = 'none';
+                
+                stagesList.innerHTML = `
+                    <div class="empty-stages-visual">
+                        <div class="empty-icon">
+                            <i class="far fa-timeline-arrow"></i>
+                        </div>
+                        <p class="empty-text">Crea tu primera etapa y empieza a diseñar el recorrido de tu candidato.</p>
+                        <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openCreateStageModal();">
+                            <i class="far fa-plus"></i>
+                            <span>Crear etapa</span>
+                        </button>
+                    </div>
+                `;
+                if (emptyState) emptyState.style.display = 'none';
+                return;
+            }
+            
+            // Mostrar botón de crear etapa si hay etapas
+            if (createStageBtn) createStageBtn.style.display = 'flex';
+            
+            // Renderizar empty state si todas las etapas están en uso
+            if (availableStagesForThisTemplate.length === 0) {
+                stagesList.innerHTML = `
+                    <div class="empty-stages-visual">
+                        <div class="empty-icon">
+                            <i class="far fa-check-circle"></i>
+                        </div>
+                        <p class="empty-text">Todas las etapas están en uso en esta plantilla</p>
+                    </div>
+                `;
+                if (emptyState) emptyState.style.display = 'none';
+                return;
+            }
+            
+            // Renderizar etapas disponibles
+            try {
+                stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
+                    const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
+                    return `
+                        <div class="stage-item" 
+                             draggable="true" 
+                             data-stage-id="${stage.id}"
+                             data-stage-name="${stage.name}"
+                             data-stage-category="${stage.category}">
+                            <div class="stage-header">
+                                <div class="stage-info">
+                                    <div class="stage-name">${stage.name}</div>
+                                    <div class="stage-category">Categoría de etapa: ${category ? category.name : stage.category}</div>
+                                </div>
+                                <div class="stage-menu">
+                                    <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" 
+                                            onclick="addStageToFlow('${stage.id}')" 
+                                            title="Agregar al flujo">
+                                        <i class="far fa-plus"></i>
+                                    </button>
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" 
+                                            onclick="toggleStageTemplateMenu(event, '${stage.id}')" 
+                                            title="Opciones">
+                                        <i class="far fa-ellipsis-vertical"></i>
+                                    </button>
+                                    <div class="stage-menu-dropdown" id="stage-template-menu-${stage.id}">
+                                        <button class="stage-menu-item" onclick="editStageTemplate('${stage.id}')">
+                                            <i class="far fa-pencil"></i>
+                                            <span>Editar</span>
+                                        </button>
+                                        <button class="stage-menu-item stage-menu-item--danger" onclick="deleteStageTemplate('${stage.id}')">
+                                            <i class="far fa-trash"></i>
+                                            <span>Eliminar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Re-inicializar el setup de búsqueda después de renderizar
+                setTimeout(() => {
+                    try {
+                        setupStageSearch();
+                    } catch (e) {
+                        console.error('Error inicializando búsqueda:', e);
+                    }
+                }, 100);
+            } catch (e) {
+                console.error('Error renderizando etapas:', e);
+            }
+        }
+
+        function renderStages() {
+            renderAvailableStages();
+        }
+
+        // Renderizar agentes en la biblioteca
+        function renderAgents() {
+            const agentsList = document.getElementById('agentsList');
+            if (!agentsList || !localTemplateCopy) return;
+            
+            // Filtrar agentes que ya están en uso
+            const usedAgentIds = localTemplateCopy.realContent?.stages
+                .filter(s => s.type === 'agent' && s.agentId)
+                .map(s => s.agentId) || [];
+            
+            const availableAgents = AGENTS.filter(agent => !usedAgentIds.includes(agent.id));
+            
+            // Mostrar empty state si todos los agentes están en uso
+            if (availableAgents.length === 0) {
+                agentsList.innerHTML = `
+                    <div class="empty-stages-visual">
+                        <div class="empty-icon">
+                            <i class="far fa-check-circle"></i>
+                        </div>
+                        <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            agentsList.innerHTML = availableAgents.map(agent => {
+                const descriptions = {
+                    'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
+                    'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
+                    'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
+                    'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
+                };
+                const agentDescription = descriptions[agent.id] || agent.description;
+                
+                return `
+                <div class="agent-item" 
+                     draggable="true" 
+                     data-agent-id="${agent.id}"
+                     data-agent-name="${agent.name}"
+                     data-agent-icon="${agent.icon}">
+                    <div class="agent-header">
+                        <div class="agent-title-section">
+                            <div class="agent-icon"><i class="far ${agent.icon}"></i></div>
+                            <div class="agent-name">${agent.name} (IA)</div>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" 
+                                    onclick="addAgentToFlow('${agent.id}')" 
+                                    title="Agregar al flujo">
+                                <i class="far fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="agent-help">${agentDescription}</div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // Agregar agente al flujo
+        window.addAgentToFlow = function(agentId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            
+            const agentData = AGENTS.find(a => a.id === agentId);
+            if (!agentData) return;
+            
+            const newAgentStage = {
+                id: 'agent-' + Date.now(),
+                type: 'agent',
+                agentId: agentId,
+                config: {},
+                expanded: false
+            };
+            
+            // Inicializar configuración por defecto
+            if (agentData.config) {
+                Object.entries(agentData.config).forEach(([key, field]) => {
+                    newAgentStage.config[key] = field.default;
+                });
+            }
+            
+            // Inicializar tests para psicométrico
+            if (agentId === 'psychometric-analyst') {
+                newAgentStage.config.tests = [];
+            }
+            
+            localTemplateCopy.realContent.stages.push(newAgentStage);
+            renderTemplateFlow(localTemplateCopy);
+            renderAgents();
+        };
+
+        // Cambiar tab en la biblioteca
+        window.switchTab = function(tabName) {
+            const tabs = document.querySelectorAll('#agents-sidebar .tab-button');
+            const contents = document.querySelectorAll('#agents-sidebar .tab-content');
+            
+            tabs.forEach(tab => {
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            contents.forEach(content => {
+                if (content.id === `${tabName}-tab`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Renderizar contenido según el tab seleccionado
+            if (tabName === 'stages') {
+                renderStages();
+            } else if (tabName === 'agents') {
+                renderAgents();
+            }
+        };
+
+        // Configurar búsqueda de etapas
+        function setupStageSearch() {
+            try {
+                const searchInput = document.getElementById('stageSearch');
+                const clearButton = document.getElementById('clearStageSearch');
+                const stagesList = document.getElementById('stagesList');
+                const emptyState = document.getElementById('stagesEmptyState');
+                const emptyStateText = document.getElementById('stagesEmptyStateText');
+                
+                if (!searchInput || !clearButton || !stagesList) {
+                    return;
+                }
+                
+                // Asegurar que el empty state esté oculto al inicio
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+                
+                // Función para aplicar filtros (búsqueda + categoría) y mostrar empty state
+                function applyFilters() {
+                    const searchTerm = searchInput.value.toLowerCase().trim();
+                    
+                    // Obtener categorías seleccionadas del dropdown
+                    let selectedCategories = [];
+                    const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+                    if (categoryFilterContainer && categoryFilterContainer.dataset.selectedCategories) {
+                        try {
+                            selectedCategories = JSON.parse(categoryFilterContainer.dataset.selectedCategories);
+                        } catch (e) {
+                            selectedCategories = [];
+                        }
+                    }
+                    
+                    const stageItems = stagesList.querySelectorAll('.stage-item');
+                    let visibleCount = 0;
+                    
+                    // Mostrar/ocultar botón de limpiar
+                    clearButton.style.display = searchTerm ? 'block' : 'none';
+                    
+                    // Filtrar etapas
+                    stageItems.forEach(item => {
+                        const stageName = item.getAttribute('data-stage-name')?.toLowerCase() || '';
+                        const stageCategory = item.getAttribute('data-stage-category') || '';
+                        
+                        // Filtro por búsqueda
+                        const matchesSearch = !searchTerm || 
+                            stageName.includes(searchTerm) || 
+                            stageCategory.toLowerCase().includes(searchTerm);
+                        
+                        // Filtro por categoría (múltiple)
+                        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(stageCategory);
+                        
+                        // Mostrar si cumple ambos filtros
+                        if (matchesSearch && matchesCategory) {
+                            item.style.display = 'flex';
+                            visibleCount++;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar/ocultar empty state SOLO cuando hay búsqueda/filtro activo y no hay resultados
+                    if (emptyState && emptyStateText) {
+                        if ((searchTerm || selectedCategories.length > 0) && visibleCount === 0) {
+                            emptyState.style.display = 'flex';
+                            emptyStateText.textContent = 'No se encontraron etapas';
+                        } else {
+                            emptyState.style.display = 'none';
+                        }
+                    }
+                }
+                
+                // Event listeners
+                searchInput.addEventListener('input', applyFilters);
+                clearButton.addEventListener('click', () => {
+                    searchInput.value = '';
+                    clearButton.style.display = 'none';
+                    applyFilters();
+                });
+            } catch (e) {
+                console.error('Error configurando búsqueda de etapas:', e);
+            }
+        }
+
+        // Toggle dropdown de categorías
+        window.toggleCategoryDropdown = function(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('categoryFilterMenu');
+            if (!menu) return;
+            
+            const isShowing = menu.classList.contains('show');
+            
+            // Cerrar todos los dropdowns primero
+            document.querySelectorAll('.category-filter-dropdown-menu').forEach(m => {
+                m.classList.remove('show');
+            });
+            
+            if (!isShowing) {
+                menu.classList.add('show');
+                // Posicionar el dropdown
+                const button = event.target.closest('.category-filter-button');
+                if (button) {
+                    const rect = button.getBoundingClientRect();
+                    menu.style.top = `${rect.bottom + 4}px`;
+                    menu.style.left = `${rect.left}px`;
+                }
+            }
+        };
+
+        // Actualizar filtro de categorías
+        window.updateCategoryFilter = function() {
+            const categoryFilterContainer = document.getElementById('stageCategoryFilterContainer');
+            if (!categoryFilterContainer) return;
+            
+            // Obtener todas las categorías seleccionadas
+            const checkboxes = categoryFilterContainer.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
+            
+            // Guardar en el dataset
+            categoryFilterContainer.dataset.selectedCategories = JSON.stringify(selectedCategories);
+            
+            // Actualizar badge y estado del botón
+            const badge = document.getElementById('categoryFilterBadge');
+            const button = document.getElementById('categoryFilterButton');
+            
+            if (badge && button) {
+                console.log('🔍 [updateCategoryFilter] Badge encontrado:', badge);
+                console.log('🔍 [updateCategoryFilter] Button encontrado:', button);
+                console.log('🔍 [updateCategoryFilter] Categorías seleccionadas:', selectedCategories.length);
+                
+                if (selectedCategories.length > 0) {
+                    const count = selectedCategories.length;
+                    badge.textContent = count.toString();
+                    badge.style.display = 'inline-flex';
+                    badge.style.color = '#ffffff';
+                    badge.style.overflow = 'visible';
+                    badge.style.visibility = 'visible';
+                    
+                    // Ajustar estilo para números de dos dígitos
+                    if (count > 9) {
+                        console.log('🔍 [updateCategoryFilter] Número de dos dígitos:', count);
+                        badge.classList.add('badge-double-digit');
+                        badge.style.minWidth = '20px';
+                        badge.style.width = 'auto';
+                        badge.style.padding = '0 5px';
+                        badge.style.borderRadius = '9px';
+                    } else {
+                        console.log('🔍 [updateCategoryFilter] Número de un dígito:', count);
+                        badge.classList.remove('badge-double-digit');
+                        badge.style.minWidth = '18px';
+                        badge.style.width = '18px';
+                        badge.style.padding = '0';
+                        badge.style.borderRadius = '50%';
+                    }
+                    
+                    // Forzar color blanco
+                    badge.style.color = '#ffffff';
+                    badge.setAttribute('style', badge.getAttribute('style') + ' color: #ffffff !important;');
+                    const badgeText = badge.querySelector('*');
+                    if (badgeText) {
+                        badgeText.style.color = '#ffffff';
+                    }
+                    
+                    console.log('🔍 [updateCategoryFilter] Estilos aplicados:', {
+                        display: badge.style.display,
+                        color: badge.style.color,
+                        minWidth: badge.style.minWidth,
+                        padding: badge.style.padding,
+                        borderRadius: badge.style.borderRadius,
+                        textContent: badge.textContent,
+                        visibility: badge.style.visibility
+                    });
+                    
+                    button.classList.add('ubits-button--active');
+                } else {
+                    // Ocultar completamente el badge cuando no hay filtros
+                    badge.style.display = 'none';
+                    badge.style.visibility = 'hidden';
+                    badge.textContent = '';
+                    badge.classList.remove('badge-double-digit');
+                    button.classList.remove('ubits-button--active');
+                    console.log('🔍 [updateCategoryFilter] Badge ocultado - no hay filtros');
+                }
+            } else {
+                console.error('🔍 [updateCategoryFilter] Badge o button no encontrado');
+            }
+            
+            // Aplicar filtros
+            const searchInput = document.getElementById('stageSearch');
+            if (searchInput) {
+                const event = new Event('input');
+                searchInput.dispatchEvent(event);
+            }
+        };
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.category-filter-dropdown')) {
+                document.querySelectorAll('.category-filter-dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        // Agregar etapa al flujo
+        window.addStageToFlow = function(stageId) {
+            if (!localTemplateCopy || !isEditMode) return;
+            
+            const stageTemplate = availableStages.find(s => s.id === stageId);
+            if (!stageTemplate) return;
+            
+            // Crear nueva etapa basada en el template
+            const newStage = {
+                id: `stage-${Date.now()}`,
+                type: 'custom',
+                name: stageTemplate.name,
+                category: stageTemplate.category,
+                description: stageTemplate.description || '',
+                templateId: stageTemplate.id
+            };
+            
+            localTemplateCopy.realContent.stages.push(newStage);
+            renderTemplateFlow(localTemplateCopy);
+            
+            // Re-renderizar la lista de etapas para ocultar la que se agregó
+            renderAvailableStages();
+            
+            if (typeof showToast === 'function') {
+                showToast('success', 'Etapa agregada al flujo');
+            }
+        };
+
+        // Generar ID único para etapa
+        function generateStageId() {
+            return 'stage-' + Date.now() + '-' + Math.random().toString(36).substring(2, 11);
+        }
+
+        // Guardar etapas en localStorage
+        function saveAvailableStages() {
+            localStorage.setItem('availableStages', JSON.stringify(availableStages));
+        }
+
+        // Crear etapa template
+        function createStageTemplate(formData) {
+            const { stageName, stageCategory, stageDescription } = formData;
+            
+            // Validar que el nombre no esté vacío
+            if (!stageName || !stageName.trim()) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'El nombre de la etapa es obligatorio');
+                }
+                return;
+            }
+            
+            // Validar que el nombre no esté duplicado
+            const existingStage = availableStages.find(stage => 
+                stage.name.toLowerCase() === stageName.toLowerCase()
+            );
+            
+            if (existingStage) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Ya existe una etapa con ese nombre');
+                }
+                return;
+            }
+            
+            // Crear nueva etapa personalizada (tipo 'custom')
+            const newStage = {
+                id: generateStageId(),
+                name: stageName.trim(),
+                category: stageCategory,
+                type: 'custom',
+                description: stageDescription?.trim() || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            // Agregar a la lista de etapas disponibles
+            availableStages.push(newStage);
+            
+            // Guardar en localStorage
+            saveAvailableStages();
+            
+            // Re-renderizar la lista de etapas
+            renderAvailableStages();
+            
+            // Mostrar toast de éxito
+            if (typeof showToast === 'function') {
+                showToast('success', `Etapa "${stageName}" creada exitosamente`);
+            }
+        }
+
+        // Abrir modal de crear etapa
+        window.openCreateStageModal = function() {
+            // Establecer callback ANTES de abrir el modal
+            window.modalFormCallback = function(formData) {
+                try {
+                    createStageTemplate(formData);
+                } catch (error) {
+                    console.error('Error al crear etapa:', error);
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'Error al crear la etapa: ' + error.message);
+                    }
+                }
+            };
+            
+            if (typeof showFormModal === 'function') {
+                showFormModal({
+                    title: 'Crear nueva etapa',
+                    message: 'Las etapas personalizadas son procesos manuales que puedes usar para organizar tu flujo de selección',
+                    fields: [
+                        {
+                            id: 'stageName',
+                            label: 'Nombre de la etapa',
+                            type: 'text',
+                            placeholder: 'Ej: Entrevista técnica',
+                            required: true,
+                            maxLength: 50,
+                            size: 'md'
+                        },
+                        {
+                            id: 'stageCategory',
+                            label: 'Categoría',
+                            type: 'select',
+                            required: true,
+                            size: 'md',
+                            placeholder: 'Selecciona una categoría',
+                            selectOptions: STAGE_CATEGORIES.map(cat => ({
+                                value: cat.id,
+                                text: cat.name
+                            }))
+                        },
+                        {
+                            id: 'stageDescription',
+                            label: 'Descripción (opcional)',
+                            type: 'textarea',
+                            placeholder: 'Describe brevemente esta etapa y qué implica...',
+                            required: false,
+                            maxLength: 500,
+                            size: 'md'
+                        }
+                    ],
+                    submitText: 'Crear etapa',
+                    cancelText: 'Cancelar',
+                    onSubmit: function(formData) {
+                        if (window.modalFormCallback) {
+                            window.modalFormCallback(formData);
+                        }
+                    },
+                    onCancel: function() {
+                        console.log('Modal cancelado');
+                    }
+                });
+            } else {
+                console.error('showFormModal no está disponible');
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Error: El modal no está disponible');
+                }
+            }
+        };
+
+        // Editar etapa template (redirigir al editor)
+        window.editStageTemplate = function(stageId) {
+            if (selectedTemplate) {
+                window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
+            } else {
+                window.location.href = 'editor-plantillas.html';
+            }
+        };
+
+        // Eliminar etapa template
+        window.deleteStageTemplate = function(stageId) {
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: 'Eliminar etapa',
+                    message: '¿Estás seguro de que quieres eliminar esta etapa? Esta acción no se puede deshacer.',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar',
+                    variant: 'primary',
+                    onConfirm: () => {
+                        availableStages = availableStages.filter(s => s.id !== stageId);
+                        localStorage.setItem('availableStages', JSON.stringify(availableStages));
+                        renderAvailableStages();
+                        if (typeof showToast === 'function') {
+                            showToast('success', 'Etapa eliminada');
+                        }
+                    }
+                });
+            } else {
+                if (confirm('¿Estás seguro de que quieres eliminar esta etapa?')) {
+                    availableStages = availableStages.filter(s => s.id !== stageId);
+                    localStorage.setItem('availableStages', JSON.stringify(availableStages));
+                    renderAvailableStages();
+                }
+            }
+        };
+
+        // Toggle menú de opciones de etapa
+        window.toggleStageTemplateMenu = function(event, stageId) {
+            event.stopPropagation();
+            const menu = document.getElementById(`stage-template-menu-${stageId}`);
+            if (!menu) return;
+            
+            // Cerrar todos los menús primero
+            document.querySelectorAll('.stage-menu-dropdown').forEach(m => {
+                if (m.id !== `stage-template-menu-${stageId}`) {
+                    m.classList.remove('show');
+                }
+            });
+            
+            menu.classList.toggle('show');
+        };
+
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.stage-menu')) {
+                document.querySelectorAll('.stage-menu-dropdown').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        // Variables globales para drawers
+        let currentPsychometricStageId = null;
+        let editingTestId = null;
+        let currentDrawerView = 'list'; // 'list', 'create', 'edit'
+        let currentSerenaStageId = null;
+
+        // Abrir drawer de pruebas psicométricas
+        window.openPsychometricTestsDrawer = function(stageId) {
+            if (!isEditMode || !localTemplateCopy) return;
+            currentPsychometricStageId = stageId;
+            editingTestId = null;
+            currentDrawerView = 'list';
+            
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+                renderPsychometricTestsView();
+            }
+        };
+
+        // Cerrar drawer de pruebas psicométricas
+        function closePsychometricTestsDrawer() {
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.remove('active');
+            }
+            currentPsychometricStageId = null;
+            editingTestId = null;
+            currentDrawerView = 'list';
+        }
+
+        // Manejar click en overlay
+        window.handleDrawerOverlayClick = function(event) {
+            if (event.target.closest('.drawer-content')) {
+                event.stopPropagation();
+                event.preventDefault();
+                return false;
+            }
+            closePsychometricTestsDrawer();
+        };
+
+        // Manejar botón cerrar
+        window.handleDrawerCloseButton = function(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            
+            if (currentDrawerView === 'list') {
+                closePsychometricTestsDrawer();
+            } else {
+                showListView(event);
+            }
+            
+            return false;
+        };
+
+        // Mostrar vista de lista
+        function showListView(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            currentDrawerView = 'list';
+            editingTestId = null;
+            renderPsychometricTestsView();
+            
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+            }
+            
+            return false;
+        }
+
+        // Renderizar vista de pruebas psicométricas
+        function renderPsychometricTestsView() {
+            const listContainer = document.getElementById('psychometricTestsList');
+            const drawerTitle = document.getElementById('drawerTitle');
+            const drawerFooterActions = document.getElementById('drawerFooterActions');
+            
+            if (!listContainer || !currentPsychometricStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage) return;
+            
+            const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+            if (!agentData) return;
+            
+            const tests = stage.config?.tests || [];
+            
+            listContainer.innerHTML = '';
+            
+            const drawerFooter = document.querySelector('#psychometricTestsDrawer .drawer-footer');
+            
+            if (currentDrawerView === 'list') {
+                if (drawerTitle) drawerTitle.textContent = 'Gestionar pruebas psicotécnicas';
+                
+                const hasTests = tests && tests.length > 0;
+                
+                if (drawerFooterActions) {
+                    if (hasTests) {
+                        drawerFooterActions.innerHTML = `
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="addPsychometricTest()">
+                                <i class="far fa-plus"></i>
+                                <span>Agregar prueba</span>
+                            </button>
+                        `;
+                        if (drawerFooter) drawerFooter.style.display = 'flex';
+                    } else {
+                        drawerFooterActions.innerHTML = '';
+                        if (drawerFooter) drawerFooter.style.display = 'none';
+                    }
+                }
+                
+                renderTestsList(tests, agentData);
+            }
+        }
+
+        // Renderizar lista de pruebas
+        function renderTestsList(tests, agentData) {
+            const listContainer = document.getElementById('psychometricTestsList');
+            if (!listContainer) return;
+            
+            if (tests.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-stages-visual">
+                        <div class="empty-icon">
+                            <i class="far fa-list"></i>
+                        </div>
+                        <p class="empty-text">No hay pruebas configuradas</p>
+                        <button class="ubits-button ubits-button--primary ubits-button--md" onclick="addPsychometricTest()">
+                            <i class="far fa-plus"></i>
+                            <span>Agregar primera prueba</span>
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = tests.map((test, index) => {
+                const testType = agentData.testTypes?.find(t => t.value === test.type);
+                const testTypeText = testType ? testType.text : test.type;
+                const minScore = test.minScore ?? 0;
+                
+                return `
+                    <div class="test-item">
+                        <div class="test-item-header">
+                            <div class="test-item-info">
+                                <div class="test-item-title">${testTypeText}</div>
+                                <div class="test-item-subtitle">Prueba ${index + 1} de ${tests.length}</div>
+                            </div>
+                            <div class="test-item-actions">
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="editPsychometricTest('${test.id}')" title="Editar">
+                                    <i class="far fa-edit"></i>
+                                </button>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deletePsychometricTest('${test.id}')" title="Eliminar" style="color: var(--ubits-feedback-accent-error);">
+                                    <i class="far fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="test-item-fields">
+                            <div class="test-item-field">
+                                <label>Puntaje mínimo</label>
+                                <div class="test-item-field-value">${minScore} pts</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Agregar prueba psicométrica
+        window.addPsychometricTest = function() {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage) return;
+            
+            if (!stage.config) stage.config = {};
+            if (!stage.config.tests) stage.config.tests = [];
+            
+            const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+            if (!agentData) return;
+            
+            const newTest = {
+                id: 'test-' + Date.now(),
+                type: agentData.testTypes?.[0]?.value || 'personalidad-16',
+                minScore: 0
+            };
+            
+            stage.config.tests.push(newTest);
+            renderPsychometricTestsView();
+            renderTemplateFlow(localTemplateCopy);
+        };
+
+        // Editar prueba psicométrica
+        window.editPsychometricTest = function(testId) {
+            // Por ahora solo mostrar toast, se puede expandir después
+            showToast('info', 'La edición de pruebas se implementará próximamente');
+        };
+
+        // Eliminar prueba psicométrica
+        window.deletePsychometricTest = function(testId) {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage || !stage.config || !stage.config.tests) return;
+            
+            if (confirm('¿Estás seguro de que quieres eliminar esta prueba?')) {
+                stage.config.tests = stage.config.tests.filter(t => t.id !== testId);
+                renderPsychometricTestsView();
+                renderTemplateFlow(localTemplateCopy);
+            }
+        };
+
+        // Abrir drawer de configuración de Serena
+        window.openSerenaConfigDrawer = function(stageId) {
+            if (!isEditMode || !localTemplateCopy) return;
+            currentSerenaStageId = stageId;
+            
+            const drawer = document.getElementById('serenaConfigDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+                renderSerenaConfigView();
+            }
+        };
+
+        // Cerrar drawer de configuración de Serena
+        window.closeSerenaConfigDrawer = function() {
+            const drawer = document.getElementById('serenaConfigDrawer');
+            if (drawer) {
+                drawer.classList.remove('active');
+            }
+            currentSerenaStageId = null;
+        };
+
+        // Manejar click en overlay de Serena
+        window.handleSerenaDrawerOverlayClick = function(event) {
+            if (event.target.closest('.drawer-content')) {
+                event.stopPropagation();
+                event.preventDefault();
+                return false;
+            }
+            closeSerenaConfigDrawer();
+        };
+
+        // Renderizar vista de configuración de Serena
+        function renderSerenaConfigView() {
+            if (!currentSerenaStageId || !localTemplateCopy) return;
+            
+            const contentContainer = document.getElementById('serenaConfigContent');
+            const footerActions = document.getElementById('serenaDrawerFooterActions');
+            
+            if (!contentContainer) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentSerenaStageId);
+            if (!stage) return;
+            
+            const agentData = AGENTS.find(a => a.id === 'interview-ia');
+            if (!agentData) return;
+            
+            const interviewType = stage.config?.interviewType || agentData.config.interviewType.default;
+            const voice = stage.config?.voice || agentData.config.voice.default;
+            const expirationDays = stage.config?.expirationDays ?? agentData.config.expirationDays.default;
+            const minScore = stage.config?.minScore ?? agentData.config.minScore.default;
+            
+            contentContainer.innerHTML = `
+                <div class="serena-section">
+                    <h4 class="serena-section-title">Tipo de entrevista</h4>
+                    <p class="serena-section-description">Elige cómo prefieres que Serena interactúe con tus candidatos:</p>
+                    <div class="interview-type-cards">
+                        <div class="interview-type-card ${interviewType === 'telefonica' ? 'selected' : ''}" 
+                             onclick="selectInterviewType('telefonica')">
+                            <label class="config-radio-label" onclick="event.stopPropagation();">
+                                <input 
+                                    type="radio" 
+                                    name="serena-interview-type-${currentSerenaStageId}"
+                                    value="telefonica"
+                                    ${interviewType === 'telefonica' ? 'checked' : ''}
+                                    onchange="selectInterviewType('telefonica')"
+                                >
+                                <span></span>
+                            </label>
+                            <div class="interview-type-card-content">
+                                <i class="far fa-phone interview-type-card-icon"></i>
+                                <span class="interview-type-card-label">Telefónica</span>
+                            </div>
+                        </div>
+                        <div class="interview-type-card ${interviewType === 'virtual' ? 'selected' : ''}" 
+                             onclick="selectInterviewType('virtual')">
+                            <label class="config-radio-label" onclick="event.stopPropagation();">
+                                <input 
+                                    type="radio" 
+                                    name="serena-interview-type-${currentSerenaStageId}"
+                                    value="virtual"
+                                    ${interviewType === 'virtual' ? 'checked' : ''}
+                                    onchange="selectInterviewType('virtual')"
+                                >
+                                <span></span>
+                            </label>
+                            <div class="interview-type-card-content">
+                                <i class="far fa-laptop interview-type-card-icon"></i>
+                                <span class="interview-type-card-label">Virtual</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="serena-section">
+                    <h4 class="serena-section-title">Voz de Serena</h4>
+                    <p class="serena-section-description">Selecciona la voz que utilizará Serena durante la entrevista:</p>
+                    <div id="serena-voice-select-container"></div>
+                </div>
+                
+                <div class="serena-section">
+                    <h4 class="serena-section-title">Configuración adicional</h4>
+                    <div class="serena-config-fields">
+                        <div class="serena-config-field">
+                            <div class="serena-config-field-label-wrapper">
+                                <label class="serena-config-field-label">Días para que expire la entrevista</label>
+                            </div>
+                            <div id="serena-expiration-days-container"></div>
+                        </div>
+                        <div class="serena-config-field">
+                            <div class="serena-config-field-label-wrapper">
+                                <label class="serena-config-field-label">Puntaje mínimo de la entrevista</label>
+                            </div>
+                            <div id="serena-min-score-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (footerActions) {
+                footerActions.innerHTML = `
+                    <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="closeSerenaConfigDrawer(); return false;">
+                        <span>Cancelar</span>
+                    </button>
+                    <button class="ubits-button ubits-button--primary ubits-button--md" onclick="saveSerenaConfig(); return false;">
+                        <i class="far fa-save"></i>
+                        <span>Guardar</span>
+                    </button>
+                `;
+            }
+            
+            setTimeout(() => {
+                // Select de voz
+                const voiceSelectContainer = document.getElementById('serena-voice-select-container');
+                if (voiceSelectContainer && agentData.voices) {
+                    createInput({
+                        containerId: 'serena-voice-select-container',
+                        type: 'select',
+                        placeholder: 'Selecciona una voz...',
+                        selectOptions: agentData.voices.map(v => ({
+                            value: v.id,
+                            text: `${v.flag} ${v.name}`
+                        })),
+                        value: voice,
+                        onChange: function(newValue) {
+                            if (stage) {
+                                if (!stage.config) stage.config = {};
+                                stage.config.voice = newValue;
+                            }
+                        }
+                    });
+                }
+                
+                // Input de días de expiración
+                const expirationContainer = document.getElementById('serena-expiration-days-container');
+                if (expirationContainer) {
+                    createInput({
+                        containerId: 'serena-expiration-days-container',
+                        type: 'number',
+                        placeholder: '0',
+                        value: expirationDays,
+                        min: 0,
+                        onChange: function(newValue) {
+                            if (stage) {
+                                if (!stage.config) stage.config = {};
+                                stage.config.expirationDays = parseFloat(newValue) || 0;
+                            }
+                        }
+                    });
+                }
+                
+                // Input de puntaje mínimo
+                const minScoreContainer = document.getElementById('serena-min-score-container');
+                if (minScoreContainer) {
+                    createInput({
+                        containerId: 'serena-min-score-container',
+                        type: 'number',
+                        placeholder: '0',
+                        value: minScore,
+                        min: 0,
+                        onChange: function(newValue) {
+                            if (stage) {
+                                if (!stage.config) stage.config = {};
+                                stage.config.minScore = parseFloat(newValue) || 0;
+                            }
+                        }
+                    });
+                }
+            }, 300);
+        }
+
+        // Seleccionar tipo de entrevista
+        window.selectInterviewType = function(type) {
+            if (!currentSerenaStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentSerenaStageId);
+            if (!stage) return;
+            
+            if (!stage.config) stage.config = {};
+            stage.config.interviewType = type;
+            
+            renderSerenaConfigView();
+        };
+
+        // Guardar configuración de Serena
+        window.saveSerenaConfig = function() {
+            if (!currentSerenaStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentSerenaStageId);
+            if (!stage) return;
+            
+            // Los valores ya se están actualizando con los onChange de los inputs
+            // Solo necesitamos re-renderizar el flujo y cerrar el drawer
+            renderTemplateFlow(localTemplateCopy);
+            closeSerenaConfigDrawer();
+            
+            if (typeof showToast === 'function') {
+                showToast('success', 'Configuración de Serena guardada');
+            }
+        };
+
+        // Renderizar agentes en la biblioteca
+        function renderAgents() {
+            const agentsList = document.getElementById('agentsList');
+            if (!agentsList) return;
+            
+            // Filtrar agentes que ya están en uso
+            const usedAgentIds = localTemplateCopy?.realContent?.stages
+                .filter(s => s.type === 'agent' && s.agentId)
+                .map(s => s.agentId) || [];
+            
+            const availableAgents = AGENTS.filter(agent => !usedAgentIds.includes(agent.id));
+            
+            // Mostrar empty state si todos los agentes están en uso
+            if (availableAgents.length === 0) {
+                agentsList.innerHTML = `
+                    <div class="empty-stages-visual">
+                        <div class="empty-icon">
+                            <i class="far fa-check-circle"></i>
+                        </div>
+                        <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            agentsList.innerHTML = availableAgents.map(agent => {
+                const descriptions = {
+                    'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
+                    'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
+                    'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
+                    'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
+                };
+                const agentDescription = descriptions[agent.id] || agent.description;
+                
+                return `
+                <div class="agent-item" 
+                     draggable="true" 
+                     data-agent-id="${agent.id}"
+                     data-agent-name="${agent.name}"
+                     data-agent-icon="${agent.icon}">
+                    <div class="agent-header">
+                        <div class="agent-title-section">
+                            <div class="agent-icon"><i class="far ${agent.icon}"></i></div>
+                            <div class="agent-name">${agent.name} (IA)</div>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" 
+                                    onclick="addAgentToFlow('${agent.id}')" 
+                                    title="Agregar al flujo">
+                                <i class="far fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="agent-help">${agentDescription}</div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // Agregar agente al flujo
+
+        // Abrir drawer de pruebas psicométricas (stub - por ahora solo muestra toast)
+        function openPsychometricTestsDrawer(stageId) {
+            if (!isEditMode) return;
+            showToast('info', 'La gestión de pruebas psicométricas se implementará próximamente');
+        }
+
+        // Abrir drawer de configuración de Serena (stub - por ahora solo muestra toast)
+        function openSerenaConfigDrawer(stageId) {
+            if (!isEditMode) return;
+            showToast('info', 'La configuración de entrevista Serena se implementará próximamente');
         }
 
 
