@@ -826,6 +826,35 @@
             min-height: 0;
             width: 100%; /* Asegurar ancho completo */
             box-sizing: border-box;
+            padding-bottom: 24px; /* Padding extra al final para que el scroll llegue hasta el final */
+            /* Scroll UBITS */
+            scrollbar-width: thin;
+            scrollbar-color: var(--ubits-fg-1-low) transparent;
+        }
+        
+        /* Scroll UBITS para WebKit - stages-list */
+        .stages-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .stages-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .stages-list::-webkit-scrollbar-thumb {
+            background: var(--ubits-fg-1-low);
+            border-radius: 3px;
+        }
+        
+        .stages-list::-webkit-scrollbar-thumb:hover {
+            background: var(--ubits-fg-1-medium);
+        }
+        
+        /* Spacer al final de las listas de biblioteca */
+        .library-scroll-spacer {
+            height: 24px;
+            flex-shrink: 0;
+            width: 100%;
         }
 
         /* Mensaje vacío para etapas */
@@ -1122,11 +1151,33 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            padding-bottom: 24px; /* Padding extra al final para que el scroll llegue hasta el final */
+            /* Scroll UBITS */
+            scrollbar-width: thin;
+            scrollbar-color: var(--ubits-fg-1-low) transparent;
             overflow-y: auto; /* Solo la lista tiene scroll */
             flex: 1;
             min-height: 0;
             width: 100%; /* Asegurar ancho completo */
             box-sizing: border-box;
+        }
+        
+        /* Scroll UBITS para WebKit - agents-list */
+        .agents-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .agents-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .agents-list::-webkit-scrollbar-thumb {
+            background: var(--ubits-fg-1-low);
+            border-radius: 3px;
+        }
+        
+        .agents-list::-webkit-scrollbar-thumb:hover {
+            background: var(--ubits-fg-1-medium);
         }
 
         .agent-item {

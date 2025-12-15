@@ -1285,7 +1285,7 @@ function renderAgents() {
         return;
     }
     
-    agentsList.innerHTML = availableAgents.map(agent => {
+    const agentsHTML = availableAgents.map(agent => {
         // Obtener descripción del agente para el tooltip
         const descriptions = {
             'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
@@ -1325,6 +1325,42 @@ function renderAgents() {
         </div>
     `;
     }).join('');
+    
+    agentsList.innerHTML = agentsHTML + '<div class="library-scroll-spacer"></div>';
+    
+    // Logs para debuggear el scroll de agents-list
+    setTimeout(() => {
+        const agentsListEl = document.getElementById('agentsList');
+        if (agentsListEl) {
+            console.log('🔍 [Agents List Scroll Debug - Editor] ============================================');
+            console.log('📦 agentsList.scrollHeight:', agentsListEl.scrollHeight, 'px');
+            console.log('📦 agentsList.clientHeight:', agentsListEl.clientHeight, 'px');
+            console.log('📦 agentsList.scrollTop:', agentsListEl.scrollTop, 'px');
+            console.log('📦 agentsList.maxHeight (computed):', window.getComputedStyle(agentsListEl).maxHeight);
+            console.log('📦 Diferencia (scrollHeight - clientHeight):', agentsListEl.scrollHeight - agentsListEl.clientHeight, 'px');
+            console.log('📦 ¿Tiene scroll?', agentsListEl.scrollHeight > agentsListEl.clientHeight ? '✅ SÍ' : '❌ NO');
+            
+            const lastAgent = agentsListEl.querySelector('.agent-item:last-child');
+            const spacer = agentsListEl.querySelector('.library-scroll-spacer');
+            if (lastAgent) {
+                const lastAgentRect = lastAgent.getBoundingClientRect();
+                const containerRect = agentsListEl.getBoundingClientRect();
+                console.log('📦 Último agent-item:');
+                console.log('   - bottom:', lastAgentRect.bottom, 'px');
+                console.log('   - container bottom:', containerRect.bottom, 'px');
+                console.log('   - Diferencia:', containerRect.bottom - lastAgentRect.bottom, 'px');
+                console.log('   - ¿Está visible?', lastAgentRect.bottom <= containerRect.bottom ? '✅ SÍ' : '❌ NO (cortado)');
+            }
+            if (spacer) {
+                const spacerRect = spacer.getBoundingClientRect();
+                const containerRect = agentsListEl.getBoundingClientRect();
+                console.log('📦 Spacer:');
+                console.log('   - bottom:', spacerRect.bottom, 'px');
+                console.log('   - container bottom:', containerRect.bottom, 'px');
+            }
+            console.log('✅ [Agents List Scroll Debug - Editor] ============================================');
+        }
+    }, 200);
     
     // Agregar event listeners para drag and drop
     agentsList.querySelectorAll('.agent-item').forEach(item => {
@@ -1535,7 +1571,7 @@ function renderAvailableStages() {
     
     // Renderizar etapas disponibles
     try {
-        stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
+        const stagesHTML = availableStagesForThisTemplate.map(stage => {
         const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
         return `
             <div class="stage-item" 
@@ -1574,6 +1610,42 @@ function renderAvailableStages() {
             </div>
         `;
         }).join('');
+        
+        stagesList.innerHTML = stagesHTML + '<div class="library-scroll-spacer"></div>';
+        
+        // Logs para debuggear el scroll de stages-list
+        setTimeout(() => {
+            const stagesListEl = document.getElementById('stagesList');
+            if (stagesListEl) {
+                console.log('🔍 [Stages List Scroll Debug - Editor] ============================================');
+                console.log('📦 stagesList.scrollHeight:', stagesListEl.scrollHeight, 'px');
+                console.log('📦 stagesList.clientHeight:', stagesListEl.clientHeight, 'px');
+                console.log('📦 stagesList.scrollTop:', stagesListEl.scrollTop, 'px');
+                console.log('📦 stagesList.maxHeight (computed):', window.getComputedStyle(stagesListEl).maxHeight);
+                console.log('📦 Diferencia (scrollHeight - clientHeight):', stagesListEl.scrollHeight - stagesListEl.clientHeight, 'px');
+                console.log('📦 ¿Tiene scroll?', stagesListEl.scrollHeight > stagesListEl.clientHeight ? '✅ SÍ' : '❌ NO');
+                
+                const lastStage = stagesListEl.querySelector('.stage-item:last-child');
+                const spacer = stagesListEl.querySelector('.library-scroll-spacer');
+                if (lastStage) {
+                    const lastStageRect = lastStage.getBoundingClientRect();
+                    const containerRect = stagesListEl.getBoundingClientRect();
+                    console.log('📦 Último stage-item:');
+                    console.log('   - bottom:', lastStageRect.bottom, 'px');
+                    console.log('   - container bottom:', containerRect.bottom, 'px');
+                    console.log('   - Diferencia:', containerRect.bottom - lastStageRect.bottom, 'px');
+                    console.log('   - ¿Está visible?', lastStageRect.bottom <= containerRect.bottom ? '✅ SÍ' : '❌ NO (cortado)');
+                }
+                if (spacer) {
+                    const spacerRect = spacer.getBoundingClientRect();
+                    const containerRect = stagesListEl.getBoundingClientRect();
+                    console.log('📦 Spacer:');
+                    console.log('   - bottom:', spacerRect.bottom, 'px');
+                    console.log('   - container bottom:', containerRect.bottom, 'px');
+                }
+                console.log('✅ [Stages List Scroll Debug - Editor] ============================================');
+            }
+        }, 200);
         
         // Agregar event listeners para drag and drop
         if (stagesList) {
@@ -2510,12 +2582,6 @@ function makeBoardDroppable() {
 }
 
 window.addStageToBoard = function(stageTemplateId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     // Buscar la etapa en availableStages
     const stageTemplate = availableStages.find(s => s.id === stageTemplateId);
     if (!stageTemplate) return;
@@ -2554,12 +2620,6 @@ window.addStageToBoard = function(stageTemplateId) {
 }
 
 function handleStageTemplateDrop(data) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const { id, name, category } = data;
     
     // Verificar que la etapa no esté ya en uso
@@ -2783,6 +2843,45 @@ function updateTemplateInfo() {
             } else {
                 // Ocultar la etiqueta si no hay status
                 templateStatusBadge.style.display = 'none';
+            }
+        }
+        
+        // Ocultar botón "Terminar" y cambiar "Guardar" a primario cuando status === 'available'
+        const saveButtonDesktop = document.querySelector('.header-right button[onclick="saveTemplate()"]');
+        const finishButtonDesktop = document.querySelector('.header-right button[onclick="finishTemplate()"]');
+        const saveButtonMobile = document.querySelector('.header-row-2 button[onclick="saveTemplate()"]');
+        const finishButtonMobile = document.querySelector('.header-row-2 button[onclick="finishTemplate()"]');
+        
+        if (currentTemplate && currentTemplate.status === 'available') {
+            // Ocultar botón "Terminar"
+            if (finishButtonDesktop) {
+                finishButtonDesktop.style.display = 'none';
+            }
+            if (finishButtonMobile) {
+                finishButtonMobile.style.display = 'none';
+            }
+            
+            // Cambiar "Guardar" a primario
+            if (saveButtonDesktop) {
+                saveButtonDesktop.className = 'ubits-button ubits-button--primary ubits-button--md';
+            }
+            if (saveButtonMobile) {
+                saveButtonMobile.className = 'ubits-button ubits-button--primary ubits-button--md';
+            }
+        } else {
+            // Mostrar botón "Terminar" y cambiar "Guardar" a secundario
+            if (finishButtonDesktop) {
+                finishButtonDesktop.style.display = 'flex';
+            }
+            if (finishButtonMobile) {
+                finishButtonMobile.style.display = 'flex';
+            }
+            
+            if (saveButtonDesktop) {
+                saveButtonDesktop.className = 'ubits-button ubits-button--secondary ubits-button--md';
+            }
+            if (saveButtonMobile) {
+                saveButtonMobile.className = 'ubits-button ubits-button--secondary ubits-button--md';
             }
         }
         
@@ -3590,12 +3689,6 @@ function addNewStage() {
 }
 
 window.moveStageUp = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -3615,12 +3708,6 @@ window.moveStageUp = function(stageId) {
 }
 
 window.moveStageDown = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -3640,12 +3727,6 @@ window.moveStageDown = function(stageId) {
 }
 
 function editStageName(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -3748,12 +3829,6 @@ window.addAgentFromSelector = function(stageId, agentId) {
 }
 
 function removeAgentFromStage(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage || !stage.agents || stage.agents.length === 0) return;
     
@@ -3778,12 +3853,6 @@ function removeAgentFromStage(stageId) {
 }
 
 function deleteStage(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -3849,12 +3918,6 @@ function addAgentToStage(stageId, agentId) {
 }
 
 function updateAgentConfig(stageId, configKey, value) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     
     if (!stage || !stage.agents || stage.agents.length === 0) {
@@ -4300,6 +4363,12 @@ function saveTemplate() {
         return;
     }
     
+    // Si la plantilla está disponible, mostrar modal de confirmación
+    if (currentTemplate.status === 'available') {
+        showSaveAvailableTemplateModal();
+        return;
+    }
+    
     console.log('Saving template:', currentTemplate);
     
     // Verificar que realContent existe
@@ -4343,6 +4412,78 @@ function saveTemplate() {
     } else {
         alert('Plantilla guardada exitosamente');
     }
+}
+
+// Función para mostrar modal de guardar plantilla disponible
+function showSaveAvailableTemplateModal() {
+    if (!currentTemplate) return;
+    
+    const message = `<p style="margin: 0 0 16px 0; font-family: 'Noto Sans', sans-serif; font-size: 14px; line-height: 20px; color: var(--ubits-fg-1-high);">Estás actualizando una plantilla que ya se está usando en vacantes activas.</p>
+<ul style="margin: 0 0 16px 0; padding-left: 20px; list-style-type: disc; font-family: 'Noto Sans', sans-serif; font-size: 14px; line-height: 20px; color: var(--ubits-fg-1-high);">
+    <li style="margin-bottom: 8px;">Los cambios no se aplicarán a las vacantes creadas antes de esta edición.</li>
+    <li style="margin-bottom: 8px;">Los cambios solo se verán en las nuevas vacantes que crees usando esta plantilla.</li>
+    <li style="margin-bottom: 8px;">Las vacantes que ya usan esta plantilla quedarán con la plantilla seleccionada marcada como "Desactualizada", para indicar que existe una versión más reciente.</li>
+</ul>
+<p style="margin: 0; font-family: 'Noto Sans', sans-serif; font-size: 14px; line-height: 20px; color: var(--ubits-fg-1-high);">Así protegemos la información y los datos ya recolectados en los procesos actuales.</p>`;
+    
+    showConfirmModal({
+        title: 'Guardar cambios en plantilla en uso',
+        message: message,
+        confirmText: 'Guardar plantilla',
+        cancelText: 'Cancelar',
+        variant: 'primary',
+        onConfirm: () => {
+            // Proceder con el guardado
+            console.log('Saving available template:', currentTemplate);
+            
+            // Verificar que realContent existe
+            if (!currentTemplate.realContent) {
+                console.log('No realContent found, creating it');
+                currentTemplate.realContent = { stages: [] };
+            }
+            
+            // Actualizar contadores
+            currentTemplate.stages = currentTemplate.realContent.stages.length;
+            currentTemplate.agents = currentTemplate.realContent.stages.reduce((total, stage) => {
+                return total + (stage.agents ? stage.agents.length : 0);
+            }, 0);
+            
+            // Mantener estado 'available' (no cambiar a 'draft')
+            currentTemplate.lastModified = new Date().toISOString().split('T')[0];
+            
+            // Guardar en localStorage
+            const stored = localStorage.getItem('templates');
+            let templates = stored ? JSON.parse(stored) : [];
+            
+            const existingIndex = templates.findIndex(t => t.id === currentTemplate.id);
+            if (existingIndex !== -1) {
+                templates[existingIndex] = currentTemplate;
+                console.log('Template updated in localStorage');
+            } else {
+                templates.unshift(currentTemplate);
+                console.log('Template added to localStorage');
+            }
+            
+            localStorage.setItem('templates', JSON.stringify(templates));
+            console.log('Template saved to localStorage successfully');
+            
+            // Marcar que no hay cambios sin guardar
+            markAsSaved();
+            
+            // Actualizar UI para reflejar los cambios
+            updateTemplateInfo();
+            
+            // Mostrar toast de éxito
+            if (typeof showToast === 'function') {
+                showToast('success', 'Plantilla guardada exitosamente');
+            } else {
+                alert('Plantilla guardada exitosamente');
+            }
+        },
+        onCancel: () => {
+            // No hacer nada, solo cerrar el modal
+        }
+    });
 }
 
 // Terminar plantilla (marcar como disponible)
@@ -4440,7 +4581,40 @@ function handleLinkClick(event) {
             cancelText: 'Cancelar',
             variant: 'primary',
             onConfirm: () => {
-                console.log('Usuario confirmó salir sin guardar');
+                console.log('Usuario confirmó salir sin guardar - guardando automáticamente como borrador');
+                
+                // Guardar automáticamente con estado draft antes de salir
+                if (currentTemplate) {
+                    // Verificar que realContent existe
+                    if (!currentTemplate.realContent) {
+                        currentTemplate.realContent = { stages: [] };
+                    }
+                    
+                    // Actualizar contadores
+                    currentTemplate.stages = currentTemplate.realContent.stages.length;
+                    currentTemplate.agents = currentTemplate.realContent.stages.reduce((total, stage) => {
+                        return total + (stage.agents ? stage.agents.length : 0);
+                    }, 0);
+                    
+                    // Guardar con estado 'draft' (borrador)
+                    currentTemplate.status = 'draft';
+                    currentTemplate.lastModified = new Date().toISOString().split('T')[0];
+                    
+                    // Guardar en localStorage
+                    const stored = localStorage.getItem('templates');
+                    let templates = stored ? JSON.parse(stored) : [];
+                    
+                    const existingIndex = templates.findIndex(t => t.id === currentTemplate.id);
+                    if (existingIndex !== -1) {
+                        templates[existingIndex] = currentTemplate;
+                    } else {
+                        templates.unshift(currentTemplate);
+                    }
+                    
+                    localStorage.setItem('templates', JSON.stringify(templates));
+                    console.log('Template guardado automáticamente como borrador');
+                }
+                
                 hasUnsavedChanges = false;
                 goToDashboard();
             },
@@ -4748,12 +4922,6 @@ window.toggleAgentStageMenu = function(event, stageId) {
 }
 
 window.moveAgentStageUp = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -4773,12 +4941,6 @@ window.moveAgentStageUp = function(stageId) {
 }
 
 window.moveAgentStageDown = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stages = currentTemplate.realContent.stages;
     const currentIndex = stages.findIndex(s => s.id === stageId);
     
@@ -4798,12 +4960,6 @@ window.moveAgentStageDown = function(stageId) {
 }
 
 window.deleteAgentStage = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -4834,12 +4990,6 @@ window.deleteAgentStage = function(stageId) {
 }
 
 window.toggleAgentStageConfig = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -5030,12 +5180,6 @@ window.toggleAgentStageConfig = function(stageId) {
 }
 
 window.updateAgentStageConfig = function(stageId, configKey, value) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
 
@@ -5066,12 +5210,6 @@ window.updateAgentStageConfig = function(stageId, configKey, value) {
 }
 
 window.toggleCustomStageDescription = function(stageId) {
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
-    
     const stage = currentTemplate.realContent.stages.find(s => s.id === stageId);
     if (!stage) return;
     
@@ -5226,12 +5364,6 @@ function editCategory() {
 // Función para abrir el dropdown de categoría de plantilla
 function openTemplateCategoryDropdown(event) {
     event.stopPropagation();
-    
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        return;
-    }
     
     // Cerrar cualquier dropdown abierto
     closeAllTemplateCategoryDropdowns();
@@ -6649,12 +6781,6 @@ function saveSerenaConfig() {
     // La función updateAgentStageConfig verifica si la plantilla está activa y muestra modal,
     // pero nosotros ya tenemos el stage, así que actualizamos directamente
     
-    // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'available') {
-        showCreateNewVersionModal();
-        closeSerenaConfigDrawer();
-        return;
-    }
     
     // Actualizar directamente en el stage (ya lo hicimos arriba, pero asegurémonos)
     stage.config.interviewType = stage.config.interviewType || 'telefonica';

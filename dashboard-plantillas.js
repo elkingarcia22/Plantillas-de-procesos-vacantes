@@ -12,6 +12,14 @@ let filteredTemplates = [];
 let currentSort = 'recent';
 let isSearching = false;
 
+// Estado de filtros
+let activeFilters = {
+    status: [],
+    dateFrom: null,
+    dateTo: null,
+    hasAgents: null // null = todos, true = con agentes, false = sin agentes
+};
+
 // Opciones de ordenamiento
 const SORT_OPTIONS = [
     { value: 'recent', text: 'Más reciente primero' },
@@ -25,10 +33,25 @@ const SORT_OPTIONS = [
 // ========================================
 
 function initializeDashboard() {
-    loadTemplatesFromStorage();
-    setupEventListeners();
-    renderTemplates();
-    updateTemplatesCount();
+    try {
+        loadTemplatesFromStorage();
+        setupEventListeners();
+        
+        // Inicializar filtros globales
+        if (typeof window.activeFilters === 'undefined') {
+            window.activeFilters = {
+                status: [],
+                dateFrom: null,
+                dateTo: null,
+                hasAgents: null
+            };
+        }
+        
+        renderTemplates();
+        updateTemplatesCount();
+    } catch (error) {
+        console.error('Error en initializeDashboard:', error);
+    }
 }
 
 // ========================================
@@ -359,18 +382,77 @@ function handleSearch(value) {
     const query = value.toLowerCase().trim();
     
     if (query === '') {
-        filteredTemplates = [...currentTemplates];
         isSearching = false;
     } else {
         isSearching = true;
-        filteredTemplates = currentTemplates.filter(template => 
-            template.name.toLowerCase().includes(query) ||
-            template.category.toLowerCase().includes(query) ||
-            template.author.toLowerCase().includes(query) ||
-            (template.description && template.description.toLowerCase().includes(query))
+    }
+    
+    // Aplicar filtros combinados (búsqueda + filtros)
+    applyTemplateFilters();
+}
+
+// Función para aplicar todos los filtros (búsqueda + filtros del drawer)
+function applyTemplateFilters() {
+    const searchInput = document.getElementById('searchTemplates');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    // Empezar con todas las plantillas
+    let templates = [...currentTemplates];
+    
+    // Aplicar búsqueda
+    if (searchQuery) {
+        templates = templates.filter(template => 
+            template.name.toLowerCase().includes(searchQuery) ||
+            template.category.toLowerCase().includes(searchQuery) ||
+            template.author.toLowerCase().includes(searchQuery) ||
+            (template.description && template.description.toLowerCase().includes(searchQuery))
         );
     }
     
+    // Aplicar filtros del drawer
+    if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
+        const filters = window.activeFilters;
+        
+        // Filtro de estado
+        if (filters.status && filters.status.length > 0) {
+            templates = templates.filter(template => filters.status.includes(template.status));
+        }
+        
+        // Filtro de rango de fecha
+        if (filters.dateFrom) {
+            templates = templates.filter(template => {
+                const templateDate = new Date(template.lastModified);
+                const fromDate = new Date(filters.dateFrom);
+                return templateDate >= fromDate;
+            });
+        }
+        
+        if (filters.dateTo) {
+            templates = templates.filter(template => {
+                const templateDate = new Date(template.lastModified);
+                const toDate = new Date(filters.dateTo);
+                toDate.setHours(23, 59, 59, 999); // Incluir todo el día
+                return templateDate <= toDate;
+            });
+        }
+        
+        // Filtro de agentes
+        if (filters.hasAgents !== null) {
+            templates = templates.filter(template => {
+                const agentsCount = template.agents || 0;
+                if (filters.hasAgents === true) {
+                    return agentsCount > 0;
+                } else {
+                    return agentsCount === 0;
+                }
+            });
+        }
+    }
+    
+    // Actualizar plantillas filtradas
+    filteredTemplates = templates;
+    
+    // Aplicar ordenamiento y renderizar
     applySorting();
     renderTemplates();
     updateTemplatesCount();
@@ -501,13 +583,34 @@ function applySorting() {
 // RENDERIZADO
 // ========================================
 
+// Variable para prevenir múltiples renderizados
+let isRendering = false;
+
 function renderTemplates() {
-    const grid = document.getElementById('templatesGrid');
-    const controls = document.querySelector('.templates-controls');
-    const createButton = document.querySelector('.dashboard-header button[onclick*="openCreateTemplateModal"]');
+    if (isRendering) {
+        return;
+    }
     
-    if (filteredTemplates.length === 0) {
-        // Diferenciar entre empty state (sin plantillas) y no results (búsqueda sin resultados)
+    isRendering = true;
+    
+    try {
+        const grid = document.getElementById('templatesGrid');
+        const controls = document.querySelector('.templates-controls');
+        const createButton = document.querySelector('.dashboard-header button[onclick*="openCreateTemplateModal"]');
+        
+        if (!grid) {
+            isRendering = false;
+            return;
+        }
+        
+        if (!filteredTemplates || !Array.isArray(filteredTemplates)) {
+            grid.innerHTML = '';
+            isRendering = false;
+            return;
+        }
+        
+        if (filteredTemplates.length === 0) {
+            // Diferenciar entre empty state (sin plantillas) y no results (búsqueda sin resultados)
         if (isSearching && currentTemplates.length > 0) {
             grid.innerHTML = getNoResultsHTML();
         } else {
@@ -530,24 +633,421 @@ function renderTemplates() {
             if (createButton) {
                 createButton.style.display = 'flex';
             }
+            }
+            isRendering = false;
+            return;
         }
-        return;
-    }
-    
-    grid.innerHTML = filteredTemplates.map(template => createTemplateCardHTML(template)).join('');
-    
-    // Mostrar controles cuando hay plantillas
-    if (controls) {
-        controls.style.display = 'flex';
-    }
-    
-    // Mostrar botón "Crear plantilla" del header cuando hay plantillas
-    if (createButton) {
-        createButton.style.display = 'flex';
+        
+        grid.innerHTML = filteredTemplates.map(template => createTemplateCardHTML(template)).join('');
+        
+        // Renderizar tabla
+        renderTemplatesTable();
+        
+        // Mostrar controles cuando hay plantillas
+        if (controls) {
+            controls.style.display = 'flex';
+        }
+        
+        // Mostrar botón "Crear plantilla" del header cuando hay plantillas
+        if (createButton) {
+            createButton.style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('Error en renderTemplates:', error);
+    } finally {
+        isRendering = false;
     }
     
     // Agregar event listeners a los botones
     addTemplateCardEventListeners();
+}
+
+// Función para renderizar la tabla de plantillas
+// Variable para prevenir re-renderizados múltiples
+let isRenderingTable = false;
+
+function renderTemplatesTable() {
+    // Prevenir múltiples renderizados simultáneos
+    if (isRenderingTable) {
+        return;
+    }
+    
+    isRenderingTable = true;
+    
+    try {
+        const tableBody = document.getElementById('templatesTableBody');
+        if (!tableBody) {
+            isRenderingTable = false;
+            return;
+        }
+        
+        if (!filteredTemplates || !Array.isArray(filteredTemplates)) {
+            tableBody.innerHTML = '';
+            isRenderingTable = false;
+            return;
+        }
+        
+        if (filteredTemplates.length === 0) {
+            tableBody.innerHTML = '';
+            isRenderingTable = false;
+            return;
+        }
+        
+        // Mapear categoría técnica a texto legible
+        const categoryMap = {
+            'administracion': 'Administración',
+            'atencion-cliente': 'Atención al cliente',
+            'contratacion-general': 'Contratación general',
+            'diseno-creatividad': 'Diseño y creatividad',
+            'finanzas-contabilidad': 'Finanzas y contabilidad',
+            'ingenieria': 'Ingeniería',
+            'operaciones': 'Operaciones',
+            'recursos-humanos': 'Recursos humanos',
+            'tecnologia-desarrollo': 'Tecnología / Desarrollo',
+            'ventas-marketing': 'Ventas y marketing'
+        };
+        
+        tableBody.innerHTML = filteredTemplates.map(template => {
+            const hasStatus = template.status !== undefined && template.status !== null && template.status !== '';
+            const statusClass = hasStatus ? (template.status === 'available' ? 'available' : 'draft') : 'draft';
+            const statusText = hasStatus ? (template.status === 'available' ? 'Disponible' : 'Borrador') : 'Borrador';
+            const categoryText = categoryMap[template.category] || template.category || 'Sin categoría';
+            
+            // Calcular participantes (stages + agents)
+            const participants = (template.stages || 0) + (template.agents || 0);
+            
+            // Calcular avance (por ahora fijo en 50%, luego se puede hacer dinámico)
+            const progress = 50;
+            
+            // Formatear fecha de modificación
+            const modifiedDate = template.lastModified ? formatDateForTable(template.lastModified) : 'N/A';
+            
+            // Obtener número de agentes IA del flujo
+            const agentsCount = template.agents || 0;
+            
+            return `
+                <tr data-template-id="${template.id}">
+                    <td class="table-checkbox">
+                        <input type="checkbox" class="template-checkbox" data-template-id="${template.id}">
+                    </td>
+                    <td data-column="name" class="table-name column-name">${template.name || 'Sin nombre'}</td>
+                    <td data-column="type" class="table-type column-type">${categoryText}</td>
+                    <td data-column="status" class="table-status column-status">
+                        <span class="table-status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td data-column="modified" class="table-date column-modified">${modifiedDate}</td>
+                    <td data-column="agents" class="table-agents column-agents">${agentsCount}</td>
+                    <td data-column="participants" class="table-participants column-participants">${participants}</td>
+                    <td data-column="progress" class="table-progress column-progress">
+                        <div class="table-progress-container">
+                            <div class="table-progress-bar">
+                                <div class="table-progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <span class="table-progress-text">${progress}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    
+        // Agregar event listeners para checkboxes
+        setupTableCheckboxes();
+        
+        // Agregar event listeners para ordenamiento
+        setupTableSorting();
+        
+        // Agregar event listeners para clicks en filas
+        setupTableRowClicks();
+    } catch (error) {
+        console.error('Error en renderTemplatesTable:', error);
+    } finally {
+        isRenderingTable = false;
+    }
+}
+
+// Función para formatear fecha para la tabla
+function formatDateForTable(dateString) {
+    if (!dateString) return 'N/A';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            // Si es formato YYYY-MM-DD
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                const day = parseInt(parts[2], 10);
+                const month = parseInt(parts[1], 10);
+                const year = parseInt(parts[0], 10);
+                const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                return `${day} - ${monthNames[month - 1]} - ${year}`;
+            }
+            return dateString;
+        }
+        
+        const day = date.getDate();
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                           'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        return `${day} - ${monthNames[month]} - ${year}`;
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Función para configurar checkboxes de la tabla
+function setupTableCheckboxes() {
+    const selectAllCheckbox = document.getElementById('selectAllTemplates');
+    const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllCheckbox();
+        });
+    });
+}
+
+// Función para actualizar el checkbox "Seleccionar todas"
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAllTemplates');
+    const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+    
+    if (selectAllCheckbox && rowCheckboxes.length > 0) {
+        const allChecked = Array.from(rowCheckboxes).every(checkbox => checkbox.checked);
+        selectAllCheckbox.checked = allChecked;
+    }
+}
+
+// Variables para el ordenamiento de la tabla
+let currentTableSortField = null;
+let currentTableSortDirection = 'asc'; // 'asc' o 'desc'
+
+// Función para configurar ordenamiento de la tabla
+function setupTableSorting() {
+    try {
+        const sortButtons = document.querySelectorAll('.table-sort-btn');
+        
+        if (!sortButtons || sortButtons.length === 0) {
+            // Los botones aún no existen, no hacer nada
+            return;
+        }
+        
+        sortButtons.forEach((button) => {
+            if (!button) return;
+            
+            // Remover event listeners anteriores usando una función nombrada
+            const oldHandler = button._sortHandler;
+            if (oldHandler) {
+                button.removeEventListener('click', oldHandler);
+            }
+            
+            // Crear nuevo handler
+            const handler = function(e) {
+                e.stopPropagation(); // Evitar que el click se propague al header
+                e.preventDefault();
+                const field = this.dataset.sort;
+                if (field) {
+                    sortTableBy(field);
+                }
+            };
+            
+            // Guardar referencia al handler para poder removerlo después
+            button._sortHandler = handler;
+            
+            // Agregar nuevo event listener
+            button.addEventListener('click', handler);
+        });
+    } catch (error) {
+        console.error('Error en setupTableSorting:', error);
+    }
+}
+
+// Variable para prevenir bucles infinitos
+let isSorting = false;
+
+// Función para ordenar la tabla
+function sortTableBy(field) {
+    // Prevenir bucles infinitos
+    if (isSorting) {
+        return;
+    }
+    
+    // Verificar que filteredTemplates esté disponible
+    if (!filteredTemplates || !Array.isArray(filteredTemplates)) {
+        return;
+    }
+    
+    isSorting = true;
+    
+    try {
+        // Si se hace click en el mismo campo, cambiar dirección
+        if (currentTableSortField === field) {
+            currentTableSortDirection = currentTableSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentTableSortField = field;
+            currentTableSortDirection = 'asc';
+        }
+        
+        // Ordenar filteredTemplates
+        filteredTemplates.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(field) {
+            case 'name':
+                aValue = (a.name || '').toLowerCase();
+                bValue = (b.name || '').toLowerCase();
+                return currentTableSortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            
+            case 'category':
+                const categoryMap = {
+                    'administracion': 'Administración',
+                    'atencion-cliente': 'Atención al cliente',
+                    'contratacion-general': 'Contratación general',
+                    'diseno-creatividad': 'Diseño y creatividad',
+                    'finanzas-contabilidad': 'Finanzas y contabilidad',
+                    'ingenieria': 'Ingeniería',
+                    'operaciones': 'Operaciones',
+                    'recursos-humanos': 'Recursos humanos',
+                    'tecnologia-desarrollo': 'Tecnología / Desarrollo',
+                    'ventas-marketing': 'Ventas y marketing'
+                };
+                aValue = (categoryMap[a.category] || a.category || '').toLowerCase();
+                bValue = (categoryMap[b.category] || b.category || '').toLowerCase();
+                return currentTableSortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            
+            case 'status':
+                const statusOrder = { 'available': 1, 'draft': 2 };
+                // Si no tiene status definido, tratarlo como draft
+                const aStatus = a.status !== undefined && a.status !== null && a.status !== '' ? a.status : 'draft';
+                const bStatus = b.status !== undefined && b.status !== null && b.status !== '' ? b.status : 'draft';
+                aValue = statusOrder[aStatus] || 3;
+                bValue = statusOrder[bStatus] || 3;
+                return currentTableSortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            
+            case 'lastModified':
+                // Manejar diferentes formatos de fecha
+                let aDate, bDate;
+                try {
+                    aDate = a.lastModified ? new Date(a.lastModified) : new Date(0);
+                    bDate = b.lastModified ? new Date(b.lastModified) : new Date(0);
+                    // Si la fecha es inválida, usar fecha muy antigua
+                    if (isNaN(aDate.getTime())) aDate = new Date(0);
+                    if (isNaN(bDate.getTime())) bDate = new Date(0);
+                } catch (e) {
+                    aDate = new Date(0);
+                    bDate = new Date(0);
+                }
+                aValue = aDate.getTime();
+                bValue = bDate.getTime();
+                return currentTableSortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            
+            case 'agents':
+                aValue = a.agents || 0;
+                bValue = b.agents || 0;
+                return currentTableSortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            
+            case 'participants':
+                aValue = (a.stages || 0) + (a.agents || 0);
+                bValue = (b.stages || 0) + (b.agents || 0);
+                return currentTableSortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            
+            case 'progress':
+                // Por ahora fijo en 50%, luego se puede hacer dinámico
+                aValue = 50;
+                bValue = 50;
+                return 0;
+            
+            default:
+                return 0;
+        }
+        });
+        
+        // Actualizar iconos de ordenamiento
+        updateSortIcons(field, currentTableSortDirection);
+        
+        // Re-renderizar la tabla
+        renderTemplatesTable();
+    } catch (error) {
+        console.error('Error en sortTableBy:', error);
+    } finally {
+        isSorting = false;
+    }
+}
+
+// Función para actualizar los iconos de ordenamiento
+function updateSortIcons(activeField, direction) {
+    try {
+        const sortButtons = document.querySelectorAll('.table-sort-btn');
+        
+        if (!sortButtons || sortButtons.length === 0) {
+            return;
+        }
+        
+        sortButtons.forEach(button => {
+            if (!button) return;
+            
+            const field = button.dataset.sort;
+            const icon = button.querySelector('i');
+            
+            if (!icon) return;
+            
+            // Remover clases activas
+            button.classList.remove('active', 'asc', 'desc');
+            
+            // Si es el campo activo, agregar clases y cambiar icono
+            if (field === activeField) {
+                button.classList.add('active', direction);
+                if (direction === 'asc') {
+                    icon.className = 'far fa-arrow-up';
+                } else {
+                    icon.className = 'far fa-arrow-down';
+                }
+            } else {
+                // Icono por defecto
+                icon.className = 'far fa-arrow-down-arrow-up';
+            }
+        });
+    } catch (error) {
+        console.error('Error en updateSortIcons:', error);
+    }
+}
+
+// Función para configurar clicks en filas de la tabla
+function setupTableRowClicks() {
+    const tableRows = document.querySelectorAll('#templatesTableBody tr');
+    
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Solo abrir si NO se hace click en un checkbox o botón
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                const templateId = this.dataset.templateId;
+                if (templateId) {
+                    openTemplateEditor(templateId);
+                }
+            }
+        });
+    });
 }
 
 function createTemplateCardHTML(template) {
@@ -796,7 +1296,8 @@ function deleteTemplate(templateId) {
 function updateTemplatesCount() {
     const countElement = document.getElementById('templatesCount');
     if (countElement) {
-        countElement.textContent = filteredTemplates.length;
+        // Mostrar el total de plantillas (no solo las filtradas)
+        countElement.textContent = currentTemplates.length;
     }
 }
 

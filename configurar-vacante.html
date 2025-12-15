@@ -85,6 +85,7 @@
             display: flex;
             flex-direction: column;
         }
+        
 
         /* Distribución de anchos */
         .section-single > div {
@@ -609,19 +610,39 @@
             min-height: 0;
             /* Permitir scroll independiente sin bloquear el scroll principal */
             max-height: calc(100vh - 300px);
-        }
-
-        /* Lista de etapas - mismo espacio entre cards que en agentes IA */
-        .agents-sidebar .stages-list {
-            overflow-y: auto;
-            overflow-x: visible;
-            flex: 1;
-            min-height: 0;
-            max-height: calc(100vh - 300px); /* Scroll solo en la lista */
             display: flex;
             flex-direction: column;
             gap: 8px; /* Mismo gap que .agents-list */
             margin-top: 0;
+            padding-bottom: 24px; /* Padding extra al final para que el scroll llegue hasta el final */
+            /* Scroll UBITS */
+            scrollbar-width: thin;
+            scrollbar-color: var(--ubits-fg-1-low) transparent;
+        }
+        
+        /* Scroll UBITS para WebKit - stages-list */
+        .agents-sidebar .stages-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .agents-sidebar .stages-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .agents-sidebar .stages-list::-webkit-scrollbar-thumb {
+            background: var(--ubits-fg-1-low);
+            border-radius: 3px;
+        }
+        
+        .agents-sidebar .stages-list::-webkit-scrollbar-thumb:hover {
+            background: var(--ubits-fg-1-medium);
+        }
+        
+        /* Spacer al final de las listas de biblioteca */
+        .library-scroll-spacer {
+            height: 24px;
+            flex-shrink: 0;
+            width: 100%;
         }
 
         /* Lista de agentes también con scroll solo en la lista */
@@ -634,6 +655,28 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            padding-bottom: 24px; /* Padding extra al final para que el scroll llegue hasta el final */
+            /* Scroll UBITS */
+            scrollbar-width: thin;
+            scrollbar-color: var(--ubits-fg-1-low) transparent;
+        }
+        
+        /* Scroll UBITS para WebKit - agents-list */
+        .agents-sidebar .agents-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .agents-sidebar .agents-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .agents-sidebar .agents-list::-webkit-scrollbar-thumb {
+            background: var(--ubits-fg-1-low);
+            border-radius: 3px;
+        }
+        
+        .agents-sidebar .agents-list::-webkit-scrollbar-thumb:hover {
+            background: var(--ubits-fg-1-medium);
         }
         
         /* Controles de etapas - fijos arriba del tab */
@@ -1695,6 +1738,7 @@
             border: 2px solid transparent;
             border-radius: 8px;
             padding: 16px;
+            padding-bottom: 48px; /* Padding extra al final para que el scroll llegue hasta el final */
             height: fit-content;
             box-sizing: border-box;
             overflow-x: hidden !important;
@@ -1703,8 +1747,36 @@
             min-width: 0;
             width: 100%;
             max-width: none;
-            max-height: calc(100vh - 260px);
+            max-height: calc(100vh - 240px); /* Ajustado para dar más espacio */
             transition: all 0.2s ease;
+            /* Scroll UBITS */
+            scrollbar-width: thin;
+            scrollbar-color: var(--ubits-fg-1-low) transparent;
+        }
+        
+        /* Scroll UBITS para WebKit (Chrome, Safari, Edge) */
+        .board-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .board-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .board-container::-webkit-scrollbar-thumb {
+            background: var(--ubits-fg-1-low);
+            border-radius: 3px;
+        }
+        
+        .board-container::-webkit-scrollbar-thumb:hover {
+            background: var(--ubits-fg-1-medium);
+        }
+        
+        /* Spacer al final para asegurar que el scroll llegue hasta el final */
+        .board-container > .board-scroll-spacer {
+            height: 40px;
+            flex-shrink: 0;
+            width: 100%;
         }
 
         .board-container.drag-over {
@@ -1822,6 +1894,14 @@
             box-sizing: border-box;
             min-width: 0;
             overflow: hidden;
+        }
+        
+        /* Quitar fondo gris de las cards en modo vista */
+        .board-container.view-mode .stage-item,
+        .board-container.view-mode .agent-stage-item,
+        .board-container.view-mode .custom-stage-item {
+            background: transparent;
+            border: 1px solid var(--ubits-border-1);
         }
 
         .agent-stage-item:hover {
@@ -3642,14 +3722,91 @@
                 </div>
                 ${stagesHTML}
                 ${nextSlotHTML}
+                <div class="board-scroll-spacer"></div>
             `;
 
             // Aplicar modo vista/edición según el estado
             applyEditMode();
 
+            // Logs para debuggear el scroll
+            setTimeout(() => {
+                const boardContainer = document.querySelector('.board-container');
+                if (boardContainer) {
+                    console.log('🔍 [Scroll Debug] ============================================');
+                    console.log('🔍 [Scroll Debug] BOARD CONTAINER SCROLL INFO');
+                    console.log('🔍 [Scroll Debug] ============================================');
+                    console.log('📦 boardContainer.scrollHeight:', boardContainer.scrollHeight, 'px');
+                    console.log('📦 boardContainer.clientHeight:', boardContainer.clientHeight, 'px');
+                    console.log('📦 boardContainer.scrollTop:', boardContainer.scrollTop, 'px');
+                    console.log('📦 boardContainer.maxHeight (computed):', window.getComputedStyle(boardContainer).maxHeight);
+                    console.log('📦 boardContainer.maxHeight (calc):', 'calc(100vh - 240px)');
+                    console.log('📦 window.innerHeight:', window.innerHeight, 'px');
+                    console.log('📦 Calculated max-height:', window.innerHeight - 240, 'px');
+                    console.log('📦 Diferencia (scrollHeight - clientHeight):', boardContainer.scrollHeight - boardContainer.clientHeight, 'px');
+                    console.log('📦 ¿Tiene scroll?', boardContainer.scrollHeight > boardContainer.clientHeight ? '✅ SÍ' : '❌ NO');
+                    
+                    // Verificar el último elemento
+                    const lastStage = boardContainer.querySelector('.stage-item:last-child');
+                    const spacer = boardContainer.querySelector('.board-scroll-spacer');
+                    if (lastStage) {
+                        const lastStageRect = lastStage.getBoundingClientRect();
+                        const containerRect = boardContainer.getBoundingClientRect();
+                        console.log('📦 Último stage-item:');
+                        console.log('   - bottom:', lastStageRect.bottom, 'px');
+                        console.log('   - container bottom:', containerRect.bottom, 'px');
+                        console.log('   - Diferencia:', containerRect.bottom - lastStageRect.bottom, 'px');
+                        console.log('   - ¿Está visible?', lastStageRect.bottom <= containerRect.bottom ? '✅ SÍ' : '❌ NO (cortado)');
+                    }
+                    if (spacer) {
+                        const spacerRect = spacer.getBoundingClientRect();
+                        const containerRect = boardContainer.getBoundingClientRect();
+                        console.log('📦 Spacer:');
+                        console.log('   - bottom:', spacerRect.bottom, 'px');
+                        console.log('   - container bottom:', containerRect.bottom, 'px');
+                        console.log('   - Diferencia:', containerRect.bottom - spacerRect.bottom, 'px');
+                    }
+                    
+                    // Verificar todos los elementos
+                    const allStages = boardContainer.querySelectorAll('.stage-item');
+                    console.log('📦 Total de stage-items:', allStages.length);
+                    allStages.forEach((stage, index) => {
+                        const rect = stage.getBoundingClientRect();
+                        const containerRect = boardContainer.getBoundingClientRect();
+                        const isVisible = rect.bottom <= containerRect.bottom && rect.top >= containerRect.top;
+                        console.log(`   Stage ${index + 1}:`, {
+                            top: rect.top.toFixed(0) + 'px',
+                            bottom: rect.bottom.toFixed(0) + 'px',
+                            visible: isVisible ? '✅' : '❌'
+                        });
+                    });
+                    
+                    console.log('✅ [Scroll Debug] ============================================');
+                }
+            }, 300);
+
             // Configurar drag and drop después de renderizar
             setTimeout(() => {
                 makeBoardDroppable();
+                
+                // Configurar drag and drop para reordenar etapas en el board
+                const boardContainer = document.querySelector('.board-container');
+                if (boardContainer) {
+                    boardContainer.querySelectorAll('.stage-item').forEach(item => {
+                        // Remover listeners previos si existen para evitar duplicados
+                        item.removeEventListener('dragstart', handleBoardStageDragStart);
+                        item.removeEventListener('dragover', handleBoardStageDragOver);
+                        item.removeEventListener('drop', handleBoardStageDrop);
+                        item.removeEventListener('dragend', handleBoardStageDragEnd);
+                        item.removeEventListener('dragleave', handleBoardStageDragLeave);
+                        
+                        // Agregar nuevos listeners
+                        item.addEventListener('dragstart', handleBoardStageDragStart);
+                        item.addEventListener('dragover', handleBoardStageDragOver);
+                        item.addEventListener('drop', handleBoardStageDrop);
+                        item.addEventListener('dragend', handleBoardStageDragEnd);
+                        item.addEventListener('dragleave', handleBoardStageDragLeave);
+                    });
+                }
             }, 100);
 
             // Crear inputs UBITS para campos select después de renderizar (solo en modo edición)
@@ -3704,6 +3861,8 @@
             const stageDragHandles = document.querySelectorAll('.stage-drag-handle');
             const editFlowBtn = document.getElementById('editFlowBtn');
             const dropSlots = document.querySelector('.board-drop-slots');
+            const boardContainer = document.querySelector('.board-container');
+            const widgetTemplateFlow = document.querySelector('.widget-template-flow');
             
             if (isEditMode) {
                 // Modo edición: mostrar botones y iconos de arrastrar
@@ -3719,6 +3878,11 @@
                 if (editFlowBtn) {
                     editFlowBtn.innerHTML = '<i class="far fa-eye"></i><span>Ver flujo</span>';
                 }
+                // Agregar clase de edición para mostrar fondo de las cards
+                if (boardContainer) {
+                    boardContainer.classList.add('editing-mode');
+                    boardContainer.classList.remove('view-mode');
+                }
             } else {
                 // Modo vista: ocultar botones y iconos de arrastrar
                 stageActions.forEach(actions => {
@@ -3732,6 +3896,11 @@
                 }
                 if (editFlowBtn) {
                     editFlowBtn.innerHTML = '<i class="far fa-edit"></i><span>Editar flujo</span>';
+                }
+                // Agregar clase de vista para quitar fondo de las cards
+                if (boardContainer) {
+                    boardContainer.classList.remove('editing-mode');
+                    boardContainer.classList.add('view-mode');
                 }
             }
         }
@@ -4113,7 +4282,7 @@
             }
 
             return `
-                <div class="stage-item agent-stage-item" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="agent">
+                <div class="stage-item agent-stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="agent">
                     <i class="far fa-grip-vertical stage-drag-handle"></i>
                     <div class="stage-content">
                         <div class="stage-header agent-stage-header">
@@ -4186,7 +4355,7 @@
             }
             
             return `
-                <div class="stage-item custom-stage-item" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="custom">
+                <div class="stage-item custom-stage-item" draggable="true" data-stage-id="${stage.id}" data-stage-index="${index}" data-stage-type="custom">
                     <i class="far fa-grip-vertical stage-drag-handle"></i>
                     <div class="stage-content">
                         <div class="stage-header">
@@ -4863,7 +5032,9 @@
                             </div>
                         </div>
                     `;
-                }).join('');
+                }).join('') + '<div class="library-scroll-spacer"></div>';
+                
+                stagesList.innerHTML = stagesHTML;
                 
                 // Agregar event listeners para drag and drop
                 if (stagesList) {
@@ -4872,6 +5043,40 @@
                         item.addEventListener('dragend', handleStageTemplateDragEnd);
                     });
                 }
+                
+                // Logs para debuggear el scroll de stages-list
+                setTimeout(() => {
+                    const stagesListEl = document.getElementById('stagesList');
+                    if (stagesListEl) {
+                        console.log('🔍 [Stages List Scroll Debug] ============================================');
+                        console.log('📦 stagesList.scrollHeight:', stagesListEl.scrollHeight, 'px');
+                        console.log('📦 stagesList.clientHeight:', stagesListEl.clientHeight, 'px');
+                        console.log('📦 stagesList.scrollTop:', stagesListEl.scrollTop, 'px');
+                        console.log('📦 stagesList.maxHeight (computed):', window.getComputedStyle(stagesListEl).maxHeight);
+                        console.log('📦 Diferencia (scrollHeight - clientHeight):', stagesListEl.scrollHeight - stagesListEl.clientHeight, 'px');
+                        console.log('📦 ¿Tiene scroll?', stagesListEl.scrollHeight > stagesListEl.clientHeight ? '✅ SÍ' : '❌ NO');
+                        
+                        const lastStage = stagesListEl.querySelector('.stage-item:last-child');
+                        const spacer = stagesListEl.querySelector('.library-scroll-spacer');
+                        if (lastStage) {
+                            const lastStageRect = lastStage.getBoundingClientRect();
+                            const containerRect = stagesListEl.getBoundingClientRect();
+                            console.log('📦 Último stage-item:');
+                            console.log('   - bottom:', lastStageRect.bottom, 'px');
+                            console.log('   - container bottom:', containerRect.bottom, 'px');
+                            console.log('   - Diferencia:', containerRect.bottom - lastStageRect.bottom, 'px');
+                            console.log('   - ¿Está visible?', lastStageRect.bottom <= containerRect.bottom ? '✅ SÍ' : '❌ NO (cortado)');
+                        }
+                        if (spacer) {
+                            const spacerRect = spacer.getBoundingClientRect();
+                            const containerRect = stagesListEl.getBoundingClientRect();
+                            console.log('📦 Spacer:');
+                            console.log('   - bottom:', spacerRect.bottom, 'px');
+                            console.log('   - container bottom:', containerRect.bottom, 'px');
+                        }
+                        console.log('✅ [Stages List Scroll Debug] ============================================');
+                    }
+                }, 200);
                 
                 // Re-inicializar el setup de búsqueda después de renderizar
                 setTimeout(() => {
@@ -5010,8 +5215,8 @@
                 console.log('🔧 [renderAgents] HTML contiene "agent-info-btn":', agentsHTML.includes('agent-info-btn'));
                 console.log('🔧 [renderAgents] Número de ocurrencias de "agent-info-btn":', (agentsHTML.match(/agent-info-btn/g) || []).length);
                 
-                // Asignar HTML al contenedor
-                agentsList.innerHTML = agentsHTML;
+                // Asignar HTML al contenedor con spacer al final
+                agentsList.innerHTML = agentsHTML + '<div class="library-scroll-spacer"></div>';
                 console.log('✅ [renderAgents] HTML asignado a agentsList.innerHTML');
                 
                 // Agregar event listeners para drag and drop
@@ -5056,6 +5261,40 @@
                         })));
                     }
                 });
+                
+                // Logs para debuggear el scroll de agents-list
+                setTimeout(() => {
+                    const agentsListEl = document.getElementById('agentsList');
+                    if (agentsListEl) {
+                        console.log('🔍 [Agents List Scroll Debug] ============================================');
+                        console.log('📦 agentsList.scrollHeight:', agentsListEl.scrollHeight, 'px');
+                        console.log('📦 agentsList.clientHeight:', agentsListEl.clientHeight, 'px');
+                        console.log('📦 agentsList.scrollTop:', agentsListEl.scrollTop, 'px');
+                        console.log('📦 agentsList.maxHeight (computed):', window.getComputedStyle(agentsListEl).maxHeight);
+                        console.log('📦 Diferencia (scrollHeight - clientHeight):', agentsListEl.scrollHeight - agentsListEl.clientHeight, 'px');
+                        console.log('📦 ¿Tiene scroll?', agentsListEl.scrollHeight > agentsListEl.clientHeight ? '✅ SÍ' : '❌ NO');
+                        
+                        const lastAgent = agentsListEl.querySelector('.agent-item:last-child');
+                        const spacer = agentsListEl.querySelector('.library-scroll-spacer');
+                        if (lastAgent) {
+                            const lastAgentRect = lastAgent.getBoundingClientRect();
+                            const containerRect = agentsListEl.getBoundingClientRect();
+                            console.log('📦 Último agent-item:');
+                            console.log('   - bottom:', lastAgentRect.bottom, 'px');
+                            console.log('   - container bottom:', containerRect.bottom, 'px');
+                            console.log('   - Diferencia:', containerRect.bottom - lastAgentRect.bottom, 'px');
+                            console.log('   - ¿Está visible?', lastAgentRect.bottom <= containerRect.bottom ? '✅ SÍ' : '❌ NO (cortado)');
+                        }
+                        if (spacer) {
+                            const spacerRect = spacer.getBoundingClientRect();
+                            const containerRect = agentsListEl.getBoundingClientRect();
+                            console.log('📦 Spacer:');
+                            console.log('   - bottom:', spacerRect.bottom, 'px');
+                            console.log('   - container bottom:', containerRect.bottom, 'px');
+                        }
+                        console.log('✅ [Agents List Scroll Debug] ============================================');
+                    }
+                }, 200);
                 
                 // Agregar event listeners para tooltips de información de agentes
                 setTimeout(() => {
@@ -6897,6 +7136,8 @@
         // ========================================
 
         let draggedElement = null;
+        let draggedBoardStage = null;
+        let currentDropTarget = null;
 
         // Drag and drop para agentes
         function handleAgentDragStart(e) {
@@ -7115,6 +7356,144 @@
             boardContainer.addEventListener('dragover', boardDragOverHandler);
             boardContainer.addEventListener('dragleave', boardDragLeaveHandler);
             boardContainer.addEventListener('drop', boardDropHandler);
+        }
+
+        // ========================================
+        // DRAG AND DROP PARA REORDENAR ETAPAS EN EL BOARD
+        // ========================================
+
+        function handleBoardStageDragStart(e) {
+            const stageItem = e.target.closest('.stage-item');
+            if (!stageItem) return;
+            
+            // Solo permitir reordenar en modo edición
+            if (!isEditMode) {
+                e.preventDefault();
+                return;
+            }
+            
+            draggedBoardStage = stageItem;
+            stageItem.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', 'board-stage-reorder');
+            
+            console.log('🔧 Iniciando arrastre de etapa del board para reordenar');
+        }
+
+        function handleBoardStageDragOver(e) {
+            // Si NO es reordenamiento del board, dejar que el evento se propague
+            // para que el board-container lo maneje (agentes/etapas desde columna izquierda)
+            if (!draggedBoardStage) {
+                // NO hacer preventDefault() - dejar que llegue al board-container
+                return;
+            }
+            
+            // SOLO si es reordenamiento del board, prevenir y manejar
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetItem = e.target.closest('.stage-item');
+            if (!targetItem) return;
+            
+            e.dataTransfer.dropEffect = 'move';
+            
+            // No hacer nada si es el mismo elemento
+            if (targetItem === draggedBoardStage) return;
+            
+            // Obtener el contenedor de etapas
+            const container = document.querySelector('.board-container');
+            if (!container) return;
+            
+            // Obtener todos los elementos de etapa
+            const allStages = [...container.querySelectorAll('.stage-item')];
+            const draggedIndex = allStages.indexOf(draggedBoardStage);
+            const targetIndex = allStages.indexOf(targetItem);
+            
+            // Insertar el elemento arrastrado antes o después del objetivo
+            if (draggedIndex < targetIndex) {
+                targetItem.parentNode.insertBefore(draggedBoardStage, targetItem.nextSibling);
+            } else {
+                targetItem.parentNode.insertBefore(draggedBoardStage, targetItem);
+            }
+        }
+
+        function handleBoardStageDragLeave(e) {
+            // Solo restaurar si estamos reordenando etapas del board
+            if (!draggedBoardStage) return;
+            
+            const targetItem = e.target.closest('.stage-item');
+            if (!targetItem || targetItem === draggedBoardStage) return;
+            
+            targetItem.style.background = '';
+            targetItem.style.borderColor = '';
+        }
+
+        function handleBoardStageDrop(e) {
+            // Si NO es reordenamiento del board, dejar que el evento se propague
+            // para que el board-container lo maneje
+            if (!draggedBoardStage) {
+                // NO hacer preventDefault() - dejar que llegue al board-container
+                return;
+            }
+            
+            // SOLO si es reordenamiento, prevenir y manejar
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetItem = e.target.closest('.stage-item');
+            if (!targetItem) return;
+            
+            // Restaurar estilos
+            targetItem.style.borderColor = '';
+        }
+
+        function handleBoardStageDragEnd(e) {
+            const stageItem = e.target.closest('.stage-item');
+            if (stageItem) {
+                stageItem.classList.remove('dragging');
+                stageItem.style.background = '';
+                stageItem.style.borderColor = '';
+            }
+            
+            // Limpiar todos los estilos de feedback
+            const allStages = document.querySelectorAll('.stage-item');
+            allStages.forEach(stage => {
+                stage.style.background = '';
+                stage.style.borderColor = '';
+            });
+            
+            // Actualizar el orden en el modelo de datos si estamos reordenando
+            if (draggedBoardStage) {
+                updateStageOrder();
+            }
+            
+            draggedBoardStage = null;
+            currentDropTarget = null;
+            console.log('✅ Finalizando arrastre');
+        }
+
+        function updateStageOrder() {
+            const container = document.querySelector('.board-container');
+            if (!container || !localTemplateCopy) return;
+            
+            const stageElements = [...container.querySelectorAll('.stage-item')];
+            const newOrder = stageElements.map(el => el.getAttribute('data-stage-id'));
+            
+            // Reordenar el array de etapas según el nuevo orden visual
+            const reorderedStages = [];
+            newOrder.forEach(stageId => {
+                const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
+                if (stage) {
+                    reorderedStages.push(stage);
+                }
+            });
+            
+            localTemplateCopy.realContent.stages = reorderedStages;
+            
+            console.log('✅ Orden de etapas actualizado:', newOrder);
+            
+            // Re-renderizar para actualizar los números
+            renderTemplateFlow(localTemplateCopy);
         }
 
         // Manejar drop de etapa

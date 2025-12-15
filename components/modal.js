@@ -556,10 +556,16 @@ function showConfirmModal(options = {}) {
         ];
     }
     
+    // Si el mensaje contiene HTML (etiquetas), usarlo directamente, sino envolverlo en párrafo
+    const hasHTML = /<[a-z][\s\S]*>/i.test(message);
+    const modalContent = hasHTML 
+        ? `<div class="ubits-modal__content">${message}</div>`
+        : `<p class="ubits-modal__content">${message}</p>`;
+    
     const modal = UBITSModalManager.create({
         id: modalId,
         title,
-        content: `<p class="ubits-modal__content">${message}</p>`,
+        content: modalContent,
         footerRight: footerButtons,
         onClose: onCancel
     });
