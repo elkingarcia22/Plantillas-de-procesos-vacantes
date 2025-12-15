@@ -16,7 +16,7 @@
     justify-content: space-between;
     width: calc(100% - 24px);
     max-width: calc(100% - 24px);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 /* Nav Tabs Container */
@@ -317,7 +317,7 @@
 
 [data-theme="dark"] .sub-nav {
     background-color: var(--ubits-bg-2);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
 }
 
 [data-theme="dark"] .nav-tab span {

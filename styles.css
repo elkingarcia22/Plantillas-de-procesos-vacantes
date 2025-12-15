@@ -421,12 +421,17 @@ html {
     max-height: none;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 0;
     z-index: 5;
     box-sizing: border-box;
     /* Forzar que no se apliquen inline styles */
     left: auto !important;
     right: auto !important;
+}
+
+/* Restaurar gap solo para elementos que no sean top-nav-container y content-area */
+.main-content > *:not(#top-nav-container):not(.content-area) {
+    margin-top: 20px;
 }
 
 /* Centrado para pantallas grandes */

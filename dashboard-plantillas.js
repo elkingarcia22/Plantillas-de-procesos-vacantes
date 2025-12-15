@@ -11,6 +11,7 @@ let currentTemplates = [];
 let filteredTemplates = [];
 let currentSort = 'recent';
 let isSearching = false;
+let isViewingSelected = false; // Estado para ver solo seleccionados
 
 // Estado de filtros
 let activeFilters = {
@@ -49,9 +50,136 @@ function initializeDashboard() {
         
         renderTemplates();
         updateTemplatesCount();
+        
+        // Logs para debuggear espaciado
+        setTimeout(() => {
+            debugSpacing();
+        }, 500);
     } catch (error) {
         console.error('Error en initializeDashboard:', error);
     }
+}
+
+// Función para debuggear el espaciado entre subnav y tabla
+function debugSpacing() {
+    console.log('🔍 ========== DEBUG ESPACIADO ==========');
+    
+    const subnav = document.querySelector('.sub-nav');
+    const topNavContainer = document.getElementById('top-nav-container');
+    const contentArea = document.querySelector('.content-area');
+    const dashboardPlantillas = document.querySelector('.dashboard-plantillas');
+    const templatesTableContainer = document.querySelector('.templates-table-container');
+    const mainContent = document.querySelector('.main-content');
+    
+    console.log('📏 Elementos encontrados:', {
+        subnav: !!subnav,
+        topNavContainer: !!topNavContainer,
+        contentArea: !!contentArea,
+        dashboardPlantillas: !!dashboardPlantillas,
+        templatesTableContainer: !!templatesTableContainer,
+        mainContent: !!mainContent
+    });
+    
+    if (subnav) {
+        const subnavRect = subnav.getBoundingClientRect();
+        const subnavStyles = window.getComputedStyle(subnav);
+        console.log('📐 SubNav:', {
+            top: subnavRect.top,
+            bottom: subnavRect.bottom,
+            height: subnavRect.height,
+            marginTop: subnavStyles.marginTop,
+            marginBottom: subnavStyles.marginBottom,
+            paddingTop: subnavStyles.paddingTop,
+            paddingBottom: subnavStyles.paddingBottom
+        });
+    }
+    
+    if (topNavContainer) {
+        const containerRect = topNavContainer.getBoundingClientRect();
+        const containerStyles = window.getComputedStyle(topNavContainer);
+        console.log('📐 Top Nav Container:', {
+            top: containerRect.top,
+            bottom: containerRect.bottom,
+            height: containerRect.height,
+            marginTop: containerStyles.marginTop,
+            marginBottom: containerStyles.marginBottom,
+            paddingTop: containerStyles.paddingTop,
+            paddingBottom: containerStyles.paddingBottom
+        });
+    }
+    
+    if (contentArea) {
+        const contentRect = contentArea.getBoundingClientRect();
+        const contentStyles = window.getComputedStyle(contentArea);
+        console.log('📐 Content Area:', {
+            top: contentRect.top,
+            bottom: contentRect.bottom,
+            height: contentRect.height,
+            marginTop: contentStyles.marginTop,
+            marginBottom: contentStyles.marginBottom,
+            paddingTop: contentStyles.paddingTop,
+            paddingBottom: contentStyles.paddingBottom
+        });
+    }
+    
+    if (dashboardPlantillas) {
+        const dashboardRect = dashboardPlantillas.getBoundingClientRect();
+        const dashboardStyles = window.getComputedStyle(dashboardPlantillas);
+        console.log('📐 Dashboard Plantillas:', {
+            top: dashboardRect.top,
+            bottom: dashboardRect.bottom,
+            height: dashboardRect.height,
+            marginTop: dashboardStyles.marginTop,
+            marginBottom: dashboardStyles.marginBottom,
+            paddingTop: dashboardStyles.paddingTop,
+            paddingBottom: dashboardStyles.paddingBottom,
+            gap: dashboardStyles.gap
+        });
+    }
+    
+    if (templatesTableContainer) {
+        const tableRect = templatesTableContainer.getBoundingClientRect();
+        const tableStyles = window.getComputedStyle(templatesTableContainer);
+        console.log('📐 Templates Table Container:', {
+            top: tableRect.top,
+            bottom: tableRect.bottom,
+            height: tableRect.height,
+            marginTop: tableStyles.marginTop,
+            marginBottom: tableStyles.marginBottom,
+            paddingTop: tableStyles.paddingTop,
+            paddingBottom: tableStyles.paddingBottom
+        });
+    }
+    
+    if (mainContent) {
+        const mainRect = mainContent.getBoundingClientRect();
+        const mainStyles = window.getComputedStyle(mainContent);
+        console.log('📐 Main Content:', {
+            top: mainRect.top,
+            bottom: mainRect.bottom,
+            height: mainRect.height,
+            marginTop: mainStyles.marginTop,
+            marginBottom: mainStyles.marginBottom,
+            paddingTop: mainStyles.paddingTop,
+            paddingBottom: mainStyles.paddingBottom,
+            gap: mainStyles.gap
+        });
+    }
+    
+    // Calcular distancia entre subnav y tabla
+    if (subnav && templatesTableContainer) {
+        const subnavBottom = subnav.getBoundingClientRect().bottom;
+        const tableTop = templatesTableContainer.getBoundingClientRect().top;
+        const distance = tableTop - subnavBottom;
+        console.log('📏 DISTANCIA ENTRE SUBNav Y TABLA:', {
+            subnavBottom: subnavBottom,
+            tableTop: tableTop,
+            distancia: distance + 'px',
+            distanciaEsperada: '24px'
+        });
+    }
+    
+    console.log('🔍 ======================================');
 }
 
 // ========================================
@@ -452,6 +580,17 @@ function applyTemplateFilters() {
     // Actualizar plantillas filtradas
     filteredTemplates = templates;
     
+    // Si estamos en modo "ver seleccionados", aplicar ese filtro también
+    if (isViewingSelected) {
+        const selectedIds = getSelectedTemplateIds();
+        if (selectedIds.length > 0) {
+            filteredTemplates = filteredTemplates.filter(template => selectedIds.includes(template.id));
+        } else {
+            // Si no hay selección, desactivar modo
+            isViewingSelected = false;
+        }
+    }
+    
     // Aplicar ordenamiento y renderizar
     applySorting();
     renderTemplates();
@@ -594,72 +733,80 @@ function renderTemplates() {
     isRendering = true;
     
     try {
-        const grid = document.getElementById('templatesGrid');
-        const controls = document.querySelector('.templates-controls');
-        const createButton = document.querySelector('.dashboard-header button[onclick*="openCreateTemplateModal"]');
+        // Verificar qué vista está activa
+        const tableView = document.getElementById('tableViewContainer');
+        const cardsView = document.getElementById('cardsViewContainer');
         
-        if (!grid) {
+        // Exponer filteredTemplates globalmente para que renderTemplatesCards pueda acceder
+        window.filteredTemplates = filteredTemplates;
+        window.currentTemplates = currentTemplates;
+        
+        // Determinar qué vista está activa
+        const isTableViewActive = tableView && (tableView.style.display === '' || tableView.style.display === 'block');
+        const isCardsViewActive = cardsView && cardsView.style.display === 'block';
+        
+        console.log('🔍 Vista activa:', {
+            isTableViewActive,
+            isCardsViewActive,
+            tableViewDisplay: tableView ? tableView.style.display : 'no existe',
+            cardsViewDisplay: cardsView ? cardsView.style.display : 'no existe',
+            filteredTemplatesCount: filteredTemplates ? filteredTemplates.length : 0
+        });
+        
+        // Verificar si hay plantillas
+        if (!filteredTemplates || !Array.isArray(filteredTemplates) || filteredTemplates.length === 0) {
+            // Manejar empty state o no results
+            if (isTableViewActive) {
+                renderTemplatesTable(); // La tabla maneja su propio empty state
+            } else if (isCardsViewActive) {
+                // Renderizar empty state en cards
+                const cardsContainer = document.getElementById('templatesCardsGrid');
+                if (cardsContainer) {
+                    if (isSearching && currentTemplates.length > 0) {
+                        cardsContainer.innerHTML = getNoResultsHTML();
+                    } else {
+                        cardsContainer.innerHTML = getEmptyStateHTML();
+                    }
+                }
+            }
             isRendering = false;
             return;
         }
         
-        if (!filteredTemplates || !Array.isArray(filteredTemplates)) {
-            grid.innerHTML = '';
-            isRendering = false;
-            return;
-        }
-        
-        if (filteredTemplates.length === 0) {
-            // Diferenciar entre empty state (sin plantillas) y no results (búsqueda sin resultados)
-        if (isSearching && currentTemplates.length > 0) {
-            grid.innerHTML = getNoResultsHTML();
+        // Renderizar según la vista activa
+        if (isTableViewActive) {
+            // Renderizar tabla
+            console.log('📊 Renderizando tabla');
+            renderTemplatesTable();
+        } else if (isCardsViewActive) {
+            // Renderizar cards
+            console.log('🎴 Renderizando cards');
+            if (typeof window.renderTemplatesCards === 'function') {
+                window.renderTemplatesCards();
+            } else if (typeof renderTemplatesCards === 'function') {
+                renderTemplatesCards();
+            } else {
+                console.error('❌ renderTemplatesCards no está disponible');
+                // Fallback: renderizar tabla si la función no existe
+                renderTemplatesTable();
+            }
         } else {
-            grid.innerHTML = getEmptyStateHTML();
+            // Por defecto renderizar tabla
+            console.log('📊 Vista por defecto: tabla');
+            renderTemplatesTable();
         }
         
-        // Ocultar controles cuando no hay plantillas (solo en empty state, no en no results)
-        if (!isSearching || currentTemplates.length === 0) {
-            if (controls) {
-                controls.style.display = 'none';
+        // Agregar event listeners a las cards si están visibles
+        if (cardsView && cardsView.style.display !== 'none') {
+            if (typeof addTemplateCardEventListeners === 'function') {
+                addTemplateCardEventListeners();
             }
-            if (createButton) {
-                createButton.style.display = 'none';
-            }
-        } else {
-            // Mostrar controles cuando hay búsqueda sin resultados pero hay plantillas
-            if (controls) {
-                controls.style.display = 'flex';
-            }
-            if (createButton) {
-                createButton.style.display = 'flex';
-            }
-            }
-            isRendering = false;
-            return;
-        }
-        
-        grid.innerHTML = filteredTemplates.map(template => createTemplateCardHTML(template)).join('');
-        
-        // Renderizar tabla
-        renderTemplatesTable();
-        
-        // Mostrar controles cuando hay plantillas
-        if (controls) {
-            controls.style.display = 'flex';
-        }
-        
-        // Mostrar botón "Crear plantilla" del header cuando hay plantillas
-        if (createButton) {
-            createButton.style.display = 'flex';
         }
     } catch (error) {
         console.error('Error en renderTemplates:', error);
     } finally {
         isRendering = false;
     }
-    
-    // Agregar event listeners a los botones
-    addTemplateCardEventListeners();
 }
 
 // Función para renderizar la tabla de plantillas
@@ -707,17 +854,23 @@ function renderTemplatesTable() {
             'ventas-marketing': 'Ventas y marketing'
         };
         
+        // Guardar IDs de plantillas seleccionadas antes de renderizar
+        const selectedIds = getSelectedTemplateIds();
+        
         tableBody.innerHTML = filteredTemplates.map(template => {
             const hasStatus = template.status !== undefined && template.status !== null && template.status !== '';
             const statusClass = hasStatus ? (template.status === 'available' ? 'available' : 'draft') : 'draft';
             const statusText = hasStatus ? (template.status === 'available' ? 'Disponible' : 'Borrador') : 'Borrador';
             const categoryText = categoryMap[template.category] || template.category || 'Sin categoría';
             
+            // Verificar si esta plantilla está seleccionada
+            const isSelected = selectedIds.includes(template.id);
+            
             // Calcular participantes (stages + agents)
             const participants = (template.stages || 0) + (template.agents || 0);
             
-            // Calcular avance (por ahora fijo en 50%, luego se puede hacer dinámico)
-            const progress = 50;
+            // Formatear fecha de creación
+            const createdDate = template.createdAt ? formatDateForTable(template.createdAt) : 'N/A';
             
             // Formatear fecha de modificación
             const modifiedDate = template.lastModified ? formatDateForTable(template.lastModified) : 'N/A';
@@ -728,24 +881,20 @@ function renderTemplatesTable() {
             return `
                 <tr data-template-id="${template.id}">
                     <td class="table-checkbox">
-                        <input type="checkbox" class="template-checkbox" data-template-id="${template.id}">
+                        <input type="checkbox" class="template-checkbox" data-template-id="${template.id}" ${isSelected ? 'checked' : ''}>
                     </td>
                     <td data-column="name" class="table-name column-name">${template.name || 'Sin nombre'}</td>
                     <td data-column="type" class="table-type column-type">${categoryText}</td>
                     <td data-column="status" class="table-status column-status">
-                        <span class="table-status-badge ${statusClass}">${statusText}</span>
+                        <span class="table-status-badge ${statusClass}" data-template-id="${template.id}" data-current-status="${template.status || 'draft'}" style="cursor: pointer;" title="Click para cambiar estado">
+                            ${statusText}
+                            <i class="far fa-chevron-down" style="margin-left: 6px; font-size: 10px; opacity: 0.7;"></i>
+                        </span>
                     </td>
+                    <td data-column="created" class="table-date column-created">${createdDate}</td>
                     <td data-column="modified" class="table-date column-modified">${modifiedDate}</td>
                     <td data-column="agents" class="table-agents column-agents">${agentsCount}</td>
                     <td data-column="participants" class="table-participants column-participants">${participants}</td>
-                    <td data-column="progress" class="table-progress column-progress">
-                        <div class="table-progress-container">
-                            <div class="table-progress-bar">
-                                <div class="table-progress-fill" style="width: ${progress}%"></div>
-                            </div>
-                            <span class="table-progress-text">${progress}%</span>
-                        </div>
-                    </td>
                 </tr>
             `;
         }).join('');
@@ -753,11 +902,17 @@ function renderTemplatesTable() {
         // Agregar event listeners para checkboxes
         setupTableCheckboxes();
         
+        // Actualizar el estado del checkbox del header después de renderizar
+        updateSelectAllCheckbox();
+        
         // Agregar event listeners para ordenamiento
         setupTableSorting();
         
         // Agregar event listeners para clicks en filas
         setupTableRowClicks();
+        
+        // Agregar event listeners para cambio de estado
+        setupStatusChangeListeners();
     } catch (error) {
         console.error('Error en renderTemplatesTable:', error);
     } finally {
@@ -796,22 +951,84 @@ function formatDateForTable(dateString) {
     }
 }
 
+// Variable para almacenar el handler del checkbox del header
+let selectAllCheckboxHandler = null;
+
 // Función para configurar checkboxes de la tabla
 function setupTableCheckboxes() {
     const selectAllCheckbox = document.getElementById('selectAllTemplates');
     const rowCheckboxes = document.querySelectorAll('.template-checkbox');
     
     if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            rowCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
+        // Remover listener anterior si existe
+        if (selectAllCheckboxHandler) {
+            selectAllCheckbox.removeEventListener('change', selectAllCheckboxHandler);
+        }
+        
+        // Crear nuevo handler
+        selectAllCheckboxHandler = function() {
+            // Obtener checkboxes actuales (pueden haber cambiado)
+            const currentRowCheckboxes = document.querySelectorAll('.template-checkbox');
+            const checkedCount = Array.from(currentRowCheckboxes).filter(checkbox => checkbox.checked).length;
+            const totalCount = currentRowCheckboxes.length;
+            
+            // Si todos están seleccionados o estaba en estado indeterminado, deseleccionar todos
+            // Si no todos están seleccionados, seleccionar todos
+            const shouldSelectAll = checkedCount < totalCount;
+            
+            currentRowCheckboxes.forEach(checkbox => {
+                checkbox.checked = shouldSelectAll;
             });
-        });
+            
+            // Limpiar estado indeterminado
+            this.indeterminate = false;
+            
+            // Actualizar el estado del checkbox del header
+            updateSelectAllCheckbox();
+            
+            // Si estamos en modo "ver seleccionados", actualizar el filtro
+            if (isViewingSelected) {
+                const selectedIds = getSelectedTemplateIds();
+                if (selectedIds.length === 0) {
+                    // Si no hay selección, desactivar modo y mostrar todas
+                    isViewingSelected = false;
+                    filteredTemplates = [...currentTemplates];
+                } else {
+                    // Actualizar filtro con las nuevas selecciones
+                    filteredTemplates = currentTemplates.filter(template => selectedIds.includes(template.id));
+                }
+                if (typeof renderTemplates === 'function') {
+                    renderTemplates();
+                }
+            }
+            
+            updateActionBar();
+        };
+        
+        selectAllCheckbox.addEventListener('change', selectAllCheckboxHandler);
     }
     
     rowCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             updateSelectAllCheckbox();
+            
+            // Si estamos en modo "ver seleccionados", actualizar el filtro
+            if (isViewingSelected) {
+                const selectedIds = getSelectedTemplateIds();
+                if (selectedIds.length === 0) {
+                    // Si no hay selección, desactivar modo y mostrar todas
+                    isViewingSelected = false;
+                    filteredTemplates = [...currentTemplates];
+                } else {
+                    // Actualizar filtro con las nuevas selecciones
+                    filteredTemplates = currentTemplates.filter(template => selectedIds.includes(template.id));
+                }
+                if (typeof renderTemplates === 'function') {
+                    renderTemplates();
+                }
+            }
+            
+            updateActionBar();
         });
     });
 }
@@ -822,8 +1039,520 @@ function updateSelectAllCheckbox() {
     const rowCheckboxes = document.querySelectorAll('.template-checkbox');
     
     if (selectAllCheckbox && rowCheckboxes.length > 0) {
-        const allChecked = Array.from(rowCheckboxes).every(checkbox => checkbox.checked);
-        selectAllCheckbox.checked = allChecked;
+        const checkedCount = Array.from(rowCheckboxes).filter(checkbox => checkbox.checked).length;
+        const totalCount = rowCheckboxes.length;
+        
+        if (checkedCount === 0) {
+            // Ninguno seleccionado
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === totalCount) {
+            // Todos seleccionados
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            // Algunos seleccionados (estado indeterminado)
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+}
+
+// Función para actualizar la barra de acciones
+function updateActionBar() {
+    const actionBar = document.getElementById('actionBar');
+    const selectedCountElement = document.getElementById('selectedCount');
+    const viewSelectedButton = document.getElementById('viewSelectedButton');
+    const duplicateButton = document.getElementById('duplicateButton');
+    const editButton = document.getElementById('editButton');
+    const deleteButton = document.getElementById('deleteButton');
+    
+    const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+    const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+    const selectedCount = selectedCheckboxes.length;
+    
+    if (actionBar && selectedCountElement) {
+        if (selectedCount > 0) {
+            actionBar.style.display = 'flex';
+            selectedCountElement.textContent = selectedCount;
+            
+            // Si hay más de una plantilla seleccionada, mostrar acciones masivas
+            if (selectedCount > 1) {
+                // Mostrar acciones masivas: Ver seleccionados, Duplicar, Eliminar
+                if (viewSelectedButton) viewSelectedButton.style.display = 'flex';
+                if (duplicateButton) duplicateButton.style.display = 'flex';
+                if (deleteButton) deleteButton.style.display = 'flex';
+                // Ocultar Editar (solo funciona con una plantilla)
+                if (editButton) editButton.style.display = 'none';
+            } else {
+                // Si hay solo una plantilla, mostrar todos los botones
+                if (viewSelectedButton) viewSelectedButton.style.display = 'flex';
+                if (duplicateButton) duplicateButton.style.display = 'flex';
+                if (editButton) editButton.style.display = 'flex';
+                if (deleteButton) deleteButton.style.display = 'flex';
+            }
+        } else {
+            actionBar.style.display = 'none';
+        }
+    }
+}
+
+// Función para obtener los IDs de las plantillas seleccionadas
+function getSelectedTemplateIds() {
+    const rowCheckboxes = document.querySelectorAll('.template-checkbox:checked');
+    return Array.from(rowCheckboxes).map(cb => cb.getAttribute('data-template-id'));
+}
+
+// Función para ver plantillas seleccionadas
+function viewSelectedTemplates() {
+    const viewSelectedButton = document.getElementById('viewSelectedButton');
+    const viewSelectedIcon = viewSelectedButton ? viewSelectedButton.querySelector('i') : null;
+    const viewSelectedText = viewSelectedButton ? viewSelectedButton.querySelector('span') : null;
+    
+    // Si ya estamos viendo seleccionados, volver a mostrar todas
+    if (isViewingSelected) {
+        isViewingSelected = false;
+        
+        // Guardar IDs seleccionados antes de restaurar
+        const selectedIds = getSelectedTemplateIds();
+        
+        // Restaurar todas las plantillas (aplicando filtros existentes)
+        applyTemplateFilters();
+        
+        // Actualizar botón: volver a estado normal
+        if (viewSelectedButton) {
+            viewSelectedButton.classList.remove('ubits-button--active');
+        }
+        if (viewSelectedIcon) {
+            viewSelectedIcon.className = 'far fa-eye';
+        }
+        if (viewSelectedText) {
+            const selectedCount = selectedIds.length;
+            viewSelectedText.innerHTML = `Ver seleccionados (<span id="selectedCount">${selectedCount}</span>)`;
+        }
+        
+        // Renderizar todas las plantillas (los checkboxes se restaurarán automáticamente)
+        if (typeof renderTemplates === 'function') {
+            renderTemplates();
+        }
+        if (typeof updateTemplatesCount === 'function') {
+            updateTemplatesCount();
+        }
+        
+        // Restaurar checkboxes después de renderizar
+        setTimeout(() => {
+            selectedIds.forEach(id => {
+                const checkbox = document.querySelector(`.template-checkbox[data-template-id="${id}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+            updateSelectAllCheckbox();
+            updateActionBar();
+        }, 100);
+        
+        return;
+    }
+    
+    // Activar modo "ver seleccionados"
+    const selectedIds = getSelectedTemplateIds();
+    if (selectedIds.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No hay plantillas seleccionadas');
+        }
+        return;
+    }
+    
+    isViewingSelected = true;
+    
+    // Aplicar filtros existentes primero (búsqueda, filtros de estado, etc.)
+    // Sin llamar a renderTemplates() todavía
+    const searchInput = document.getElementById('searchTemplates');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    // Empezar con todas las plantillas
+    let templates = [...currentTemplates];
+    
+    // Aplicar búsqueda
+    if (searchQuery) {
+        templates = templates.filter(template => 
+            template.name.toLowerCase().includes(searchQuery) ||
+            template.category.toLowerCase().includes(searchQuery) ||
+            template.author.toLowerCase().includes(searchQuery) ||
+            (template.description && template.description.toLowerCase().includes(searchQuery))
+        );
+    }
+    
+    // Aplicar filtros del drawer
+    if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
+        const filters = window.activeFilters;
+        
+        // Filtro de estado
+        if (filters.status && filters.status.length > 0) {
+            templates = templates.filter(template => filters.status.includes(template.status));
+        }
+        
+        // Filtro de rango de fecha
+        if (filters.dateFrom) {
+            templates = templates.filter(template => {
+                const templateDate = new Date(template.lastModified);
+                const fromDate = new Date(filters.dateFrom);
+                return templateDate >= fromDate;
+            });
+        }
+        
+        if (filters.dateTo) {
+            templates = templates.filter(template => {
+                const templateDate = new Date(template.lastModified);
+                const toDate = new Date(filters.dateTo);
+                toDate.setHours(23, 59, 59, 999);
+                return templateDate <= toDate;
+            });
+        }
+        
+        // Filtro de agentes
+        if (filters.hasAgents !== null) {
+            templates = templates.filter(template => {
+                const agentsCount = template.agents || 0;
+                if (filters.hasAgents === true) {
+                    return agentsCount > 0;
+                } else {
+                    return agentsCount === 0;
+                }
+            });
+        }
+    }
+    
+    // Finalmente, filtrar solo las plantillas seleccionadas
+    filteredTemplates = templates.filter(template => selectedIds.includes(template.id));
+    
+    console.log('👁️ Modo "ver seleccionados" activado:', {
+        selectedIds: selectedIds,
+        filteredTemplatesCount: filteredTemplates.length,
+        filteredTemplates: filteredTemplates.map(t => ({ id: t.id, name: t.name }))
+    });
+    
+    // Actualizar botón: estado activo
+    if (viewSelectedButton) {
+        viewSelectedButton.classList.add('ubits-button--active');
+    }
+    if (viewSelectedIcon) {
+        viewSelectedIcon.className = 'far fa-eye-slash';
+    }
+    if (viewSelectedText) {
+        viewSelectedText.innerHTML = 'Dejar de ver seleccionados';
+    }
+    
+    // Aplicar ordenamiento
+    applySorting();
+    
+    // Renderizar solo las plantillas seleccionadas
+    if (typeof renderTemplates === 'function') {
+        renderTemplates();
+    }
+    if (typeof updateTemplatesCount === 'function') {
+        updateTemplatesCount();
+    }
+}
+
+// Función para duplicar plantillas seleccionadas
+function duplicateSelectedTemplates() {
+    const selectedIds = getSelectedTemplateIds();
+    if (selectedIds.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No hay plantillas seleccionadas');
+        }
+        return;
+    }
+    
+    // Obtener plantillas del localStorage
+    let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+    
+    // Buscar las plantillas seleccionadas
+    const templatesToClone = templates.filter(template => selectedIds.includes(template.id));
+    
+    if (templatesToClone.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No se encontraron las plantillas seleccionadas');
+        }
+        return;
+    }
+    
+    // Preparar mensaje de confirmación
+    const confirmTitle = templatesToClone.length === 1 
+        ? 'Duplicar plantilla'
+        : `Duplicar ${templatesToClone.length} plantillas`;
+    
+    const templateNames = templatesToClone.map(t => t.name).join(', ');
+    const confirmMessage = templatesToClone.length === 1
+        ? `¿Estás seguro de que quieres duplicar la plantilla <strong>${templateNames}</strong>? Se creará una copia como borrador.`
+        : `¿Estás seguro de que quieres duplicar ${templatesToClone.length} plantillas? Se crearán copias como borrador.`;
+    
+    // Mostrar modal de confirmación UBITS
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: confirmTitle,
+            message: confirmMessage,
+            confirmText: 'Duplicar',
+            cancelText: 'Cancelar',
+            variant: 'primary',
+            onConfirm: function() {
+                // Duplicar cada plantilla con IDs únicos
+                const baseTimestamp = Date.now();
+                const clonedTemplates = templatesToClone.map((template, index) => {
+                    // Generar ID único para cada plantilla clonada
+                    const uniqueId = 'template-' + (baseTimestamp + index) + '-' + Math.random().toString(36).substr(2, 9);
+                    return {
+                        ...template,
+                        id: uniqueId,
+                        name: 'Copia de ' + template.name,
+                        version: 1,
+                        status: 'draft',
+                        createdAt: new Date().toISOString(),
+                        lastModified: new Date().toISOString().split('T')[0],
+                        // Clonar deep copy de realContent si existe
+                        realContent: template.realContent ? JSON.parse(JSON.stringify(template.realContent)) : {
+                            stages: []
+                        }
+                    };
+                });
+                
+                // Agregar las plantillas clonadas al inicio del array
+                templates.unshift(...clonedTemplates);
+                
+                // Guardar en localStorage
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Actualizar variables globales
+                currentTemplates = templates;
+                filteredTemplates = [...currentTemplates];
+                
+                // Mostrar confirmación
+                if (typeof showToast === 'function') {
+                    showToast('success', `${clonedTemplates.length} plantilla(s) duplicada(s) exitosamente`);
+                }
+                
+                // Recargar y renderizar la tabla
+                if (typeof loadTemplatesFromStorage === 'function') {
+                    loadTemplatesFromStorage();
+                }
+                if (typeof renderTemplates === 'function') {
+                    renderTemplates();
+                }
+                if (typeof updateTemplatesCount === 'function') {
+                    updateTemplatesCount();
+                }
+                
+                // Deseleccionar todos los checkboxes
+                const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                const selectAllCheckbox = document.getElementById('selectAllTemplates');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                
+                // Ocultar la barra de acciones
+                updateActionBar();
+            },
+            onCancel: function() {
+                // No hacer nada al cancelar
+            }
+        });
+    } else {
+        // Fallback: duplicar sin confirmación si el modal no está disponible
+        const baseTimestamp = Date.now();
+        const clonedTemplates = templatesToClone.map((template, index) => {
+            // Generar ID único para cada plantilla clonada
+            const uniqueId = 'template-' + (baseTimestamp + index) + '-' + Math.random().toString(36).substr(2, 9);
+            return {
+                ...template,
+                id: uniqueId,
+                name: 'Copia de ' + template.name,
+                version: 1,
+                status: 'draft',
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString().split('T')[0],
+                realContent: template.realContent ? JSON.parse(JSON.stringify(template.realContent)) : {
+                    stages: []
+                }
+            };
+        });
+        
+        templates.unshift(...clonedTemplates);
+        localStorage.setItem('templates', JSON.stringify(templates));
+        
+        // Actualizar variables globales
+        currentTemplates = templates;
+        filteredTemplates = [...currentTemplates];
+        
+        if (typeof showToast === 'function') {
+            showToast('success', `${clonedTemplates.length} plantilla(s) duplicada(s) exitosamente`);
+        }
+        
+        // Recargar y renderizar la tabla
+        if (typeof loadTemplatesFromStorage === 'function') {
+            loadTemplatesFromStorage();
+        }
+        if (typeof renderTemplates === 'function') {
+            renderTemplates();
+        }
+        if (typeof updateTemplatesCount === 'function') {
+            updateTemplatesCount();
+        }
+        
+        // Deseleccionar todos los checkboxes
+        const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        const selectAllCheckbox = document.getElementById('selectAllTemplates');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+        
+        updateActionBar();
+    }
+}
+
+// Función para editar plantilla seleccionada (solo una)
+function editSelectedTemplate() {
+    const selectedIds = getSelectedTemplateIds();
+    if (selectedIds.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No hay plantillas seleccionadas');
+        }
+        return;
+    }
+    if (selectedIds.length > 1) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'Solo puedes editar una plantilla a la vez');
+        }
+        return;
+    }
+    // Redirigir al editor
+    window.location.href = `editor-plantillas.html?id=${selectedIds[0]}`;
+}
+
+// Función para eliminar plantillas seleccionadas
+function deleteSelectedTemplates() {
+    const selectedIds = getSelectedTemplateIds();
+    if (selectedIds.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No hay plantillas seleccionadas');
+        }
+        return;
+    }
+    
+    // Usar modal de confirmación UBITS
+    const confirmTitle = selectedIds.length === 1 
+        ? 'Eliminar plantilla'
+        : `Eliminar ${selectedIds.length} plantillas`;
+    
+    const confirmMessage = selectedIds.length === 1 
+        ? '¿Estás seguro de que deseas eliminar esta plantilla? Esta acción no se puede deshacer.'
+        : `¿Estás seguro de que deseas eliminar ${selectedIds.length} plantillas? Esta acción no se puede deshacer.`;
+    
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: confirmTitle,
+            message: confirmMessage,
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+            variant: 'primary',
+            onConfirm: function() {
+                // Obtener plantillas del localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                
+                // Filtrar las plantillas seleccionadas
+                templates = templates.filter(template => !selectedIds.includes(template.id));
+                
+                // Guardar en localStorage
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Actualizar variables globales
+                currentTemplates = templates;
+                filteredTemplates = [...currentTemplates];
+                
+                // Mostrar confirmación
+                if (typeof showToast === 'function') {
+                    showToast('success', `${selectedIds.length} plantilla(s) eliminada(s) exitosamente`);
+                }
+                
+                // Recargar y renderizar la tabla
+                if (typeof loadTemplatesFromStorage === 'function') {
+                    loadTemplatesFromStorage();
+                }
+                if (typeof renderTemplates === 'function') {
+                    renderTemplates();
+                }
+                if (typeof updateTemplatesCount === 'function') {
+                    updateTemplatesCount();
+                }
+                
+                // Deseleccionar todos los checkboxes
+                const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                const selectAllCheckbox = document.getElementById('selectAllTemplates');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                
+                // Ocultar la barra de acciones
+                updateActionBar();
+            },
+            onCancel: function() {
+                // No hacer nada al cancelar
+            }
+        });
+    } else {
+        // Fallback al confirm nativo si el modal no está disponible
+        if (confirm(confirmMessage)) {
+            // Obtener plantillas del localStorage
+            let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            
+            // Filtrar las plantillas seleccionadas
+            templates = templates.filter(template => !selectedIds.includes(template.id));
+            
+            // Guardar en localStorage
+            localStorage.setItem('templates', JSON.stringify(templates));
+            
+            // Actualizar variables globales
+            currentTemplates = templates;
+            filteredTemplates = [...currentTemplates];
+            
+            // Mostrar confirmación
+            if (typeof showToast === 'function') {
+                showToast('success', `${selectedIds.length} plantilla(s) eliminada(s) exitosamente`);
+            }
+            
+            // Recargar y renderizar la tabla
+            if (typeof loadTemplatesFromStorage === 'function') {
+                loadTemplatesFromStorage();
+            }
+            if (typeof renderTemplates === 'function') {
+                renderTemplates();
+            }
+            if (typeof updateTemplatesCount === 'function') {
+                updateTemplatesCount();
+            }
+            
+            // Deseleccionar todos los checkboxes
+            const rowCheckboxes = document.querySelectorAll('.template-checkbox');
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            const selectAllCheckbox = document.getElementById('selectAllTemplates');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+            
+            // Ocultar la barra de acciones
+            updateActionBar();
+        }
     }
 }
 
@@ -972,11 +1701,12 @@ function sortTableBy(field) {
                     ? aValue - bValue
                     : bValue - aValue;
             
-            case 'progress':
-                // Por ahora fijo en 50%, luego se puede hacer dinámico
-                aValue = 50;
-                bValue = 50;
-                return 0;
+            case 'createdAt':
+                aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return currentTableSortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
             
             default:
                 return 0;
@@ -1039,8 +1769,8 @@ function setupTableRowClicks() {
     
     tableRows.forEach(row => {
         row.addEventListener('click', function(e) {
-            // Solo abrir si NO se hace click en un checkbox o botón
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+            // Solo abrir si NO se hace click en un checkbox, botón o badge de estado
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button') && !e.target.classList.contains('table-status-badge')) {
                 const templateId = this.dataset.templateId;
                 if (templateId) {
                     openTemplateEditor(templateId);
@@ -1048,6 +1778,146 @@ function setupTableRowClicks() {
             }
         });
     });
+}
+
+// Función para configurar listeners de cambio de estado
+function setupStatusChangeListeners() {
+    const statusBadges = document.querySelectorAll('.table-status-badge[data-template-id]');
+    
+    statusBadges.forEach(badge => {
+        badge.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevenir que se abra el editor
+            
+            const templateId = this.dataset.templateId;
+            const currentStatus = this.dataset.currentStatus || 'draft';
+            
+            if (templateId) {
+                showStatusDropdown(this, templateId, currentStatus);
+            }
+        });
+    });
+}
+
+// Función para mostrar dropdown de estado
+function showStatusDropdown(badgeElement, templateId, currentStatus) {
+    // Cerrar otros dropdowns abiertos
+    document.querySelectorAll('.status-dropdown-menu').forEach(menu => {
+        menu.remove();
+    });
+    
+    // Crear dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'status-dropdown-menu';
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '10000';
+    
+    // Posicionar el dropdown
+    const badgeRect = badgeElement.getBoundingClientRect();
+    dropdown.style.top = (badgeRect.bottom + 4) + 'px';
+    dropdown.style.left = badgeRect.left + 'px';
+    dropdown.style.minWidth = badgeRect.width + 'px';
+    
+    // Opciones de estado
+    const statusOptions = [
+        { value: 'available', text: 'Disponible', class: 'available' },
+        { value: 'draft', text: 'Borrador', class: 'draft' }
+    ];
+    
+    // Crear items del dropdown
+    statusOptions.forEach(option => {
+        const item = document.createElement('div');
+        item.className = 'status-dropdown-item';
+        if (option.value === currentStatus) {
+            item.classList.add('active');
+        }
+        
+        const badge = document.createElement('span');
+        badge.className = `status-dropdown-badge ${option.class}`;
+        badge.textContent = option.text;
+        
+        item.appendChild(badge);
+        
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (option.value !== currentStatus) {
+                toggleTemplateStatus(templateId, currentStatus, option.value);
+            }
+            dropdown.remove();
+        });
+        
+        dropdown.appendChild(item);
+    });
+    
+    // Agregar al body
+    document.body.appendChild(dropdown);
+    
+    // Cerrar al hacer click fuera
+    const closeDropdown = (e) => {
+        if (!dropdown.contains(e.target) && !badgeElement.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', closeDropdown);
+        }
+    };
+    
+    setTimeout(() => {
+        document.addEventListener('click', closeDropdown);
+    }, 0);
+}
+
+// Función para cambiar el estado de una plantilla
+function toggleTemplateStatus(templateId, currentStatus, newStatus) {
+    try {
+        // Si no se proporciona nuevo estado, alternar
+        if (!newStatus) {
+            newStatus = currentStatus === 'available' ? 'draft' : 'available';
+        }
+        
+        // Si el estado es el mismo, no hacer nada
+        if (newStatus === currentStatus) {
+            return;
+        }
+        
+        // Encontrar la plantilla
+        const templateIndex = currentTemplates.findIndex(t => t.id === templateId);
+        
+        if (templateIndex === -1) {
+            console.error('Plantilla no encontrada:', templateId);
+            return;
+        }
+        
+        const template = currentTemplates[templateIndex];
+        
+        // Cambiar el estado
+        template.status = newStatus;
+        
+        // Actualizar fecha de modificación
+        template.lastModified = new Date().toISOString().split('T')[0];
+        
+        // Guardar en localStorage
+        saveTemplatesToStorage();
+        
+        // Actualizar filteredTemplates si la plantilla está ahí
+        const filteredIndex = filteredTemplates.findIndex(t => t.id === templateId);
+        if (filteredIndex !== -1) {
+            filteredTemplates[filteredIndex] = template;
+        }
+        
+        // Re-renderizar la tabla
+        renderTemplatesTable();
+        
+        // Mostrar toast de confirmación
+        if (typeof showToast === 'function') {
+            const statusText = newStatus === 'available' ? 'Disponible' : 'Borrador';
+            showToast('success', `Estado cambiado a "${statusText}"`);
+        }
+        
+        console.log(`Estado de plantilla ${templateId} cambiado de ${currentStatus} a ${newStatus}`);
+    } catch (error) {
+        console.error('Error al cambiar estado de plantilla:', error);
+        if (typeof showToast === 'function') {
+            showToast('error', 'Error al cambiar el estado');
+        }
+    }
 }
 
 function createTemplateCardHTML(template) {

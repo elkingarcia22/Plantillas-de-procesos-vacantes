@@ -84,7 +84,7 @@
         /* Mostrar sub-nav en el dashboard de plantillas */
         #top-nav-container {
             display: block;
-            margin-bottom: 16px;
+            margin-bottom: 0;
         }
 
         /* Header del dashboard */
@@ -285,6 +285,36 @@
         }
 
         #filterButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        /* Estado activo del botón "Ver seleccionados" (igual que filtros pero sin badge) */
+        #viewSelectedButton.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+
+        #viewSelectedButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        #viewSelectedButton.ubits-button--active span {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        /* Estado activo del botón "Ver seleccionados" (igual que filtros pero sin badge) */
+        #viewSelectedButton.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+
+        #viewSelectedButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        #viewSelectedButton.ubits-button--active span {
             color: var(--ubits-accent-brand) !important;
         }
 
@@ -713,10 +743,53 @@
             align-items: start;
         }
 
+        .templates-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            padding: 16px 0;
+        }
+
+        .view-container {
+            width: 100%;
+            min-height: 200px;
+        }
+        
+        #cardsViewContainer {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 200px !important;
+        }
+        
+        #cardsViewContainer[style*="display: none"] {
+            display: none !important;
+        }
+        
+        #cardsViewContainer[style*="display: block"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        #templatesCardsGrid {
+            display: grid !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Asegurar que las cards sean visibles */
+        #templatesCardsGrid .template-card {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
         /* Template card usando estructura UBITS */
         .template-card,
         .templates-grid .template-card,
-        .dashboard-plantillas .template-card {
+        .dashboard-plantillas .template-card,
+        #templatesCardsGrid .template-card {
             background: var(--ubits-bg-1) !important;
             border: none !important;
             border-width: 0 !important;
@@ -726,6 +799,9 @@
             padding: 16px;
             transition: all 0.2s ease;
             cursor: pointer;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
             position: relative;
             overflow: hidden;
             box-shadow: none !important;
@@ -1103,7 +1179,7 @@
         /* Tabla de plantillas UBITS */
         .templates-table-container {
             width: 100%;
-            margin-top: 24px;
+            margin-top: 0;
             background: var(--ubits-bg-1);
             border-radius: 8px;
             overflow: visible;
@@ -1111,11 +1187,74 @@
             padding: 16px !important;
             box-sizing: border-box;
         }
+        
+        /* Ajustar espaciado desde el subnav - 24px */
+        #top-nav-container + .content-area {
+            margin-top: 24px;
+        }
+        
+        /* Asegurar que dashboard-plantillas no agregue espacio extra */
+        .content-area .dashboard-plantillas {
+            margin-top: 0;
+            padding-top: 0;
+        }
 
         /* Header dentro del contenedor de la tabla */
         .templates-table-container .dashboard-header {
             margin-bottom: 16px;
             padding-bottom: 0;
+        }
+
+        /* Barra de acciones */
+        .action-bar {
+            margin-top: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Botón activo en la barra de acciones */
+        .action-bar .ubits-button.active {
+            background: var(--ubits-accent-brand) !important;
+            color: var(--ubits-bg-1) !important;
+            border-color: var(--ubits-accent-brand) !important;
+        }
+
+        .action-bar .ubits-button.active i {
+            color: var(--ubits-bg-1) !important;
+        }
+
+        .action-bar .ubits-button.active span {
+            color: var(--ubits-bg-1) !important;
+        }
+
+        /* Botones de icono en la barra de acciones - cuadrados con bordes redondeados */
+        .action-bar .ubits-button--icon-only {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+        }
+
+        .action-button-delete {
+            border: 1px solid var(--ubits-feedback-accent-error) !important;
+            background: var(--ubits-bg-1) !important;
+        }
+
+        .action-button-delete:hover {
+            background: var(--ubits-feedback-accent-error) !important;
+            border-color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        .action-button-delete i {
+            color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        .action-button-delete:hover i {
+            color: var(--ubits-bg-1) !important;
         }
 
         /* Barra de búsqueda dentro del contenedor de la tabla */
@@ -1244,6 +1383,27 @@
             box-sizing: border-box;
         }
         
+        /* Estado indeterminado - línea horizontal */
+        .ubits-table td.table-checkbox input[type="checkbox"]:indeterminate,
+        .ubits-table th.table-checkbox input[type="checkbox"]:indeterminate {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:indeterminate::after,
+        .ubits-table th.table-checkbox input[type="checkbox"]:indeterminate::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 2px;
+            background: var(--ubits-bg-1);
+            border-radius: 1px;
+            box-sizing: border-box;
+        }
+        
         .ubits-table td.table-checkbox input[type="checkbox"]:focus,
         .ubits-table th.table-checkbox input[type="checkbox"]:focus {
             outline: 2px solid var(--ubits-accent-brand-subtle);
@@ -1271,6 +1431,95 @@
             font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            gap: 6px;
+        }
+        
+        .table-status-badge i {
+            transition: transform 0.2s ease;
+        }
+        
+        .table-status-badge:hover i {
+            opacity: 1;
+        }
+        
+        .table-status-badge[data-template-id] {
+            cursor: pointer;
+        }
+        
+        .table-status-badge[data-template-id]:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        
+        .table-status-badge[data-template-id]:active {
+            transform: scale(0.95);
+        }
+        
+        /* Dropdown de estado */
+        .status-dropdown-menu {
+            position: fixed;
+            min-width: 140px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            overflow: hidden;
+        }
+        
+        .status-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+        }
+        
+        .status-dropdown-item:hover {
+            background: var(--ubits-bg-2);
+        }
+        
+        .status-dropdown-item.active {
+            background: var(--ubits-bg-2);
+        }
+        
+        .status-dropdown-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .status-dropdown-badge.available {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        .status-dropdown-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        [data-theme="dark"] .status-dropdown-badge.available {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1.5px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .status-dropdown-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
         }
         
         .table-status-badge.available {
@@ -1334,40 +1583,6 @@
             font-weight: 500;
         }
         
-        .ubits-table td.table-progress {
-            min-width: 120px;
-        }
-        
-        .table-progress-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .table-progress-bar {
-            flex: 1;
-            height: 8px;
-            background: var(--ubits-bg-3);
-            border-radius: 4px;
-            overflow: hidden;
-            min-width: 80px;
-        }
-        
-        .table-progress-fill {
-            height: 100%;
-            background: var(--ubits-accent-brand);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-        
-        .table-progress-text {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--ubits-fg-1-high);
-            white-space: nowrap;
-            min-width: 40px;
-        }
-        
         /* Modo oscuro para la tabla */
         [data-theme="dark"] .templates-table-container {
             background: var(--ubits-bg-1);
@@ -1408,11 +1623,6 @@
             <div class="content-area">
                 <!-- Dashboard de Plantillas -->
                 <div class="dashboard-plantillas">
-                    <!-- Grid de plantillas -->
-                    <div id="templatesGrid" class="templates-grid">
-                        <!-- Las plantillas se cargarán dinámicamente aquí -->
-                    </div>
-                    
                     <!-- Tabla de plantillas -->
                     <div id="templatesTableContainer" class="templates-table-container">
                         <!-- Header del dashboard dentro del contenedor de la tabla -->
@@ -1480,9 +1690,9 @@
                                                 <input type="checkbox" id="column-participants" data-column="participants" checked onchange="toggleColumnVisibility('participants', this.checked)">
                                                 <span class="column-filter-label">Participantes</span>
                                             </label>
-                                            <label class="column-filter-item" for="column-progress">
-                                                <input type="checkbox" id="column-progress" data-column="progress" checked onchange="toggleColumnVisibility('progress', this.checked)">
-                                                <span class="column-filter-label">Avance</span>
+                                            <label class="column-filter-item" for="column-created">
+                                                <input type="checkbox" id="column-created" data-column="created" checked onchange="toggleColumnVisibility('created', this.checked)">
+                                                <span class="column-filter-label">Creado</span>
                                             </label>
                                         </div>
                                     </div>
@@ -1495,7 +1705,26 @@
                             </div>
                         </div>
 
-                        <table class="ubits-table" id="templatesTable">
+                        <!-- Barra de acciones (visible cuando hay items seleccionados) -->
+                        <div id="actionBar" class="action-bar" style="display: none;">
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm" id="viewSelectedButton" onclick="viewSelectedTemplates()">
+                                <i class="far fa-eye"></i>
+                                <span>Ver seleccionados (<span id="selectedCount">0</span>)</span>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="duplicateButton" onclick="duplicateSelectedTemplates()" title="Duplicar">
+                                <i class="far fa-copy"></i>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="editButton" onclick="editSelectedTemplate()" title="Editar">
+                                <i class="far fa-pencil"></i>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button action-button-delete" id="deleteButton" onclick="deleteSelectedTemplates()" title="Eliminar">
+                                <i class="far fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <!-- Contenedor de tabla (vista por defecto) -->
+                        <div id="tableViewContainer" class="view-container">
+                            <table class="ubits-table" id="templatesTable">
                             <thead>
                                 <tr>
                                     <th class="table-checkbox">
@@ -1525,6 +1754,14 @@
                                             </button>
                                         </div>
                                     </th>
+                                    <th data-column="created" class="column-created">
+                                        <div class="table-header-content">
+                                            <span>Creado</span>
+                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="createdAt" title="Ordenar por fecha de creación">
+                                                <i class="far fa-arrow-down-arrow-up"></i>
+                                            </button>
+                                        </div>
+                                    </th>
                                     <th data-column="modified" class="column-modified">
                                         <div class="table-header-content">
                                             <span>Modificado</span>
@@ -1545,14 +1782,6 @@
                                         <div class="table-header-content">
                                             <span>Participantes</span>
                                             <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="participants" title="Ordenar por participantes">
-                                                <i class="far fa-arrow-down-arrow-up"></i>
-                                            </button>
-                                        </div>
-                                    </th>
-                                    <th data-column="progress" class="column-progress">
-                                        <div class="table-header-content">
-                                            <span>Avance</span>
-                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="progress" title="Ordenar por avance">
                                                 <i class="far fa-arrow-down-arrow-up"></i>
                                             </button>
                                         </div>
@@ -1998,7 +2227,7 @@
         // Cargar preferencias de columnas al inicializar
         function loadColumnPreferences() {
             const preferences = JSON.parse(localStorage.getItem('tableColumnPreferences') || '{}');
-            const columns = ['name', 'type', 'status', 'modified', 'agents', 'participants', 'progress'];
+            const columns = ['name', 'type', 'status', 'created', 'modified', 'agents', 'participants'];
             
             columns.forEach(columnName => {
                 const checkbox = document.getElementById(`column-${columnName}`);
@@ -2109,6 +2338,114 @@
             }
         }
 
+        // Funciones de vista de cards eliminadas - solo se usa tabla
+
+        // Exponer funciones de la barra de acciones globalmente después de cargar dashboard-plantillas.js
+        setTimeout(() => {
+            if (typeof viewSelectedTemplates === 'function') {
+                window.viewSelectedTemplates = viewSelectedTemplates;
+            }
+            if (typeof duplicateSelectedTemplates === 'function') {
+                window.duplicateSelectedTemplates = duplicateSelectedTemplates;
+            }
+            if (typeof editSelectedTemplate === 'function') {
+                window.editSelectedTemplate = editSelectedTemplate;
+            }
+            if (typeof deleteSelectedTemplates === 'function') {
+                window.deleteSelectedTemplates = deleteSelectedTemplates;
+            }
+        }, 500);
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const columnsContainer = document.querySelector('.columns-toggle-container');
+            const columnsMenu = document.getElementById('columnsDropdownMenu');
+            const columnsButton = document.getElementById('columnsButton');
+            
+            if (columnsMenu && columnsButton && !columnsContainer.contains(event.target)) {
+                columnsMenu.classList.remove('show');
+                columnsButton.classList.remove('active');
+            }
+        });
+
+        function openCreateFromTemplateModal() {
+            // TODO: Implementar modal para crear desde plantilla
+            if (typeof showToast === 'function') {
+                showToast('info', 'Crear desde plantilla próximamente');
+            }
+        }
+
+        // Función para abrir modal de creación de plantilla
+        function openCreateTemplateModal() {
+            // Configurar callback global
+            window.modalFormCallback = function(formData) {
+                const { templateName, templateCategory } = formData;
+                
+                // Crear la plantilla
+                const nuevaPlantilla = {
+                    id: 'template-' + Date.now(),
+                    name: templateName.trim(),
+                    category: templateCategory,
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'María Alexandra Patiño Castillo',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Guardar en localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                templates.push(nuevaPlantilla);
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Mostrar confirmación con toast UBITS
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Plantilla creada exitosamente!');
+                }
+                
+                // Redirigir al editor de plantillas con el ID de la nueva plantilla
+                setTimeout(() => {
+                    window.location.href = `editor-plantillas.html?id=${nuevaPlantilla.id}`;
+                }, 1000);
+            };
+            
+            // Mostrar modal UBITS oficial con inputs oficiales
+            showFormModal({
+                title: 'Crear nueva plantilla',
+                message: 'Completa los datos para crear una nueva plantilla de flujo de selección',
+                fields: [
+                    {
+                        id: 'templateName',
+                        label: 'Nombre de la plantilla',
+                        type: 'text',
+                        placeholder: 'Ej: Selección de desarrolladores',
+                        required: true
+                    },
+                    {
+                        id: 'templateCategory',
+                        label: 'Categoría',
+                        type: 'select',
+                        options: [
+                            { value: 'tecnologia', text: 'Tecnología' },
+                            { value: 'ventas', text: 'Ventas' },
+                            { value: 'marketing', text: 'Marketing' },
+                            { value: 'recursos-humanos', text: 'Recursos Humanos' },
+                            { value: 'operaciones', text: 'Operaciones' }
+                        ],
+                        required: true
+                    }
+                ],
+                submitText: 'Crear plantilla',
+                cancelText: 'Cancelar'
+            });
+        }
+
         // Cerrar dropdown al hacer clic fuera
         document.addEventListener('click', function(event) {
             const columnsContainer = document.querySelector('.columns-toggle-container');
@@ -2215,9 +2552,24 @@
         }
         
         // Cargar componentes UBITS dinámicamente
+        // Log inicial
+        console.log('📄 Script de vista cargado');
+        console.log('🔍 Funciones disponibles:', {
+            toggleView: typeof toggleView,
+            renderTemplatesCards: typeof renderTemplatesCards,
+            loadViewPreference: typeof loadViewPreference
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 console.log('🚀 Inicializando dashboard de plantillas...');
+                console.log('🔍 Verificando botón de vista:', {
+                    viewToggleButton: !!document.getElementById('viewToggleButton'),
+                    viewToggleIcon: !!document.getElementById('viewToggleIcon'),
+                    tableViewContainer: !!document.getElementById('tableViewContainer'),
+                    cardsViewContainer: !!document.getElementById('cardsViewContainer'),
+                    templatesCardsGrid: !!document.getElementById('templatesCardsGrid')
+                });
                 
                 // Cargar componentes con manejo de errores individual
                 try {
@@ -2234,6 +2586,13 @@
                 // Configurar SubNav con sección "Plantillas"
                 try {
                     if (typeof loadSubNav === 'function') {
+                        // Logs después de cargar SubNav
+                        setTimeout(() => {
+                            if (typeof debugSpacing === 'function') {
+                                debugSpacing();
+                            }
+                        }, 100);
+                        
                         const plantillasTabs = [
                             { id: 'plantillas', label: 'Plantillas', active: true }
                         ];
@@ -2313,6 +2672,15 @@
                             loadColumnPreferences();
                         }
                     }, 500);
+                    
+                    // Vista de cards eliminada - solo se usa tabla
+                    
+                    // Inicializar componentes UBITS del drawer
+                    setTimeout(() => {
+                        if (typeof initializeFilterDrawerComponents === 'function') {
+                            initializeFilterDrawerComponents();
+                        }
+                    }, 600);
                 } catch (error) {
                     console.error('❌ Error al inicializar dashboard:', error);
                 }
