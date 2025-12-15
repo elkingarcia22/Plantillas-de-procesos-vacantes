@@ -40,6 +40,26 @@ function loadTemplatesFromStorage() {
     if (stored) {
         currentTemplates = JSON.parse(stored);
         console.log('📋 [loadTemplatesFromStorage] Plantillas cargadas:', currentTemplates.length);
+        
+        // Actualizar nombres de plantillas por defecto si tienen nombres antiguos
+        let needsUpdate = false;
+        currentTemplates.forEach(template => {
+            if (template.isDefault) {
+                if (template.id === 'default-template-ia' && template.name === 'Plantilla por defecto – Flujo estándar de selección con IA') {
+                    template.name = 'Plantilla estándar de selección con IA';
+                    needsUpdate = true;
+                } else if (template.id === 'default-template-standard' && template.name === 'Plantilla por defecto – Flujo estándar de selección') {
+                    template.name = 'Plantilla flujo estándar de selección';
+                    needsUpdate = true;
+                }
+            }
+        });
+        
+        if (needsUpdate) {
+            saveTemplatesToStorage();
+            console.log('📋 [loadTemplatesFromStorage] Nombres de plantillas por defecto actualizados');
+        }
+        
         // Verificar si ya existen las plantillas por defecto
         const hasDefaultTemplates = currentTemplates.some(t => t.isDefault === true);
         console.log('📋 [loadTemplatesFromStorage] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
@@ -72,7 +92,7 @@ function createDefaultTemplates() {
     // Plantilla 1: Flujo estándar de selección con IA
     const template1 = {
         id: 'default-template-ia',
-        name: 'Plantilla por defecto – Flujo estándar de selección con IA',
+        name: 'Plantilla estándar de selección con IA',
         category: 'reclutamiento',
         status: 'active',
         createdAt: now,
@@ -167,7 +187,7 @@ function createDefaultTemplates() {
     // Plantilla 2: Flujo estándar de selección (sin IA)
     const template2 = {
         id: 'default-template-standard',
-        name: 'Plantilla por defecto – Flujo estándar de selección',
+        name: 'Plantilla flujo estándar de selección',
         category: 'reclutamiento',
         status: 'active',
         createdAt: now,

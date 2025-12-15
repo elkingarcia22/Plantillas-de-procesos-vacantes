@@ -25,7 +25,7 @@
         .content-sections {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 16px !important; /* Forzar gap consistente */
             flex: 1;
             min-width: 0;
             width: 100%;
@@ -33,9 +33,12 @@
             max-height: none;
         }
 
-        /* Espaciador para alinear elementos */
-        .content-sections > *:not(:last-child):not(.section-dual):not(.section-single):not(.section-triple):not(.section-quad) {
-            margin-bottom: 16px;
+        /* Asegurar que todas las secciones tengan el mismo gap */
+        .content-sections > .section-single,
+        .content-sections > .section-dual,
+        .content-sections > .section-triple,
+        .content-sections > .section-quad {
+            margin-bottom: 0; /* El gap se maneja con gap del flexbox */
         }
 
         /* Espaciador final */
@@ -45,15 +48,12 @@
             flex-shrink: 0;
         }
 
-        /* Reducir el gap del último elemento */
-        .content-sections > *:last-child {
-            margin-bottom: 0;
-        }
-
         /* Secciones de widgets */
         .section-single {
             display: flex;
             width: 100%;
+            max-width: 100%;
+            min-width: 0;
         }
 
         .section-dual {
@@ -90,6 +90,13 @@
         .section-single > div {
             flex: 1;
         }
+        
+        .section-single > .widget-template-flow {
+            flex: 1;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
 
         .section-dual > div {
             flex: 1;
@@ -112,6 +119,8 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
+            width: 100%;
+            max-width: none;
         }
 
         .section-triple > div {
@@ -498,6 +507,10 @@
             border-radius: 8px;
             padding: 20px;
             border: none;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         .flow-header {
@@ -573,18 +586,10 @@
             gap: 16px;
             box-sizing: border-box;
             overflow-x: visible;
-            overflow-y: visible;
+            overflow-y: hidden; /* Sin scroll en el sidebar completo */
             min-height: 0;
             flex: 1;
-        }
-
-        /* Asegurar que las listas dentro de tabs tengan scroll si es necesario */
-        .agents-sidebar .agents-list,
-        .agents-sidebar .stages-list {
-            overflow-y: auto;
-            overflow-x: visible;
-            flex: 1;
-            min-height: 0;
+            position: relative;
         }
 
         /* Asegurar que los tabs no corten el badge */
@@ -595,8 +600,43 @@
         #stages-tab {
             overflow: visible !important;
         }
+
+        /* Solo la lista de etapas debe tener scroll, no todo el tab */
+        .agents-sidebar .stages-list {
+            overflow-y: auto;
+            overflow-x: visible;
+            flex: 1;
+            min-height: 0;
+            /* Permitir scroll independiente sin bloquear el scroll principal */
+            max-height: calc(100vh - 300px);
+        }
+
+        /* Lista de etapas - mismo espacio entre cards que en agentes IA */
+        .agents-sidebar .stages-list {
+            overflow-y: auto;
+            overflow-x: visible;
+            flex: 1;
+            min-height: 0;
+            max-height: calc(100vh - 300px); /* Scroll solo en la lista */
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Mismo gap que .agents-list */
+            margin-top: 0;
+        }
+
+        /* Lista de agentes también con scroll solo en la lista */
+        .agents-sidebar .agents-list {
+            overflow-y: auto;
+            overflow-x: visible;
+            flex: 1;
+            min-height: 0;
+            max-height: calc(100vh - 300px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
         
-        /* Controles de etapas */
+        /* Controles de etapas - fijos arriba del tab */
         .stages-controls-row {
             display: flex;
             align-items: center;
@@ -606,6 +646,7 @@
             flex-wrap: wrap;
             position: relative;
             overflow: visible !important;
+            flex-shrink: 0; /* No se comprime */
         }
         
         /* Search input wrapper para etapas */
@@ -1051,6 +1092,7 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 16px;
+            flex-shrink: 0; /* No se comprime, queda fijo arriba */
         }
 
         /* Tabs del sidebar */
@@ -1109,7 +1151,7 @@
             gap: 16px;
             flex: 1;
             min-height: 0;
-            overflow-y: auto;
+            overflow-y: visible; /* Sin scroll en el tab, solo en la lista */
             overflow-x: visible;
         }
 
@@ -1630,16 +1672,106 @@
         .board-container {
             flex: 1;
             background: var(--ubits-bg-1);
-            border: none;
+            border: 2px solid transparent;
             border-radius: 8px;
             padding: 16px;
             height: fit-content;
             box-sizing: border-box;
             overflow-x: hidden !important;
+            /* Scroll interno solo para el tablero de flujo */
             overflow-y: auto;
             min-width: 0;
             width: 100%;
+            max-width: none;
+            max-height: calc(100vh - 260px);
+            transition: all 0.2s ease;
+        }
+
+        .board-container.drag-over {
+            background: var(--ubits-bg-1);
+            border: 2px dashed var(--ubits-feedback-accent-info);
+        }
+
+        /* Mantener fija la sección donde están los pasos (stepper) */
+        .stepper-section {
+            position: sticky;
+            top: 0;
+            z-index: 6;
+        }
+
+        /* Mantener fija la fila con selector de plantilla y notificaciones */
+        /* Altura aproximada del stepper (80px) + gap (16px) = 96px */
+        .sticky-config-section {
+            position: sticky;
+            top: calc(80px + 16px); /* Altura del stepper + gap */
+            z-index: 4;
+        }
+
+        /* Mantener fijos los contenedores de biblioteca y flujo del candidato */
+        /* Altura del stepper (80px) + gap (16px) + altura de config (120px) + gap (16px) = 232px */
+        .template-flow-section {
+            position: sticky;
+            top: calc(80px + 16px + 120px + 16px); /* Altura stepper + gap + altura config + gap */
+            z-index: 3;
+            width: 100%;
             max-width: 100%;
+            min-width: 0;
+        }
+
+        /* Esta página no debe tener scroll general, solo interno en los paneles */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden !important;
+            position: fixed;
+            width: 100%;
+        }
+
+        /* Asegurar que main-content y content-area no causen scroll */
+        .main-content {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: calc(100vw - 143px - 24px) !important;
+            max-width: none !important;
+        }
+        
+        /* Override más específico para pantallas grandes */
+        @media (min-width: 1440px) {
+            .dashboard-container .main-content,
+            body .main-content,
+            html body .main-content {
+                width: calc(100vw - 143px - 24px) !important;
+                max-width: none !important;
+                margin-left: 143px !important;
+                margin-right: 24px !important;
+            }
+        }
+        
+        /* Override para todas las resoluciones */
+        .dashboard-container .main-content,
+        body .main-content {
+            width: calc(100vw - 143px - 24px) !important;
+            max-width: none !important;
+        }
+
+        .content-area {
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .content-sections {
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .stages-container {
@@ -1975,7 +2107,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
 
         .board-header-top {
@@ -1983,6 +2115,15 @@
             align-items: center;
             justify-content: space-between;
             gap: 16px;
+        }
+
+        .board-header-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+            line-height: 1.2;
         }
 
         .board-empty-title {
@@ -2035,6 +2176,24 @@
             border: 2px dashed var(--ubits-border-1);
             border-radius: 8px;
             background: var(--ubits-bg-2);
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+
+        /* Quitar hover - solo cambiar cuando está en drag-over */
+        .board-drop-slot:hover {
+            /* Sin cambios en hover - mantener estilos por defecto */
+        }
+
+        .board-container.drag-over .board-drop-slot {
+            border-color: var(--ubits-feedback-accent-info);
+            background: var(--ubits-feedback-bg-info-subtle);
+        }
+
+        .board-drop-slot.drag-over {
+            border-color: var(--ubits-feedback-accent-info);
+            background: var(--ubits-feedback-bg-info-subtle);
+            border-style: solid;
         }
 
         .slot-number {
@@ -2107,7 +2266,7 @@
                 <!-- Content wrapper con secciones de widgets -->
                 <div class="content-sections">
                     <!-- Sección 1: Stepper -->
-                    <div class="section-single">
+                    <div class="section-single stepper-section">
                         <div class="widget-stepper">
                             <!-- Desktop Stepper -->
                             <div class="stepper">
@@ -2157,7 +2316,7 @@
                     </div>
 
                     <!-- Sección 2: Configuración (2 columnas) -->
-                    <div class="section-dual">
+                    <div class="section-dual sticky-config-section">
                         <!-- Widget: Selector de plantilla -->
                         <div class="widget-template-selector">
                             <div class="selector-header">
@@ -2190,7 +2349,7 @@
                     </div>
 
                     <!-- Sección 3: Flujo de la plantilla seleccionada -->
-                    <div class="section-dual" id="template-flow-section">
+                    <div class="section-dual template-flow-section" id="template-flow-section">
                         <!-- Biblioteca (solo visible en modo edición) -->
                         <div class="widget-library" id="library-widget">
                             <div class="agents-sidebar" id="agents-sidebar">
@@ -2295,7 +2454,7 @@
         <div class="drawer-overlay" onclick="handleDrawerOverlayClick(event)"></div>
         <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
             <div class="drawer-header">
-                <h3 class="drawer-title" id="drawerTitle">Gestionar pruebas psicotécnicas</h3>
+                <h3 class="drawer-title" id="drawerTitle">Pruebas psicotécnicas</h3>
                 <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="handleDrawerCloseButton(event); return false;" title="Cerrar">
                     <i class="far fa-times"></i>
                 </button>
@@ -2386,6 +2545,203 @@
             
             // Inicializar flujo vacío por defecto para que puedan crear su flujo
             initializeEmptyFlow();
+
+            // LOGS DE DEPURACIÓN DE SCROLL Y STICKY
+            try {
+                const body = document.body;
+                const html = document.documentElement;
+                const dashboard = document.querySelector('.dashboard-container');
+                const mainContent = document.querySelector('.main-content');
+                const contentArea = document.querySelector('.content-area');
+                const stepperSection = document.querySelector('.stepper-section');
+                const stickyConfig = document.querySelector('.sticky-config-section');
+                const templateFlowSection = document.querySelector('.template-flow-section');
+                const boardContainer = document.querySelector('.board-container');
+
+                console.log('🔎 [Vacante Debug] ============================================');
+                console.log('🔎 [Vacante Debug] ESTADOS INICIALES DE SCROLL Y STICKY');
+                console.log('🔎 [Vacante Debug] ============================================');
+                
+                // HTML y Body
+                console.log('\n📄 HTML:');
+                console.log('  - overflowX:', getComputedStyle(html).overflowX);
+                console.log('  - overflowY:', getComputedStyle(html).overflowY);
+                console.log('  - scrollHeight:', html.scrollHeight, 'px');
+                console.log('  - clientHeight:', html.clientHeight, 'px');
+                console.log('  - ¿Tiene scroll?', html.scrollHeight > html.clientHeight ? '✅ SÍ' : '❌ NO');
+                
+                console.log('\n📄 BODY:');
+                console.log('  - overflowX:', getComputedStyle(body).overflowX);
+                console.log('  - overflowY:', getComputedStyle(body).overflowY);
+                console.log('  - scrollHeight:', body.scrollHeight, 'px');
+                console.log('  - clientHeight:', body.clientHeight, 'px');
+                console.log('  - ¿Tiene scroll?', body.scrollHeight > body.clientHeight ? '✅ SÍ' : '❌ NO');
+                
+                // Contenedores principales
+                if (dashboard) {
+                    console.log('\n📦 .dashboard-container:');
+                    console.log('  - overflowX:', getComputedStyle(dashboard).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(dashboard).overflowY);
+                    console.log('  - scrollHeight:', dashboard.scrollHeight, 'px');
+                    console.log('  - clientHeight:', dashboard.clientHeight, 'px');
+                }
+                
+                if (mainContent) {
+                    console.log('\n📦 .main-content:');
+                    console.log('  - overflowX:', getComputedStyle(mainContent).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(mainContent).overflowY);
+                    console.log('  - scrollHeight:', mainContent.scrollHeight, 'px');
+                    console.log('  - clientHeight:', mainContent.clientHeight, 'px');
+                }
+                
+                if (contentArea) {
+                    console.log('\n📦 .content-area:');
+                    console.log('  - overflowX:', getComputedStyle(contentArea).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(contentArea).overflowY);
+                    console.log('  - scrollHeight:', contentArea.scrollHeight, 'px');
+                    console.log('  - clientHeight:', contentArea.clientHeight, 'px');
+                }
+                
+                // Secciones sticky
+                if (stepperSection) {
+                    const rect = stepperSection.getBoundingClientRect();
+                    console.log('\n📌 .stepper-section (STICKY):');
+                    console.log('  - position:', getComputedStyle(stepperSection).position);
+                    console.log('  - top:', getComputedStyle(stepperSection).top);
+                    console.log('  - z-index:', getComputedStyle(stepperSection).zIndex);
+                    console.log('  - getBoundingClientRect().top:', rect.top, 'px');
+                    console.log('  - ¿Está fijo?', getComputedStyle(stepperSection).position === 'sticky' ? '✅ SÍ' : '❌ NO');
+                } else {
+                    console.log('\n❌ .stepper-section: NO ENCONTRADO');
+                }
+                
+                if (stickyConfig) {
+                    const rect = stickyConfig.getBoundingClientRect();
+                    console.log('\n📌 .sticky-config-section (STICKY):');
+                    console.log('  - position:', getComputedStyle(stickyConfig).position);
+                    console.log('  - top:', getComputedStyle(stickyConfig).top);
+                    console.log('  - z-index:', getComputedStyle(stickyConfig).zIndex);
+                    console.log('  - getBoundingClientRect().top:', rect.top, 'px');
+                    console.log('  - ¿Está fijo?', getComputedStyle(stickyConfig).position === 'sticky' ? '✅ SÍ' : '❌ NO');
+                } else {
+                    console.log('\n❌ .sticky-config-section: NO ENCONTRADO');
+                }
+                
+                if (templateFlowSection) {
+                    const rect = templateFlowSection.getBoundingClientRect();
+                    console.log('\n📌 .template-flow-section (STICKY):');
+                    console.log('  - position:', getComputedStyle(templateFlowSection).position);
+                    console.log('  - top:', getComputedStyle(templateFlowSection).top);
+                    console.log('  - z-index:', getComputedStyle(templateFlowSection).zIndex);
+                    console.log('  - getBoundingClientRect().top:', rect.top, 'px');
+                    console.log('  - ¿Está fijo?', getComputedStyle(templateFlowSection).position === 'sticky' ? '✅ SÍ' : '❌ NO');
+                } else {
+                    console.log('\n❌ .template-flow-section: NO ENCONTRADO');
+                }
+                
+                // Board container
+                if (boardContainer) {
+                    const boardRect = boardContainer.getBoundingClientRect();
+                    console.log('\n📦 .board-container:');
+                    console.log('  - overflowY:', getComputedStyle(boardContainer).overflowY);
+                    console.log('  - maxHeight:', getComputedStyle(boardContainer).maxHeight);
+                    console.log('  - scrollHeight:', boardContainer.scrollHeight, 'px');
+                    console.log('  - clientHeight:', boardContainer.clientHeight, 'px');
+                    console.log('  - width (CSS):', getComputedStyle(boardContainer).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(boardContainer).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', boardRect.width, 'px');
+                    console.log('  - ¿Tiene scroll interno?', boardContainer.scrollHeight > boardContainer.clientHeight ? '✅ SÍ' : '❌ NO');
+                }
+                
+                // LOGS DETALLADOS DE ANCHOS
+                console.log('\n🔎 [Vacante Debug] ============================================');
+                console.log('🔎 [Vacante Debug] ANÁLISIS DE ANCHOS');
+                console.log('🔎 [Vacante Debug] ============================================');
+                
+                if (mainContent) {
+                    const mainRect = mainContent.getBoundingClientRect();
+                    console.log('\n📏 .main-content:');
+                    console.log('  - width (CSS):', getComputedStyle(mainContent).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(mainContent).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', mainRect.width, 'px');
+                    console.log('  - window.innerWidth:', window.innerWidth, 'px');
+                    console.log('  - Diferencia:', (window.innerWidth - mainRect.width), 'px');
+                }
+                
+                if (contentArea) {
+                    const contentRect = contentArea.getBoundingClientRect();
+                    console.log('\n📏 .content-area:');
+                    console.log('  - width (CSS):', getComputedStyle(contentArea).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(contentArea).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', contentRect.width, 'px');
+                }
+                
+                const contentSections = document.querySelector('.content-sections');
+                if (contentSections) {
+                    const sectionsRect = contentSections.getBoundingClientRect();
+                    console.log('\n📏 .content-sections:');
+                    console.log('  - width (CSS):', getComputedStyle(contentSections).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(contentSections).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', sectionsRect.width, 'px');
+                }
+                
+                const widgetTemplateFlow = document.querySelector('.widget-template-flow');
+                if (widgetTemplateFlow) {
+                    const widgetRect = widgetTemplateFlow.getBoundingClientRect();
+                    console.log('\n📏 .widget-template-flow:');
+                    console.log('  - width (CSS):', getComputedStyle(widgetTemplateFlow).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(widgetTemplateFlow).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', widgetRect.width, 'px');
+                }
+                
+                const templateFlowSection = document.querySelector('.template-flow-section');
+                if (templateFlowSection) {
+                    const flowSectionRect = templateFlowSection.getBoundingClientRect();
+                    console.log('\n📏 .template-flow-section:');
+                    console.log('  - width (CSS):', getComputedStyle(templateFlowSection).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(templateFlowSection).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', flowSectionRect.width, 'px');
+                }
+                
+                const sectionSingle = document.querySelector('.section-single');
+                if (sectionSingle) {
+                    const sectionRect = sectionSingle.getBoundingClientRect();
+                    console.log('\n📏 .section-single:');
+                    console.log('  - width (CSS):', getComputedStyle(sectionSingle).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(sectionSingle).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', sectionRect.width, 'px');
+                }
+                
+                if (boardContainer) {
+                    const boardRect = boardContainer.getBoundingClientRect();
+                    console.log('\n📏 .board-container (detalle):');
+                    console.log('  - width (CSS):', getComputedStyle(boardContainer).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(boardContainer).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', boardRect.width, 'px');
+                }
+                
+                console.log('\n🔎 [Vacante Debug] ============================================');
+                console.log('🔎 [Vacante Debug] window.scrollY inicial:', window.scrollY);
+                console.log('🔎 [Vacante Debug] ============================================\n');
+
+                // Listener para detectar scroll en window
+                let scrollCount = 0;
+                window.addEventListener('scroll', () => {
+                    scrollCount++;
+                    if (scrollCount <= 5) { // Solo mostrar los primeros 5 eventos
+                        console.warn('⚠️ [Vacante Debug] window.scrollY:', window.scrollY, '- ¡LA PÁGINA ESTÁ HACIENDO SCROLL!');
+                    }
+                }, { passive: true });
+
+                // Listener para scroll en board-container
+                if (boardContainer) {
+                    boardContainer.addEventListener('scroll', () => {
+                        console.log('📜 [Vacante Debug] board-container scrollTop:', boardContainer.scrollTop, '/ scrollHeight:', boardContainer.scrollHeight, '/ clientHeight:', boardContainer.clientHeight);
+                    }, { passive: true });
+                }
+            } catch (e) {
+                console.warn('⚠️ [Vacante Debug] Error al inicializar logs de depuración:', e);
+            }
         });
         
         // Inicializar flujo vacío por defecto
@@ -2592,7 +2948,7 @@
             // Plantilla 1: Flujo estándar de selección con IA
             const template1 = {
                 id: 'default-template-ia',
-                name: 'Plantilla por defecto – Flujo estándar de selección con IA',
+                name: 'Plantilla estándar de selección con IA',
                 category: 'reclutamiento',
                 status: 'active',
                 createdAt: now,
@@ -2687,7 +3043,7 @@
             // Plantilla 2: Flujo estándar de selección (sin IA)
             const template2 = {
                 id: 'default-template-standard',
-                name: 'Plantilla por defecto – Flujo estándar de selección',
+                name: 'Plantilla flujo estándar de selección',
                 category: 'reclutamiento',
                 status: 'active',
                 createdAt: now,
@@ -2778,6 +3134,26 @@
                 allTemplates = JSON.parse(stored);
                 console.log('📋 [loadTemplates] Plantillas cargadas:', allTemplates.length);
                 console.log('📋 [loadTemplates] Plantillas:', allTemplates.map(t => ({ id: t.id, name: t.name, isDefault: t.isDefault })));
+                
+                // Actualizar nombres de plantillas por defecto si tienen nombres antiguos
+                let needsUpdate = false;
+                allTemplates.forEach(template => {
+                    if (template.isDefault) {
+                        if (template.id === 'default-template-ia' && template.name === 'Plantilla por defecto – Flujo estándar de selección con IA') {
+                            template.name = 'Plantilla estándar de selección con IA';
+                            needsUpdate = true;
+                        } else if (template.id === 'default-template-standard' && template.name === 'Plantilla por defecto – Flujo estándar de selección') {
+                            template.name = 'Plantilla flujo estándar de selección';
+                            needsUpdate = true;
+                        }
+                    }
+                });
+                
+                if (needsUpdate) {
+                    localStorage.setItem('templates', JSON.stringify(allTemplates));
+                    console.log('📋 [loadTemplates] Nombres de plantillas por defecto actualizados');
+                }
+                
                 // Verificar si ya existen las plantillas por defecto
                 const hasDefaultTemplates = allTemplates.some(t => t.isDefault === true);
                 console.log('📋 [loadTemplates] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
@@ -2876,18 +3252,21 @@
                 });
             }
             
-            // Asegurar que iniciamos en modo edición para mostrar biblioteca
-            isEditMode = true;
+            // Cargar en modo vista (no edición)
+            isEditMode = false;
             const libraryWidget = document.getElementById('library-widget');
             const flowSection = document.getElementById('template-flow-section');
             if (libraryWidget) {
-                libraryWidget.style.display = 'flex';
+                libraryWidget.style.display = 'none'; // Ocultar biblioteca en modo vista
             }
             if (flowSection) {
-                flowSection.className = 'section-dual';
+                flowSection.className = 'section-single'; // Solo mostrar el flujo en modo vista
+                flowSection.style.display = 'flex';
             }
             
             renderTemplateFlow(localTemplateCopy);
+            // Aplicar modo vista después de renderizar
+            applyEditMode();
         }
         
         // Inicializar flujo vacío por defecto
@@ -2965,19 +3344,10 @@
                             </div>
                         </div>
                     </div>
-                ` : `
-                    <div class="board-header-section">
-                        <div class="board-header-top">
-                            <h3 class="board-header-title">Flujo del candidato</h3>
-                        </div>
-                    </div>
-                `;
+                ` : '';
                 
                 flowContainer.innerHTML = headerHTML + `
                     <div class="board-empty-state">
-                        <div class="board-empty-icon">
-                            <i class="far fa-timeline-arrow"></i>
-                        </div>
                         <h4 class="board-empty-title">Comienza a construir tu flujo</h4>
                         <p class="board-empty-instruction">Arrastra etapas o agentes IA desde la biblioteca de la izquierda para crear tu flujo de selección.</p>
                     </div>
@@ -2992,6 +3362,7 @@
                 // Aplicar modo edición después de renderizar
                 setTimeout(() => {
                     applyEditMode();
+                    makeBoardDroppable(); // Configurar drag and drop
                 }, 100);
                 
                 return;
@@ -3040,7 +3411,6 @@
                         <h3 class="board-header-title">Flujo del candidato</h3>
                         ${headerActionsHTML}
                     </div>
-                    <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
                 </div>
                 ${stagesHTML}
                 ${nextSlotHTML}
@@ -3048,6 +3418,11 @@
 
             // Aplicar modo vista/edición según el estado
             applyEditMode();
+
+            // Configurar drag and drop después de renderizar
+            setTimeout(() => {
+                makeBoardDroppable();
+            }, 100);
 
             // Crear inputs UBITS para campos select después de renderizar (solo en modo edición)
             if (isEditMode) {
@@ -3373,9 +3748,9 @@
                             </div>
                             <div class="stage-actions">
                                 ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
-                                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Gestionar pruebas psicotécnicas">
+                                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Pruebas psicotécnicas">
                                         <i class="far fa-list"></i>
-                                        <span>Gestionar pruebas (${stage.config?.tests?.length || 0})</span>
+                                        <span>Pruebas (${stage.config?.tests?.length || 0})</span>
                                     </button>
                                 ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
                                     <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
@@ -4062,6 +4437,14 @@
                     `;
                 }).join('');
                 
+                // Agregar event listeners para drag and drop
+                if (stagesList) {
+                    stagesList.querySelectorAll('.stage-item').forEach(item => {
+                        item.addEventListener('dragstart', handleStageTemplateDragStart);
+                        item.addEventListener('dragend', handleStageTemplateDragEnd);
+                    });
+                }
+                
                 // Re-inicializar el setup de búsqueda después de renderizar
                 setTimeout(() => {
                     try {
@@ -4714,7 +5097,7 @@
             const drawerFooter = document.querySelector('#psychometricTestsDrawer .drawer-footer');
             
             if (currentDrawerView === 'list') {
-                if (drawerTitle) drawerTitle.textContent = 'Gestionar pruebas psicotécnicas';
+        if (drawerTitle) drawerTitle.textContent = 'Pruebas psicotécnicas';
                 
                 const hasTests = tests && tests.length > 0;
                 
@@ -5109,6 +5492,14 @@
                 </div>
             `;
             }).join('');
+            
+            // Agregar event listeners para drag and drop
+            if (agentsList) {
+                agentsList.querySelectorAll('.agent-item').forEach(item => {
+                    item.addEventListener('dragstart', handleAgentDragStart);
+                    item.addEventListener('dragend', handleAgentDragEnd);
+                });
+            }
         }
 
         // Agregar agente al flujo
@@ -5125,7 +5516,249 @@
             showToast('info', 'La configuración de entrevista Serena se implementará próximamente');
         }
 
+        // ========================================
+        // DRAG AND DROP HANDLERS
+        // ========================================
 
+        let draggedElement = null;
+
+        // Drag and drop para agentes
+        function handleAgentDragStart(e) {
+            const agentItem = e.target.closest('.agent-item');
+            if (!agentItem) return;
+            
+            const agentId = agentItem.getAttribute('data-agent-id');
+            const agentName = agentItem.getAttribute('data-agent-name');
+            const agentIcon = agentItem.getAttribute('data-agent-icon');
+            
+            // Guardar datos del elemento arrastrado
+            draggedElement = {
+                type: 'agent',
+                id: agentId,
+                name: agentName,
+                icon: agentIcon,
+                element: agentItem
+            };
+            
+            // Agregar clase de arrastre
+            agentItem.classList.add('dragging');
+            
+            // Configurar datos de transferencia
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                type: 'agent',
+                id: agentId,
+                name: agentName,
+                icon: agentIcon
+            }));
+            
+            // Configurar efecto de arrastre
+            e.dataTransfer.effectAllowed = 'move';
+            
+            console.log('Iniciando arrastre de agente:', agentName);
+        }
+
+        function handleAgentDragEnd(e) {
+            const agentItem = e.target.closest('.agent-item');
+            if (agentItem) {
+                agentItem.classList.remove('dragging');
+            }
+            draggedElement = null;
+        }
+
+        // Drag and drop para etapas
+        function handleStageTemplateDragStart(event) {
+            const stageItem = event.target.closest('.stage-item');
+            if (!stageItem) return;
+            
+            const stageId = stageItem.getAttribute('data-stage-id');
+            const stageName = stageItem.getAttribute('data-stage-name');
+            const stageCategory = stageItem.getAttribute('data-stage-category');
+            
+            // Guardar datos del elemento arrastrado
+            draggedElement = {
+                type: 'stage-template',
+                id: stageId,
+                name: stageName,
+                category: stageCategory,
+                element: stageItem
+            };
+            
+            // Agregar clase de arrastre
+            stageItem.classList.add('dragging');
+            
+            // Configurar datos de transferencia
+            event.dataTransfer.setData('text/plain', JSON.stringify({
+                type: 'stage-template',
+                id: stageId,
+                name: stageName,
+                category: stageCategory
+            }));
+            
+            // Configurar efecto de arrastre
+            event.dataTransfer.effectAllowed = 'move';
+            
+            console.log('Iniciando arrastre de etapa:', stageName);
+        }
+
+        function handleStageTemplateDragEnd(event) {
+            const stageItem = event.target.closest('.stage-item');
+            if (stageItem) {
+                stageItem.classList.remove('dragging');
+            }
+            draggedElement = null;
+        }
+
+        // Hacer el board droppable
+        // Guardar referencias a los handlers para poder removerlos
+        let boardDragOverHandler = null;
+        let boardDragLeaveHandler = null;
+        let boardDropHandler = null;
+
+        function makeBoardDroppable() {
+            const flowContainer = document.getElementById('template-flow-container');
+            const boardContainer = document.querySelector('.board-container');
+            
+            if (!flowContainer || !boardContainer) return;
+            
+            // Remover listeners anteriores si existen
+            if (boardDragOverHandler) {
+                boardContainer.removeEventListener('dragover', boardDragOverHandler);
+            }
+            if (boardDragLeaveHandler) {
+                boardContainer.removeEventListener('dragleave', boardDragLeaveHandler);
+            }
+            if (boardDropHandler) {
+                boardContainer.removeEventListener('drop', boardDropHandler);
+            }
+            
+            // Función para manejar drag over
+            boardDragOverHandler = function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                boardContainer.classList.add('drag-over');
+            };
+            
+            // Función para manejar drag leave
+            boardDragLeaveHandler = function(e) {
+                if (!boardContainer.contains(e.relatedTarget)) {
+                    boardContainer.classList.remove('drag-over');
+                }
+            };
+            
+            // Función para manejar drop
+            boardDropHandler = function(e) {
+                e.preventDefault();
+                boardContainer.classList.remove('drag-over');
+                
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    
+                    if (data.type === 'stage-template') {
+                        handleStageTemplateDrop(data);
+                    } else if (data.type === 'agent') {
+                        handleAgentDrop(data);
+                    }
+                } catch (error) {
+                    console.error('Error al procesar drop:', error);
+                }
+            };
+            
+            // Agregar event listeners al board-container
+            boardContainer.addEventListener('dragover', boardDragOverHandler);
+            boardContainer.addEventListener('dragleave', boardDragLeaveHandler);
+            boardContainer.addEventListener('drop', boardDropHandler);
+        }
+
+        // Manejar drop de etapa
+        function handleStageTemplateDrop(data) {
+            if (!localTemplateCopy || !isEditMode) return;
+            
+            const { id, name, category } = data;
+            
+            // Verificar que la etapa no esté ya en uso
+            const existingStage = localTemplateCopy.realContent.stages.find(stage => stage.templateId === id);
+            if (existingStage) {
+                showToast('info', 'Esta etapa ya está en el flujo');
+                return;
+            }
+            
+            // Buscar template de etapa para obtener tipo y descripción
+            const stageTemplate = availableStages.find(s => s.id === id);
+            
+            // Crear nueva etapa en el área de trabajo
+            const newStage = {
+                id: 'work-stage-' + Date.now(),
+                templateId: id,
+                name: name,
+                category: category,
+                type: stageTemplate?.type || 'custom',
+                description: stageTemplate?.description || ''
+            };
+            
+            // Agregar a la plantilla actual
+            localTemplateCopy.realContent.stages.push(newStage);
+            
+            // Re-renderizar todo
+            renderTemplateFlow(localTemplateCopy);
+            renderStages();
+            
+            showToast('success', `Etapa "${name}" agregada al flujo`);
+        }
+
+        // Manejar drop de agente
+        function handleAgentDrop(data) {
+            if (!localTemplateCopy || !isEditMode) return;
+            
+            const { id, name, icon } = data;
+            
+            // Buscar datos completos del agente
+            const agentData = AGENTS.find(a => a.id === id);
+            if (!agentData) return;
+            
+            // Verificar que este agente no esté ya en el flujo
+            const existingAgentStage = localTemplateCopy.realContent.stages.find(stage => 
+                stage.type === 'agent' && stage.agentId === id
+            );
+            
+            if (existingAgentStage) {
+                showToast('info', 'Este agente ya está en el flujo');
+                return;
+            }
+            
+            // Crear configuración por defecto del agente si tiene config
+            let defaultConfig = {};
+            if (agentData.hasConfig && agentData.config) {
+                Object.entries(agentData.config).forEach(([key, field]) => {
+                    if (key === 'tests' && field.type === 'psychometric-tests-manager') {
+                        defaultConfig[key] = [];
+                    } else {
+                        defaultConfig[key] = field.default;
+                    }
+                });
+            }
+            
+            // Crear nueva etapa tipo 'agent'
+            const newAgentStage = {
+                id: 'agent-stage-' + Date.now(),
+                type: 'agent',
+                agentId: id,
+                name: agentData.name,
+                icon: agentData.icon,
+                category: agentData.category,
+                hasConfig: agentData.hasConfig,
+                config: defaultConfig,
+                expanded: false
+            };
+            
+            // Agregar al final del flujo
+            localTemplateCopy.realContent.stages.push(newAgentStage);
+            
+            // Re-renderizar todo
+            renderTemplateFlow(localTemplateCopy);
+            renderAgents();
+            
+            showToast('success', `Agente "${name}" agregado al flujo`);
+        }
 
     </script>
 </body>

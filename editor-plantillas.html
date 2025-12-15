@@ -23,16 +23,70 @@
     <link rel="stylesheet" href="profile.css">
     
     <style>
+        /* Esta página no debe tener scroll general, solo interno en los paneles */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden !important;
+            position: fixed;
+            width: 100%;
+        }
+
+        /* Asegurar que main-content y content-area no causen scroll */
+        .main-content {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: calc(100vw - 143px - 24px) !important;
+            max-width: none !important;
+        }
+        
+        /* Override más específico para pantallas grandes */
+        @media (min-width: 1440px) {
+            .dashboard-container .main-content,
+            body .main-content,
+            html body .main-content {
+                width: calc(100vw - 143px - 24px) !important;
+                max-width: none !important;
+                margin-left: 143px !important;
+                margin-right: 24px !important;
+            }
+        }
+        
+        /* Override para todas las resoluciones - mayor especificidad */
+        html body .dashboard-container .main-content,
+        html body .main-content,
+        body.dashboard-container .main-content,
+        .dashboard-container > .main-content {
+            width: calc(100vw - 143px - 24px) !important;
+            max-width: none !important;
+        }
+        
+        /* Override específico para todas las resoluciones */
+        @media (min-width: 1024px) {
+            html body .dashboard-container .main-content,
+            html body .main-content,
+            body.dashboard-container .main-content,
+            .dashboard-container > .main-content {
+                width: calc(100vw - 143px - 24px) !important;
+                max-width: none !important;
+            }
+        }
+
         /* Estilos específicos para el editor de plantillas */
         .content-area {
-            margin-top: 0 !important; /* Respetar el margen del main-content */
-            padding-top: 0 !important; /* No agregar padding adicional */
+            margin-top: 0 !important;
+            padding-top: 0 !important;
             width: 100%;
             max-width: 100%;
+            min-width: 0;
             box-sizing: border-box;
             overflow-x: visible;
-            overflow-y: visible;
-            /* Asegurar que no cause desplazamiento */
+            overflow-y: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             position: relative;
             left: 0;
             margin-left: 0;
@@ -49,13 +103,12 @@
             width: 100%;
             max-width: 100%;
             overflow-x: visible;
-            overflow-y: visible;
-            max-height: none;
+            overflow-y: hidden;
+            height: 100%;
             box-sizing: border-box;
-            margin-top: 0; /* Respetar el margen del main-content */
+            margin-top: 0;
             margin-left: 0;
             margin-right: 0;
-            /* Asegurar que no cause desplazamiento */
             position: relative;
             left: 0;
             padding-left: 0;
@@ -68,6 +121,11 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 6;
+            background: var(--ubits-bg-2);
+            padding-bottom: 16px;
         }
 
         .header-left {
@@ -391,15 +449,14 @@
             min-height: 0;
             width: 100%;
             max-width: 100%;
+            min-width: 0;
             box-sizing: border-box;
-            overflow-x: hidden; /* Cambiar a hidden para evitar que el board se salga */
+            overflow-x: hidden;
             overflow-y: visible;
-            /* Asegurar que no cause desplazamiento */
-            position: relative;
-            left: 0;
-            margin-left: 0;
-            padding-left: 0;
-            padding-right: 0;
+            position: sticky;
+            top: calc(80px + 16px); /* Altura del header + gap */
+            z-index: 3;
+            height: calc(100vh - 80px - 16px); /* Altura del viewport menos header y gap */
         }
 
         /* Sidebar de agentes */
@@ -419,10 +476,11 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            height: fit-content;
+            height: 100%;
             box-sizing: border-box;
             overflow-x: visible;
-            overflow-y: auto;
+            overflow-y: hidden; /* Sin scroll en el sidebar completo, solo en las listas */
+            max-height: calc(100vh - 80px - 16px - 32px);
         }
 
         .agents-title {
@@ -459,14 +517,16 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 16px;
+            flex-shrink: 0; /* No se comprime, queda fijo arriba */
         }
 
-        /* Tabs del sidebar */
+        /* Tabs del sidebar - fijos arriba */
         .sidebar-tabs {
             display: flex;
             background: var(--ubits-bg-2);
             border-radius: 6px;
             padding: 4px;
+            flex-shrink: 0; /* No se comprime, queda fijo arriba */
         }
 
         .tab-button {
@@ -515,6 +575,10 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: visible; /* Sin scroll en el tab, solo en la lista */
+            overflow-x: visible;
         }
         
         /* Cuando no hay controles, reducir el gap */
@@ -727,15 +791,19 @@
             white-space: nowrap;
         }
 
-        /* Lista de etapas */
+        /* Lista de etapas - solo esta lista tiene scroll */
         .stages-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
-            overflow-x: visible; /* Permitir que los dropdowns no se corten */
-            overflow-y: visible; /* Permitir que los dropdowns no se corten */
-            position: relative; /* Asegurar contexto de posicionamiento */
+            gap: 8px; /* Mismo gap que agents-list */
+            margin-top: 0; /* Remover margin-top para que coincida con agents-list */
+            overflow-x: visible;
+            overflow-y: auto; /* Solo la lista tiene scroll */
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            width: 100%; /* Asegurar ancho completo */
+            box-sizing: border-box;
         }
 
         /* Mensaje vacío para etapas */
@@ -799,6 +867,9 @@
             font-family: 'Noto Sans', sans-serif;
             overflow: visible; /* Permitir que el dropdown no se corte */
             position: relative; /* Asegurar contexto de posicionamiento */
+            width: 100%; /* Asegurar ancho completo */
+            box-sizing: border-box;
+            flex-shrink: 0; /* No se comprime */
         }
 
         #stagesList .stage-item:hover {
@@ -959,7 +1030,7 @@
             pointer-events: none;
         }
 
-        /* Contenedor de controles de etapas en una línea */
+        /* Contenedor de controles de etapas en una línea - fijo arriba */
         .stages-controls-row {
             display: flex;
             align-items: center;
@@ -967,7 +1038,8 @@
             margin-bottom: 12px;
             width: 100%;
             flex-wrap: wrap;
-            position: relative; /* Asegurar contexto de posicionamiento */
+            position: relative;
+            flex-shrink: 0; /* No se comprime, queda fijo arriba */
             overflow: visible; /* Permitir que los dropdowns no se corten */
         }
         
@@ -1028,6 +1100,11 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            overflow-y: auto; /* Solo la lista tiene scroll */
+            flex: 1;
+            min-height: 0;
+            width: 100%; /* Asegurar ancho completo */
+            box-sizing: border-box;
         }
 
         .agent-item {
@@ -1041,6 +1118,9 @@
             cursor: grab;
             transition: all 0.2s ease;
             font-family: 'Noto Sans', sans-serif;
+            width: 100%; /* Asegurar ancho completo */
+            box-sizing: border-box;
+            flex-shrink: 0; /* No se comprime */
         }
 
         .agent-item:hover {
@@ -1145,18 +1225,19 @@
 
         /* Board principal */
         .board-main {
-            width: 60%;
-            max-width: 60%;
+            flex: 1;
             min-width: 0;
-            flex: 0 0 60%;
+            width: 100%;
+            max-width: none;
             display: flex;
             flex-direction: column;
             gap: 16px;
             box-sizing: border-box;
-            overflow-x: hidden; /* Cambiar a hidden para evitar overflow */
-            overflow-y: auto;
+            overflow-x: hidden;
+            overflow-y: visible;
             padding: 0;
             margin: 0;
+            height: 100%;
         }
 
         .board-container {
@@ -1169,14 +1250,15 @@
             border-image: none;
             border-radius: 8px;
             padding: 16px;
-            height: fit-content;
-            transition: none; /* Remover transición para evitar "brincos" */
+            height: 100%;
+            transition: none;
             box-sizing: border-box;
-            overflow-x: hidden !important; /* Cambiar a hidden para evitar que el contenido se salga */
+            overflow-x: hidden !important;
             overflow-y: auto;
             min-width: 0;
             width: 100%;
-            max-width: 100%;
+            max-width: none;
+            max-height: calc(100vh - 80px - 16px - 32px); /* Altura del viewport menos header, gap y padding */
         }
         
         .board-container.drag-over {
@@ -2678,7 +2760,7 @@
             <div class="drawer-overlay" onclick="handleDrawerOverlayClick(event)"></div>
             <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
                 <div class="drawer-header">
-                    <h3 class="drawer-title" id="drawerTitle">Gestionar pruebas psicotécnicas</h3>
+                    <h3 class="drawer-title" id="drawerTitle">Pruebas psicotécnicas</h3>
                     <button class="ubits-button ubits-button--secondary ubits-button--sm ubits-button--icon-only" onclick="handleDrawerCloseButton(event); return false;" title="Cerrar">
                         <i class="far fa-times"></i>
                     </button>
@@ -2952,6 +3034,212 @@
             
             // Inicializar editor de plantillas
             initializeEditor();
+
+            // LOGS DE DEPURACIÓN DE SCROLL Y STICKY EN EDITOR DE PLANTILLAS
+            try {
+                const body = document.body;
+                const html = document.documentElement;
+                const dashboard = document.querySelector('.dashboard-container');
+                const mainContent = document.querySelector('.main-content');
+                const contentArea = document.querySelector('.content-area');
+                const editorContainer = document.querySelector('.editor-container');
+                const editorHeader = document.querySelector('.editor-header');
+                const editorLayout = document.querySelector('.editor-layout');
+                const agentsSidebar = document.querySelector('.agents-sidebar');
+                const boardMain = document.querySelector('.board-main');
+                const boardContainer = document.querySelector('.board-container');
+
+                console.log('🔎 [Editor Plantillas Debug] ===============================');
+                console.log('🔎 [Editor Plantillas Debug] ESTADOS INICIALES DE SCROLL');
+                console.log('🔎 [Editor Plantillas Debug] ===============================');
+
+                console.log('\\n📄 HTML:');
+                console.log('  - overflowX:', getComputedStyle(html).overflowX);
+                console.log('  - overflowY:', getComputedStyle(html).overflowY);
+                console.log('  - scrollHeight:', html.scrollHeight, 'px');
+                console.log('  - clientHeight:', html.clientHeight, 'px');
+                console.log('  - ¿Tiene scroll?', html.scrollHeight > html.clientHeight ? '✅ SÍ' : '❌ NO');
+
+                console.log('\\n📄 BODY:');
+                console.log('  - overflowX:', getComputedStyle(body).overflowX);
+                console.log('  - overflowY:', getComputedStyle(body).overflowY);
+                console.log('  - scrollHeight:', body.scrollHeight, 'px');
+                console.log('  - clientHeight:', body.clientHeight, 'px');
+                console.log('  - ¿Tiene scroll?', body.scrollHeight > body.clientHeight ? '✅ SÍ' : '❌ NO');
+
+                if (dashboard) {
+                    console.log('\\n📦 .dashboard-container:');
+                    console.log('  - overflowX:', getComputedStyle(dashboard).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(dashboard).overflowY);
+                    console.log('  - scrollHeight:', dashboard.scrollHeight, 'px');
+                    console.log('  - clientHeight:', dashboard.clientHeight, 'px');
+                }
+
+                if (mainContent) {
+                    console.log('\\n📦 .main-content:');
+                    console.log('  - overflowX:', getComputedStyle(mainContent).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(mainContent).overflowY);
+                    console.log('  - scrollHeight:', mainContent.scrollHeight, 'px');
+                    console.log('  - clientHeight:', mainContent.clientHeight, 'px');
+                }
+
+                if (contentArea) {
+                    console.log('\\n📦 .content-area:');
+                    console.log('  - overflowX:', getComputedStyle(contentArea).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(contentArea).overflowY);
+                    console.log('  - scrollHeight:', contentArea.scrollHeight, 'px');
+                    console.log('  - clientHeight:', contentArea.clientHeight, 'px');
+                }
+
+                if (editorContainer) {
+                    console.log('\\n📦 .editor-container:');
+                    console.log('  - overflowX:', getComputedStyle(editorContainer).overflowX);
+                    console.log('  - overflowY:', getComputedStyle(editorContainer).overflowY);
+                    console.log('  - scrollHeight:', editorContainer.scrollHeight, 'px');
+                    console.log('  - clientHeight:', editorContainer.clientHeight, 'px');
+                }
+
+                if (editorHeader) {
+                    const rect = editorHeader.getBoundingClientRect();
+                    console.log('\\n📌 .editor-header:');
+                    console.log('  - position:', getComputedStyle(editorHeader).position);
+                    console.log('  - top (CSS):', getComputedStyle(editorHeader).top);
+                    console.log('  - z-index:', getComputedStyle(editorHeader).zIndex);
+                    console.log('  - getBoundingClientRect().top:', rect.top, 'px');
+                }
+
+                if (editorLayout) {
+                    const rect = editorLayout.getBoundingClientRect();
+                    console.log('\\n📌 .editor-layout:');
+                    console.log('  - position:', getComputedStyle(editorLayout).position);
+                    console.log('  - top (CSS):', getComputedStyle(editorLayout).top);
+                    console.log('  - z-index:', getComputedStyle(editorLayout).zIndex);
+                    console.log('  - getBoundingClientRect().top:', rect.top, 'px');
+                }
+
+                if (agentsSidebar) {
+                    console.log('\\n📦 .agents-sidebar:');
+                    console.log('  - overflowY:', getComputedStyle(agentsSidebar).overflowY);
+                    console.log('  - maxHeight:', getComputedStyle(agentsSidebar).maxHeight);
+                    console.log('  - scrollHeight:', agentsSidebar.scrollHeight, 'px');
+                    console.log('  - clientHeight:', agentsSidebar.clientHeight, 'px');
+                }
+
+                if (boardMain) {
+                    console.log('\\n📦 .board-main:');
+                    console.log('  - overflowY:', getComputedStyle(boardMain).overflowY);
+                    console.log('  - scrollHeight:', boardMain.scrollHeight, 'px');
+                    console.log('  - clientHeight:', boardMain.clientHeight, 'px');
+                }
+
+                if (boardContainer) {
+                    const boardRect = boardContainer.getBoundingClientRect();
+                    console.log('\\n📦 .board-container:');
+                    console.log('  - overflowY:', getComputedStyle(boardContainer).overflowY);
+                    console.log('  - maxHeight:', getComputedStyle(boardContainer).maxHeight);
+                    console.log('  - scrollHeight:', boardContainer.scrollHeight, 'px');
+                    console.log('  - clientHeight:', boardContainer.clientHeight, 'px');
+                    console.log('  - width (CSS):', getComputedStyle(boardContainer).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(boardContainer).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', boardRect.width, 'px');
+                    console.log('  - ¿Tiene scroll interno?', boardContainer.scrollHeight > boardContainer.clientHeight ? '✅ SÍ' : '❌ NO');
+                }
+
+                // LOGS DETALLADOS DE ANCHOS
+                console.log('\\n🔎 [Editor Plantillas Debug] ===============================');
+                console.log('🔎 [Editor Plantillas Debug] ANÁLISIS DE ANCHOS');
+                console.log('🔎 [Editor Plantillas Debug] ===============================');
+                
+                if (mainContent) {
+                    const mainRect = mainContent.getBoundingClientRect();
+                    console.log('\\n📏 .main-content:');
+                    console.log('  - width (CSS):', getComputedStyle(mainContent).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(mainContent).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', mainRect.width, 'px');
+                    console.log('  - window.innerWidth:', window.innerWidth, 'px');
+                    console.log('  - Diferencia:', (window.innerWidth - mainRect.width), 'px');
+                }
+                
+                if (contentArea) {
+                    const contentRect = contentArea.getBoundingClientRect();
+                    console.log('\\n📏 .content-area:');
+                    console.log('  - width (CSS):', getComputedStyle(contentArea).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(contentArea).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', contentRect.width, 'px');
+                }
+                
+                if (editorContainer) {
+                    const editorRect = editorContainer.getBoundingClientRect();
+                    console.log('\\n📏 .editor-container:');
+                    console.log('  - width (CSS):', getComputedStyle(editorContainer).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(editorContainer).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', editorRect.width, 'px');
+                }
+                
+                if (editorLayout) {
+                    const layoutRect = editorLayout.getBoundingClientRect();
+                    console.log('\\n📏 .editor-layout:');
+                    console.log('  - width (CSS):', getComputedStyle(editorLayout).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(editorLayout).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', layoutRect.width, 'px');
+                }
+                
+                if (agentsSidebar) {
+                    const sidebarRect = agentsSidebar.getBoundingClientRect();
+                    console.log('\\n📏 .agents-sidebar:');
+                    console.log('  - width (CSS):', getComputedStyle(agentsSidebar).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(agentsSidebar).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', sidebarRect.width, 'px');
+                }
+                
+                if (boardMain) {
+                    const boardMainRect = boardMain.getBoundingClientRect();
+                    console.log('\\n📏 .board-main:');
+                    console.log('  - width (CSS):', getComputedStyle(boardMain).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(boardMain).maxWidth);
+                    console.log('  - flex (CSS):', getComputedStyle(boardMain).flex);
+                    console.log('  - getBoundingClientRect().width:', boardMainRect.width, 'px');
+                }
+                
+                if (boardContainer) {
+                    const boardRect = boardContainer.getBoundingClientRect();
+                    console.log('\\n📏 .board-container:');
+                    console.log('  - width (CSS):', getComputedStyle(boardContainer).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(boardContainer).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', boardRect.width, 'px');
+                }
+                
+                const widgetTemplateFlow = document.querySelector('.widget-template-flow');
+                if (widgetTemplateFlow) {
+                    const widgetRect = widgetTemplateFlow.getBoundingClientRect();
+                    console.log('\\n📏 .widget-template-flow:');
+                    console.log('  - width (CSS):', getComputedStyle(widgetTemplateFlow).width);
+                    console.log('  - maxWidth (CSS):', getComputedStyle(widgetTemplateFlow).maxWidth);
+                    console.log('  - getBoundingClientRect().width:', widgetRect.width, 'px');
+                }
+
+                console.log('\\n🔎 [Editor Plantillas Debug] ===============================');
+                console.log('🔎 [Editor Plantillas Debug] window.scrollY inicial:', window.scrollY);
+                console.log('🔎 [Editor Plantillas Debug] ===============================\\n');
+
+                // Detectar si la página sigue haciendo scroll
+                let scrollCount = 0;
+                window.addEventListener('scroll', () => {
+                    scrollCount++;
+                    if (scrollCount <= 5) {
+                        console.warn('⚠️ [Editor Plantillas Debug] window.scrollY:', window.scrollY, '- ¡LA PÁGINA ESTÁ HACIENDO SCROLL!');
+                    }
+                }, { passive: true });
+
+                // Log de scroll interno del board
+                if (boardContainer) {
+                    boardContainer.addEventListener('scroll', () => {
+                        console.log('📜 [Editor Plantillas Debug] board-container scrollTop:', boardContainer.scrollTop, '/ scrollHeight:', boardContainer.scrollHeight, '/ clientHeight:', boardContainer.clientHeight);
+                    }, { passive: true });
+                }
+            } catch (e) {
+                console.warn('⚠️ [Editor Plantillas Debug] Error al inicializar logs de depuración:', e);
+            }
         });
     </script>
 </body>

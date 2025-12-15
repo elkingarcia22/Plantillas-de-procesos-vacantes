@@ -1759,9 +1759,9 @@ function renderAgentStageCard(stage, index) {
                     </div>
                     <div class="stage-actions">
                         ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
-                            <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Gestionar pruebas psicotécnicas">
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Pruebas psicotécnicas">
                                 <i class="far fa-list"></i>
-                                <span>Gestionar pruebas (${stage.config?.tests?.length || 0})</span>
+                                <span>Pruebas (${stage.config?.tests?.length || 0})</span>
                             </button>
                         ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
                             <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
@@ -2353,50 +2353,14 @@ function fixBoardContainerWidth() {
     
     // Usar setTimeout para asegurar que el DOM se haya actualizado
     setTimeout(() => {
-        // SIEMPRE calcular el ancho desde el editor-layout (60%) para mantener consistencia
-        // No usar el ancho actual del board-main porque puede estar en un estado intermedio
-        let maxBoardMainWidth;
-        
-        if (editorLayout) {
-            const editorLayoutRect = editorLayout.getBoundingClientRect();
-            // El board-main debería ocupar el 60% del editor-layout
-            maxBoardMainWidth = editorLayoutRect.width * 0.6;
-        } else {
-            // Fallback: usar el ancho actual del board-main solo si no hay editor-layout
-            const boardMainRect = boardMain.getBoundingClientRect();
-            maxBoardMainWidth = boardMainRect.width;
-        }
-        
-        // Ajustar si el board-main se está saliendo del límite del botón Guardar
-        if (saveButton && mainContent) {
-            const saveButtonRight = saveButton.getBoundingClientRect().right;
-            const boardMainRect = boardMain.getBoundingClientRect();
-            const boardMainLeft = boardMainRect.left;
-            
-            // Calcular el ancho máximo permitido desde el botón Guardar
-            const maxAllowedWidth = saveButtonRight - boardMainLeft;
-            
-            // Usar el menor entre el ancho calculado (60%) y el ancho máximo permitido
-            if (maxAllowedWidth < maxBoardMainWidth) {
-                maxBoardMainWidth = maxAllowedWidth;
-            }
-        }
-        
-        // Aplicar el max-width al board-main usando setProperty con important
-        boardMain.style.setProperty('max-width', maxBoardMainWidth + 'px', 'important');
+        // NO aplicar max-width al board-main - dejar que flex: 1 haga su trabajo
+        // El board-main debe expandirse completamente usando flex: 1
+        boardMain.style.removeProperty('max-width');
         boardMain.style.setProperty('transition', 'none', 'important'); // Remover transición para evitar brincos
         
-        // Calcular el ancho disponible del board-container
-        // El board-container está dentro del board-main, así que debe usar el ancho del board-main
-        // Considerar el padding del board-container
-        const boardContainerPadding = parseFloat(window.getComputedStyle(boardContainer).paddingLeft || 0) + 
-                                      parseFloat(window.getComputedStyle(boardContainer).paddingRight || 0);
-        
-        // El board-container debe tener el mismo ancho que el board-main (menos padding)
-        // Aplicar max-width para evitar expansión horizontal
-        const containerMaxWidth = maxBoardMainWidth - boardContainerPadding;
-        
-        boardContainer.style.setProperty('max-width', containerMaxWidth + 'px', 'important');
+        // El board-container debe usar 100% del ancho del board-main (sin limitaciones)
+        // Solo asegurar que no haya overflow horizontal
+        boardContainer.style.removeProperty('max-width');
         boardContainer.style.setProperty('width', '100%', 'important');
         boardContainer.style.setProperty('box-sizing', 'border-box', 'important');
         boardContainer.style.setProperty('overflow-x', 'hidden', 'important');
@@ -2493,7 +2457,7 @@ function fixBoardContainerWidth() {
             slotNumber.style.setProperty('box-sizing', 'border-box', 'important');
         });
         
-        console.log('🔧 Ancho del board-container fijado:', containerMaxWidth, 'px');
+        console.log('🔧 Ancho del board-container: sin limitación (flex: 1)');
         
         // Liberar el flag después de completar
         isFixingWidth = false;
@@ -4877,46 +4841,13 @@ window.toggleAgentStageConfig = function(stageId) {
     const saveButton = document.querySelector('.save-template-button');
     
     if (boardMain && boardContainer) {
-        // Calcular el ancho base del board-main desde el editor-layout (60%)
-        let maxBoardMainWidth;
-        
-        if (editorLayout) {
-            const editorLayoutRect = editorLayout.getBoundingClientRect();
-            // El board-main debería ocupar el 60% del editor-layout
-            maxBoardMainWidth = editorLayoutRect.width * 0.6;
-        } else {
-            // Fallback: usar el ancho actual del board-main
-            const boardMainRect = boardMain.getBoundingClientRect();
-            maxBoardMainWidth = boardMainRect.width;
-        }
-        
-        // Ajustar si el board-main se está saliendo del límite del botón Guardar
-        if (saveButton) {
-            const saveButtonRight = saveButton.getBoundingClientRect().right;
-            const boardMainRect = boardMain.getBoundingClientRect();
-            const boardMainLeft = boardMainRect.left;
-            
-            // Calcular el ancho máximo permitido desde el botón Guardar
-            const maxAllowedWidth = saveButtonRight - boardMainLeft;
-            
-            // Usar el menor entre el ancho calculado (60%) y el ancho máximo permitido
-            if (maxAllowedWidth < maxBoardMainWidth) {
-                maxBoardMainWidth = maxAllowedWidth;
-            }
-        }
-        
-        // Aplicar el max-width al board-main INMEDIATAMENTE antes de cambiar el estado
-        boardMain.style.setProperty('max-width', maxBoardMainWidth + 'px', 'important');
+        // NO aplicar max-width - dejar que flex: 1 haga su trabajo
+        // El board-main debe expandirse completamente
+        boardMain.style.removeProperty('max-width');
         boardMain.style.setProperty('transition', 'none', 'important');
         
-        // Calcular el ancho del board-container (board-main menos padding)
-        const boardContainerPadding = parseFloat(window.getComputedStyle(boardContainer).paddingLeft || 0) + 
-                                      parseFloat(window.getComputedStyle(boardContainer).paddingRight || 0);
-        const containerMaxWidth = maxBoardMainWidth - boardContainerPadding;
-        
-        // Fijar el ancho del board-container INMEDIATAMENTE antes de cambiar el estado
-        // Esto previene cualquier expansión horizontal
-        boardContainer.style.setProperty('max-width', containerMaxWidth + 'px', 'important');
+        // El board-container debe usar 100% del ancho del board-main (sin limitaciones)
+        boardContainer.style.removeProperty('max-width');
         boardContainer.style.setProperty('width', '100%', 'important');
         boardContainer.style.setProperty('box-sizing', 'border-box', 'important');
         boardContainer.style.setProperty('overflow-x', 'hidden', 'important');
@@ -5711,7 +5642,7 @@ function renderPsychometricTestsView() {
         console.log('  📋 Renderizando vista de LISTA');
         // Vista de lista
         // Actualizar título
-        if (drawerTitle) drawerTitle.textContent = 'Gestionar pruebas psicotécnicas';
+        if (drawerTitle) drawerTitle.textContent = 'Pruebas psicotécnicas';
         
         // Obtener tests para verificar si hay pruebas
         const hasTests = tests && tests.length > 0;
