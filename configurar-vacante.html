@@ -1199,6 +1199,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex: 1;
+            min-width: 0;
         }
 
         .agent-icon {
@@ -1220,6 +1222,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .agent-help {
@@ -1467,6 +1470,23 @@
             font-size: 13px;
             font-weight: 400;
             color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-form-field-label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-form-field-label-wrapper span {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-form-info-btn {
+            flex-shrink: 0;
         }
 
         /* Drawer para configurar entrevista Serena AI */
@@ -2006,6 +2026,45 @@
             font-size: 12px;
         }
 
+        .tooltip.agent-info-tooltip {
+            white-space: normal;
+            max-width: 400px;
+            min-width: 250px;
+            padding: 12px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            box-sizing: border-box;
+            max-width: min(400px, calc(100vw - 24px));
+        }
+
+        .tooltip.agent-info-tooltip::before {
+            left: -6px;
+        }
+        
+        /* Tooltip en board (paso del proceso) - alineado a la derecha */
+        .board-container .tooltip.agent-info-tooltip::before {
+            left: auto;
+            right: -6px;
+        }
+        
+        .tooltip.config-info-tooltip {
+            white-space: normal;
+            max-width: 300px;
+            min-width: 200px;
+            padding: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            box-sizing: border-box;
+            max-width: min(300px, calc(100vw - 24px));
+        }
+        
+        .tooltip.config-info-tooltip::before {
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -6px;
+            top: auto;
+        }
+
         .config-input-group {
             display: flex;
             align-items: center;
@@ -2098,8 +2157,21 @@
             flex: 1;
             min-width: 0;
             width: 100%;
+            max-width: 100%;
             position: relative;
             display: block;
+        }
+        
+        /* Asegurar que los inputs UBITS dentro de config-input-container se muestren */
+        .config-input-container .ubits-input {
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         /* Board Header Section */
@@ -2117,6 +2189,12 @@
             gap: 16px;
         }
 
+        .board-header-title-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
         .board-header-title {
             font-family: 'Noto Sans', sans-serif;
             font-size: 18px;
@@ -2124,6 +2202,15 @@
             color: var(--ubits-fg-1-high);
             margin: 0;
             line-height: 1.2;
+        }
+        
+        .board-header-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+            margin: 0;
+            line-height: 1.5;
         }
 
         .board-empty-title {
@@ -2349,9 +2436,9 @@
                     </div>
 
                     <!-- Sección 3: Flujo de la plantilla seleccionada -->
-                    <div class="section-dual template-flow-section" id="template-flow-section">
+                    <div class="section-dual template-flow-section" id="template-flow-section" style="display: flex;">
                         <!-- Biblioteca (solo visible en modo edición) -->
-                        <div class="widget-library" id="library-widget">
+                        <div class="widget-library" id="library-widget" style="display: flex;">
                             <div class="agents-sidebar" id="agents-sidebar">
                                 <!-- Título y descripción de la sección -->
                                 <div class="agents-header-section">
@@ -2513,7 +2600,13 @@
             loadProfileMenu('profile-menu-container');
             
             // Cargar etapas disponibles
-            loadAvailableStages();
+            console.log('🔧 [DOMContentLoaded] Cargando etapas disponibles...');
+            try {
+                loadAvailableStages();
+                console.log('✅ [DOMContentLoaded] Etapas disponibles cargadas');
+            } catch (error) {
+                console.error('❌ [DOMContentLoaded] Error al cargar etapas disponibles:', error);
+            }
             
             // Asegurar que las plantillas por defecto existan
             const stored = localStorage.getItem('templates');
@@ -2543,8 +2636,7 @@
             createTemplateSelect();
             createDaysInput();
             
-            // Inicializar flujo vacío por defecto para que puedan crear su flujo
-            initializeEmptyFlow();
+            // El flujo vacío se inicializará automáticamente cuando se seleccione "Personalizada" en createTemplateSelect
 
             // LOGS DE DEPURACIÓN DE SCROLL Y STICKY
             try {
@@ -2694,7 +2786,7 @@
                     console.log('  - getBoundingClientRect().width:', widgetRect.width, 'px');
                 }
                 
-                const templateFlowSection = document.querySelector('.template-flow-section');
+                // Reutilizar templateFlowSection ya declarado arriba
                 if (templateFlowSection) {
                     const flowSectionRect = templateFlowSection.getBoundingClientRect();
                     console.log('\n📏 .template-flow-section:');
@@ -2746,8 +2838,12 @@
         
         // Inicializar flujo vacío por defecto
         function initializeEmptyFlow() {
+            console.log('🔧 [initializeEmptyFlow] Iniciando...');
+            console.log('🔧 [initializeEmptyFlow] localTemplateCopy:', localTemplateCopy);
+            
             // Solo inicializar si no hay una plantilla seleccionada
             if (!localTemplateCopy) {
+                console.log('🔧 [initializeEmptyFlow] Creando flujo vacío...');
                 localTemplateCopy = {
                     id: 'new-vacancy-flow',
                     name: 'Nuevo flujo de vacante',
@@ -2767,35 +2863,53 @@
                 
                 // Asegurar que estamos en modo edición
                 isEditMode = true;
+                console.log('🔧 [initializeEmptyFlow] Modo edición activado');
                 
                 // Mostrar la sección de flujo
                 const flowSection = document.getElementById('template-flow-section');
                 const libraryWidget = document.getElementById('library-widget');
                 
+                console.log('🔧 [initializeEmptyFlow] flowSection:', flowSection);
+                console.log('🔧 [initializeEmptyFlow] libraryWidget:', libraryWidget);
+                
                 if (flowSection) {
                     flowSection.style.display = 'flex';
                     flowSection.className = 'section-dual';
+                    console.log('✅ [initializeEmptyFlow] Sección de flujo mostrada');
+                } else {
+                    console.error('❌ [initializeEmptyFlow] No se encontró template-flow-section');
                 }
                 
                 if (libraryWidget) {
                     libraryWidget.style.display = 'flex';
+                    console.log('✅ [initializeEmptyFlow] Biblioteca mostrada');
+                } else {
+                    console.error('❌ [initializeEmptyFlow] No se encontró library-widget');
                 }
                 
                 // Renderizar el flujo vacío
+                console.log('🔧 [initializeEmptyFlow] Renderizando flujo...');
                 renderTemplateFlow(localTemplateCopy);
                 
                 // Aplicar modo edición
+                console.log('🔧 [initializeEmptyFlow] Aplicando modo edición...');
                 applyEditMode();
                 
                 // Renderizar contenido de la biblioteca
                 setTimeout(() => {
+                    console.log('🔧 [initializeEmptyFlow] Renderizando contenido de biblioteca...');
                     const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                    console.log('🔧 [initializeEmptyFlow] Tab activo:', activeTab);
                     if (activeTab && activeTab.dataset.tab === 'stages') {
+                        console.log('🔧 [initializeEmptyFlow] Renderizando etapas...');
                         renderStages();
                     } else {
+                        console.log('🔧 [initializeEmptyFlow] Renderizando agentes...');
                         renderAgents();
                     }
                 }, 100);
+            } else {
+                console.log('ℹ️ [initializeEmptyFlow] Ya existe localTemplateCopy, no se inicializa flujo vacío');
             }
         }
 
@@ -2917,6 +3031,11 @@
                     { value: 'estilo-social', text: 'Estilo Social' },
                     { value: 'inventario-valores', text: 'Inventario de valores organizacionales (Corta)' },
                     { value: 'personalidad-16', text: 'Personalidad 16' }
+                ],
+                testLanguages: [
+                    { value: 'es', text: 'Español' },
+                    { value: 'en', text: 'Inglés' },
+                    { value: 'pt', text: 'Portugués' }
                 ]
             },
             { 
@@ -2948,9 +3067,9 @@
             // Plantilla 1: Flujo estándar de selección con IA
             const template1 = {
                 id: 'default-template-ia',
-                name: 'Plantilla estándar de selección con IA',
+                name: 'Estándar de selección con IA',
                 category: 'reclutamiento',
-                status: 'active',
+                status: 'available',
                 createdAt: now,
                 lastModified: today,
                 author: 'Sistema',
@@ -3043,9 +3162,9 @@
             // Plantilla 2: Flujo estándar de selección (sin IA)
             const template2 = {
                 id: 'default-template-standard',
-                name: 'Plantilla flujo estándar de selección',
+                name: 'Estándar de selección',
                 category: 'reclutamiento',
-                status: 'active',
+                status: 'available',
                 createdAt: now,
                 lastModified: today,
                 author: 'Sistema',
@@ -3139,11 +3258,11 @@
                 let needsUpdate = false;
                 allTemplates.forEach(template => {
                     if (template.isDefault) {
-                        if (template.id === 'default-template-ia' && template.name === 'Plantilla por defecto – Flujo estándar de selección con IA') {
-                            template.name = 'Plantilla estándar de selección con IA';
+                        if (template.id === 'default-template-ia' && (template.name === 'Plantilla por defecto – Flujo estándar de selección con IA' || template.name === 'Plantilla estándar de selección con IA')) {
+                            template.name = 'Estándar de selección con IA';
                             needsUpdate = true;
-                        } else if (template.id === 'default-template-standard' && template.name === 'Plantilla por defecto – Flujo estándar de selección') {
-                            template.name = 'Plantilla flujo estándar de selección';
+                        } else if (template.id === 'default-template-standard' && (template.name === 'Plantilla por defecto – Flujo estándar de selección' || template.name === 'Plantilla flujo estándar de selección' || template.name === 'Flujo estándar de selección')) {
+                            template.name = 'Estándar de selección';
                             needsUpdate = true;
                         }
                     }
@@ -3178,33 +3297,42 @@
             return allTemplates;
         }
 
+        // Variable global para mantener referencia al input del selector
+        let globalTemplateInput = null;
+
         // Crear selector de plantilla con UBITS Input
-        function createTemplateSelect() {
-            const templates = loadTemplates();
+        function createTemplateSelect(initialValue = 'custom') {
+            const allTemplates = loadTemplates();
             
-            // Si no hay plantillas, mostrar mensaje
-            if (templates.length === 0) {
-                const container = document.getElementById('template-input-container');
-                container.innerHTML = `
-                    <div style="padding: 16px; text-align: center; color: var(--ubits-fg-1-medium);">
-                        <i class="far fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
-                        <p style="margin: 0; font-size: 14px;">No hay plantillas creadas. Ve al dashboard para crear una.</p>
-                    </div>
-                `;
-                return;
+            // Filtrar solo plantillas disponibles (status === 'available')
+            const availableTemplates = allTemplates.filter(template => template.status === 'available');
+            
+            // Crear opciones para el selector
+            // Primero agregar la opción "Personalizada"
+            const selectOptions = [
+                {
+                    value: 'custom',
+                    text: 'Personalizada'
+                },
+                // Luego agregar las plantillas disponibles
+                ...availableTemplates.map(template => ({
+                    value: template.id,
+                    text: template.name
+                }))
+            ];
+            
+            // Limpiar el contenedor antes de crear el nuevo input
+            const container = document.getElementById('template-input-container');
+            if (container) {
+                container.innerHTML = '';
             }
 
-            // Crear opciones para el selector
-            const selectOptions = templates.map(template => ({
-                value: template.id,
-                text: template.name
-            }));
-
-            createInput({
+            globalTemplateInput = createInput({
                 containerId: 'template-input-container',
                 type: 'select',
                 placeholder: 'Selecciona una plantilla...',
                 selectOptions: selectOptions,
+                value: initialValue, // Usar el valor inicial proporcionado
                 onChange: function(value) {
                     if (value) {
                         selectTemplate(value);
@@ -3213,10 +3341,79 @@
                     }
                 }
             });
+            
+            // Establecer el valor inicial
+            setTimeout(() => {
+                // Usar setValue del componente para establecer el valor correctamente
+                if (globalTemplateInput && typeof globalTemplateInput.setValue === 'function') {
+                    globalTemplateInput.setValue(initialValue);
+                }
+                // Inicializar el flujo según el valor inicial
+                if (initialValue === 'custom') {
+                    selectTemplate('custom');
+                } else {
+                    selectTemplate(initialValue);
+                }
+            }, 300);
         }
 
         // Seleccionar plantilla y mostrar su flujo
         function selectTemplate(templateId) {
+            // Si se selecciona "Personalizada", crear un flujo vacío
+            if (templateId === 'custom') {
+                selectedTemplate = null;
+                localTemplateCopy = {
+                    id: 'new-vacancy-flow',
+                    name: 'Nuevo flujo de vacante',
+                    category: 'reclutamiento',
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'Usuario',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Asegurar que estamos en modo edición
+                isEditMode = true;
+                
+                // Mostrar la sección de flujo
+                const flowSection = document.getElementById('template-flow-section');
+                const libraryWidget = document.getElementById('library-widget');
+                
+                if (flowSection) {
+                    flowSection.style.display = 'flex';
+                    flowSection.className = 'section-dual';
+                }
+                
+                if (libraryWidget) {
+                    libraryWidget.style.display = 'flex';
+                }
+                
+                // Renderizar el flujo vacío
+                renderTemplateFlow(localTemplateCopy);
+                
+                // Aplicar modo edición
+                applyEditMode();
+                
+                // Renderizar contenido de la biblioteca
+                setTimeout(() => {
+                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                    if (activeTab && activeTab.dataset.tab === 'stages') {
+                        renderStages();
+                    } else {
+                        renderAgents();
+                    }
+                }, 100);
+                
+                return;
+            }
+            
             const template = allTemplates.find(t => t.id === templateId);
             if (!template) {
                 console.error('Plantilla no encontrada:', templateId);
@@ -3331,7 +3528,10 @@
                 const headerHTML = selectedTemplate ? `
                     <div class="board-header-section">
                         <div class="board-header-top">
-                            <h3 class="board-header-title">Flujo del candidato</h3>
+                            <div class="board-header-title-wrapper">
+                                <h3 class="board-header-title">Flujo del candidato</h3>
+                                ${isEditMode ? '<p class="board-header-description">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>' : ''}
+                            </div>
                             <div class="board-header-actions">
                                 <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()">
                                     <i class="far fa-external-link"></i>
@@ -3344,13 +3544,24 @@
                             </div>
                         </div>
                     </div>
-                ` : '';
+                ` : (isEditMode ? `
+                    <div class="board-header-section">
+                        <div class="board-header-top">
+                            <div class="board-header-title-wrapper">
+                                <h3 class="board-header-title">Flujo del candidato</h3>
+                                <p class="board-header-description">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
+                            </div>
+                            <div class="board-header-actions">
+                                <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="saveAsTemplate()" id="saveTemplateBtn">
+                                    <i class="far fa-save"></i>
+                                    <span>Guardar plantilla</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ` : '');
                 
                 flowContainer.innerHTML = headerHTML + `
-                    <div class="board-empty-state">
-                        <h4 class="board-empty-title">Comienza a construir tu flujo</h4>
-                        <p class="board-empty-instruction">Arrastra etapas o agentes IA desde la biblioteca de la izquierda para crear tu flujo de selección.</p>
-                    </div>
                     <div class="board-drop-slots ${isEditMode ? 'editing-mode' : ''}">
                         <div class="board-drop-slot" data-slot-number="1">
                             <div class="slot-number">1</div>
@@ -3390,25 +3601,42 @@
                 </div>
             `;
 
-            // Header con botones solo si hay plantilla seleccionada
-            const headerActionsHTML = selectedTemplate ? `
-                <div class="flow-header-actions">
-                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
-                        <i class="far fa-external-link"></i>
-                        <span>Ir a la plantilla</span>
-                    </button>
-                    <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
-                        <i class="far fa-edit"></i>
-                        <span>Editar flujo</span>
-                    </button>
-                </div>
-            ` : '';
+            // Header con botones según el modo
+            let headerActionsHTML = '';
+            if (selectedTemplate) {
+                // Si hay plantilla seleccionada, mostrar botones de ir a plantilla y editar
+                headerActionsHTML = `
+                    <div class="flow-header-actions">
+                        <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
+                            <i class="far fa-external-link"></i>
+                            <span>Ir a la plantilla</span>
+                        </button>
+                        <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
+                            <i class="far fa-edit"></i>
+                            <span>Editar flujo</span>
+                        </button>
+                    </div>
+                `;
+            } else if (!selectedTemplate && localTemplateCopy) {
+                // Si es modo personalizada, mostrar botón de guardar plantilla
+                headerActionsHTML = `
+                    <div class="flow-header-actions">
+                        <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="saveAsTemplate()" id="saveTemplateBtn">
+                            <i class="far fa-save"></i>
+                            <span>Guardar plantilla</span>
+                        </button>
+                    </div>
+                `;
+            }
             
             // Mostrar las etapas con el slot adicional (igual que en el editor)
             flowContainer.innerHTML = `
                 <div class="board-header-section">
                     <div class="board-header-top">
-                        <h3 class="board-header-title">Flujo del candidato</h3>
+                        <div class="board-header-title-wrapper">
+                            <h3 class="board-header-title">Flujo del candidato</h3>
+                            ${isEditMode ? '<p class="board-header-description">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>' : ''}
+                        </div>
                         ${headerActionsHTML}
                     </div>
                 </div>
@@ -3428,6 +3656,44 @@
             if (isEditMode) {
                 setTimeout(() => {
                     createConfigInputs(template);
+                    
+                    // Agregar event listeners para tooltips de campos de configuración
+                    const boardContainer = document.querySelector('.board-container');
+                    if (boardContainer) {
+                        boardContainer.querySelectorAll('.config-info-btn').forEach(btn => {
+                            // Remover listeners previos si existen para evitar duplicados
+                            btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                            btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                            // Agregar nuevos listeners
+                            btn.addEventListener('mouseenter', handleConfigInfoHover);
+                            btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                        });
+                        
+                        // Agregar event listeners para tooltips de información de agentes en las cards del flujo
+                        boardContainer.querySelectorAll('.agent-info-btn').forEach(btn => {
+                            // Remover listeners previos si existen para evitar duplicados
+                            btn.removeEventListener('mouseenter', handleAgentInfoHover);
+                            btn.removeEventListener('mouseleave', handleAgentInfoLeave);
+                            // Agregar nuevos listeners
+                            btn.addEventListener('mouseenter', handleAgentInfoHover);
+                            btn.addEventListener('mouseleave', handleAgentInfoLeave);
+                        });
+                    }
+                }, 100);
+            } else {
+                // En modo vista, también agregar event listeners para tooltips de información de agentes
+                setTimeout(() => {
+                    const boardContainer = document.querySelector('.board-container');
+                    if (boardContainer) {
+                        boardContainer.querySelectorAll('.agent-info-btn').forEach(btn => {
+                            // Remover listeners previos si existen para evitar duplicados
+                            btn.removeEventListener('mouseenter', handleAgentInfoHover);
+                            btn.removeEventListener('mouseleave', handleAgentInfoLeave);
+                            // Agregar nuevos listeners
+                            btn.addEventListener('mouseenter', handleAgentInfoHover);
+                            btn.addEventListener('mouseleave', handleAgentInfoLeave);
+                        });
+                    }
                 }, 100);
             }
         }
@@ -3514,6 +3780,120 @@
             if (selectedTemplate) {
                 window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
             }
+        };
+
+        // Guardar flujo como plantilla
+        window.saveAsTemplate = function() {
+            if (!localTemplateCopy || !localTemplateCopy.realContent) {
+                if (typeof showToast === 'function') {
+                    showToast('warning', 'No hay flujo para guardar');
+                }
+                return;
+            }
+
+            // Configurar callback global para el modal
+            window.modalFormCallback = function(formData) {
+                const { templateName, templateCategory } = formData;
+                
+                // Crear la plantilla con el flujo actual
+                const nuevaPlantilla = {
+                    id: 'template-' + Date.now(),
+                    name: templateName.trim(),
+                    category: templateCategory,
+                    status: 'available', // Guardar como disponible para que aparezca en el selector
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'Usuario',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: localTemplateCopy.realContent.stages ? localTemplateCopy.realContent.stages.length : 0,
+                    agents: localTemplateCopy.realContent.stages ? localTemplateCopy.realContent.stages.filter(s => s.type === 'agent').length : 0,
+                    realContent: {
+                        stages: localTemplateCopy.realContent.stages ? JSON.parse(JSON.stringify(localTemplateCopy.realContent.stages)) : []
+                    }
+                };
+                
+                // Guardar en localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                templates.push(nuevaPlantilla);
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Actualizar la lista de plantillas disponibles
+                allTemplates = templates;
+                
+                // Actualizar el selector para incluir la nueva plantilla y seleccionarla automáticamente
+                createTemplateSelect(nuevaPlantilla.id);
+                
+                // Seleccionar la plantilla recién guardada para mostrar su flujo
+                selectedTemplate = nuevaPlantilla;
+                localTemplateCopy = JSON.parse(JSON.stringify(nuevaPlantilla));
+                
+                // Cambiar a modo vista (no edición) ya que es una plantilla guardada
+                isEditMode = false;
+                const libraryWidget = document.getElementById('library-widget');
+                const flowSection = document.getElementById('template-flow-section');
+                if (libraryWidget) {
+                    libraryWidget.style.display = 'none'; // Ocultar biblioteca en modo vista
+                }
+                if (flowSection) {
+                    flowSection.className = 'section-single'; // Solo mostrar el flujo en modo vista
+                    flowSection.style.display = 'flex';
+                }
+                
+                // Renderizar el flujo de la plantilla guardada
+                renderTemplateFlow(localTemplateCopy);
+                applyEditMode();
+                
+                // Mostrar confirmación con toast UBITS
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Plantilla guardada exitosamente');
+                }
+            };
+            
+            // Mostrar modal UBITS oficial con inputs oficiales
+            showFormModal({
+                title: 'Guardar como plantilla',
+                message: 'Completa los datos para guardar este flujo como una plantilla reutilizable',
+                fields: [
+                    {
+                        id: 'templateName',
+                        label: 'Nombre de la plantilla',
+                        type: 'text',
+                        placeholder: 'Ej: Flujo de contratación general',
+                        required: true,
+                        maxLength: 100,
+                        size: 'md'
+                    },
+                    {
+                        id: 'templateCategory',
+                        label: 'Categoría',
+                        type: 'select',
+                        placeholder: 'Selecciona una categoría',
+                        required: true,
+                        size: 'md',
+                        selectOptions: [
+                            {value: 'administracion', text: 'Administración'},
+                            {value: 'atencion-cliente', text: 'Atención al cliente'},
+                            {value: 'contratacion-general', text: 'Contratación general'},
+                            {value: 'diseno-creatividad', text: 'Diseño y creatividad'},
+                            {value: 'finanzas-contabilidad', text: 'Finanzas y contabilidad'},
+                            {value: 'ingenieria', text: 'Ingeniería'},
+                            {value: 'operaciones', text: 'Operaciones'},
+                            {value: 'reclutamiento', text: 'Recursos humanos'},
+                            {value: 'tecnologia-desarrollo', text: 'Tecnología / Desarrollo'},
+                            {value: 'ventas-marketing', text: 'Ventas y marketing'}
+                        ]
+                    }
+                ],
+                submitText: 'Guardar plantilla',
+                cancelText: 'Cancelar',
+                onSubmit: function(formData) {
+                    window.modalFormCallback(formData);
+                },
+                onCancel: function() {
+                    console.log('Guardar plantilla cancelado');
+                }
+            });
         };
 
         // Renderizar tarjeta de agente (igual que en el editor)
@@ -3774,6 +4154,13 @@
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar agente" style="color: var(--ubits-feedback-accent-error);">
                                     <i class="far fa-trash"></i>
                                 </button>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn"
+                                        data-agent-id="${stage.agentId}"
+                                        data-agent-name="${agentData.name}"
+                                        data-agent-description="${agentDescription.replace(/"/g, '&quot;')}"
+                                        title="Ver más información">
+                                    <i class="far fa-circle-info"></i>
+                                </button>
                             </div>
                         </div>
                         ${viewModeDescription}
@@ -3895,6 +4282,18 @@
                         divider.className = 'agent-stage-divider';
                         configDiv.parentNode.insertBefore(divider, configDiv);
                     }
+                    
+                    // Agregar event listeners para tooltips cuando se expande
+                    setTimeout(() => {
+                        configDiv.querySelectorAll('.config-info-btn').forEach(btn => {
+                            // Remover listeners previos si existen para evitar duplicados
+                            btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                            btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                            // Agregar nuevos listeners
+                            btn.addEventListener('mouseenter', handleConfigInfoHover);
+                            btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                        });
+                    }, 50);
                 } else {
                     configDiv.classList.remove('expanded');
                     // Remover divider
@@ -3942,25 +4341,36 @@
         window.deleteAgentStage = function(stageId) {
             if (!localTemplateCopy || !isEditMode) return;
             
+            // Determinar si es una etapa o un agente IA
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
+            const isAgent = stage && stage.type === 'agent';
+            const stageType = isAgent ? 'asistente IA' : 'etapa';
+            const actionText = isAgent ? 'Quitar asistente IA' : 'Quitar etapa';
+            const messageText = isAgent ? '¿Estás seguro de que quieres quitar este asistente IA del flujo?' : '¿Estás seguro de que quieres quitar esta etapa del flujo?';
+            const successMessage = isAgent ? 'Asistente IA quitado del flujo' : 'Etapa quitada del flujo';
+            
             if (typeof showConfirmModal === 'function') {
                 showConfirmModal({
-                    title: 'Eliminar etapa',
-                    message: '¿Estás seguro de que quieres eliminar esta etapa del flujo?',
-                    confirmText: 'Eliminar',
+                    title: actionText,
+                    message: messageText,
+                    confirmText: 'Quitar',
                     cancelText: 'Cancelar',
                     variant: 'primary',
                     onConfirm: () => {
                         localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                         renderTemplateFlow(localTemplateCopy);
                         if (typeof showToast === 'function') {
-                            showToast('success', 'Etapa eliminada del flujo');
+                            showToast('success', successMessage);
                         }
                     }
                 });
             } else {
-                if (confirm('¿Estás seguro de que quieres eliminar esta etapa del flujo?')) {
+                if (confirm(messageText)) {
                     localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                     renderTemplateFlow(localTemplateCopy);
+                    if (typeof showToast === 'function') {
+                        showToast('success', successMessage);
+                    }
                 }
             }
         };
@@ -4273,38 +4683,56 @@
 
         // Cargar etapas desde localStorage
         function loadAvailableStages() {
+            console.log('🔧 [loadAvailableStages] Iniciando...');
             const stored = localStorage.getItem('availableStages');
+            console.log('🔧 [loadAvailableStages] stored:', stored ? 'existe' : 'no existe');
             if (stored) {
                 const parsedStages = JSON.parse(stored);
+                console.log('🔧 [loadAvailableStages] parsedStages.length:', parsedStages.length);
                 // Si hay etapas guardadas, verificar si ya se inicializaron las por defecto
                 const hasDefaultStages = parsedStages.some(s => s.isDefault);
+                console.log('🔧 [loadAvailableStages] hasDefaultStages:', hasDefaultStages);
                 if (!hasDefaultStages) {
                     // Si no hay etapas por defecto, agregarlas al inicio
                     availableStages = [...DEFAULT_STAGES, ...parsedStages];
                     saveAvailableStages();
+                    console.log('✅ [loadAvailableStages] Etapas por defecto agregadas');
                 } else {
                     availableStages = parsedStages;
+                    console.log('✅ [loadAvailableStages] Etapas cargadas desde localStorage');
                 }
             } else {
                 // Si no hay etapas guardadas, usar las por defecto
                 availableStages = [...DEFAULT_STAGES];
                 saveAvailableStages();
+                console.log('✅ [loadAvailableStages] Etapas por defecto inicializadas');
             }
+            console.log('🔧 [loadAvailableStages] availableStages.length final:', availableStages.length);
         }
 
         // Renderizar etapas disponibles
         function renderAvailableStages() {
+            console.log('🔧 [renderAvailableStages] Iniciando...');
             const stagesList = document.getElementById('stagesList');
-            if (!stagesList) return;
+            console.log('🔧 [renderAvailableStages] stagesList:', stagesList);
+            if (!stagesList) {
+                console.error('❌ [renderAvailableStages] No se encontró stagesList');
+                return;
+            }
             
             // Cargar etapas si no están cargadas
             if (availableStages.length === 0) {
+                console.log('🔧 [renderAvailableStages] Cargando etapas disponibles...');
                 loadAvailableStages();
             }
+            
+            console.log('🔧 [renderAvailableStages] availableStages.length:', availableStages.length);
+            console.log('🔧 [renderAvailableStages] localTemplateCopy:', localTemplateCopy);
             
             // Filtrar etapas que ya están en uso en esta plantilla
             const usedStageIds = localTemplateCopy?.realContent?.stages?.map(stage => stage.templateId).filter(id => id) || [];
             const availableStagesForThisTemplate = availableStages.filter(stage => !usedStageIds.includes(stage.id));
+            console.log('🔧 [renderAvailableStages] availableStagesForThisTemplate.length:', availableStagesForThisTemplate.length);
             
             // Obtener referencias a elementos que se mostrarán/ocultarán
             const createStageBtn = document.getElementById('createStageBtn');
@@ -4459,35 +4887,71 @@
         }
 
         function renderStages() {
-            renderAvailableStages();
+            console.log('🔧 [renderStages] Iniciando renderizado de etapas...');
+            try {
+                renderAvailableStages();
+                console.log('✅ [renderStages] Etapas renderizadas correctamente');
+            } catch (error) {
+                console.error('❌ [renderStages] Error al renderizar etapas:', error);
+            }
         }
 
         // Renderizar agentes en la biblioteca
-        function renderAgents() {
-            const agentsList = document.getElementById('agentsList');
-            if (!agentsList || !localTemplateCopy) return;
-            
-            // Filtrar agentes que ya están en uso
-            const usedAgentIds = localTemplateCopy.realContent?.stages
-                .filter(s => s.type === 'agent' && s.agentId)
-                .map(s => s.agentId) || [];
-            
-            const availableAgents = AGENTS.filter(agent => !usedAgentIds.includes(agent.id));
-            
-            // Mostrar empty state si todos los agentes están en uso
-            if (availableAgents.length === 0) {
-                agentsList.innerHTML = `
-                    <div class="empty-stages-visual">
-                        <div class="empty-icon">
-                            <i class="far fa-check-circle"></i>
+        window.renderAgents = function() {
+            console.log('🚨 [renderAgents] FUNCIÓN LLAMADA - PRIMERA LÍNEA');
+            console.log('🚨 [renderAgents] this:', this);
+            console.log('🚨 [renderAgents] arguments:', arguments);
+            try {
+                console.log('🔧 [renderAgents] ========== INICIANDO RENDERIZADO DE AGENTES ==========');
+                console.log('🔧 [renderAgents] Verificando variables globales...');
+                console.log('🔧 [renderAgents] typeof AGENTS:', typeof AGENTS);
+                console.log('🔧 [renderAgents] AGENTS:', AGENTS);
+                console.log('🔧 [renderAgents] typeof localTemplateCopy:', typeof localTemplateCopy);
+                console.log('🔧 [renderAgents] localTemplateCopy:', localTemplateCopy);
+                
+                const agentsList = document.getElementById('agentsList');
+                console.log('🔧 [renderAgents] agentsList:', agentsList);
+                console.log('🔧 [renderAgents] agentsList existe?:', !!agentsList);
+                console.log('🔧 [renderAgents] AGENTS disponibles:', AGENTS?.length || 0);
+                
+                if (!agentsList) {
+                    console.error('❌ [renderAgents] agentsList NO ENCONTRADO');
+                    return;
+                }
+                
+                if (!localTemplateCopy) {
+                    console.error('❌ [renderAgents] localTemplateCopy NO ENCONTRADO');
+                    return;
+                }
+                
+                // Filtrar agentes que ya están en uso
+                const usedAgentIds = localTemplateCopy.realContent?.stages
+                    .filter(s => s.type === 'agent' && s.agentId)
+                    .map(s => s.agentId) || [];
+                
+                console.log('🔧 [renderAgents] Agentes en uso:', usedAgentIds);
+                
+                const availableAgents = AGENTS.filter(agent => !usedAgentIds.includes(agent.id));
+                console.log('🔧 [renderAgents] Agentes disponibles:', availableAgents.length);
+                console.log('🔧 [renderAgents] Lista de agentes disponibles:', availableAgents.map(a => a.name));
+                
+                // Mostrar empty state si todos los agentes están en uso
+                if (availableAgents.length === 0) {
+                    console.log('⚠️ [renderAgents] Todos los agentes están en uso, mostrando empty state');
+                    agentsList.innerHTML = `
+                        <div class="empty-stages-visual">
+                            <div class="empty-icon">
+                                <i class="far fa-check-circle"></i>
+                            </div>
+                            <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
                         </div>
-                        <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            agentsList.innerHTML = availableAgents.map(agent => {
+                    `;
+                    return;
+                }
+                
+                console.log('🔧 [renderAgents] Generando HTML para', availableAgents.length, 'agentes...');
+                
+                const agentsHTML = availableAgents.map((agent, index) => {
                 const descriptions = {
                     'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
                     'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
@@ -4496,7 +4960,13 @@
                 };
                 const agentDescription = descriptions[agent.id] || agent.description;
                 
-                return `
+                console.log(`🔧 [renderAgents] Agente ${index + 1}/${availableAgents.length}:`, {
+                    id: agent.id,
+                    name: agent.name,
+                    description: agentDescription.substring(0, 50) + '...'
+                });
+                
+                const agentCardHTML = `
                 <div class="agent-item" 
                      draggable="true" 
                      data-agent-id="${agent.id}"
@@ -4513,12 +4983,128 @@
                                     title="Agregar al flujo">
                                 <i class="far fa-plus"></i>
                             </button>
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn" 
+                                    data-agent-id="${agent.id}"
+                                    data-agent-name="${agent.name}"
+                                    data-agent-description="${agentDescription.replace(/"/g, '&quot;')}"
+                                    title="Ver más información">
+                                <i class="far fa-circle-info"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="agent-help">${agentDescription}</div>
                 </div>
             `;
-            }).join('');
+                
+                // Verificar que el HTML contiene el botón de información
+                const hasInfoBtn = agentCardHTML.includes('agent-info-btn');
+                console.log(`  ✅ [renderAgents] Agente ${agent.name}: HTML generado, contiene botón info:`, hasInfoBtn);
+                if (!hasInfoBtn) {
+                    console.error(`  ❌ [renderAgents] ERROR: Agente ${agent.name} NO tiene botón de información en el HTML!`);
+                }
+                
+                    return agentCardHTML;
+                }).join('');
+                
+                console.log('🔧 [renderAgents] HTML completo generado, longitud:', agentsHTML.length);
+                console.log('🔧 [renderAgents] HTML contiene "agent-info-btn":', agentsHTML.includes('agent-info-btn'));
+                console.log('🔧 [renderAgents] Número de ocurrencias de "agent-info-btn":', (agentsHTML.match(/agent-info-btn/g) || []).length);
+                
+                // Asignar HTML al contenedor
+                agentsList.innerHTML = agentsHTML;
+                console.log('✅ [renderAgents] HTML asignado a agentsList.innerHTML');
+                
+                // Agregar event listeners para drag and drop
+                agentsList.querySelectorAll('.agent-item').forEach(item => {
+                    // Remover listeners previos si existen para evitar duplicados
+                    item.removeEventListener('dragstart', handleAgentDragStart);
+                    item.removeEventListener('dragend', handleAgentDragEnd);
+                    // Agregar nuevos listeners
+                    item.addEventListener('dragstart', handleAgentDragStart);
+                    item.addEventListener('dragend', handleAgentDragEnd);
+                });
+                console.log('✅ [renderAgents] Event listeners de drag and drop agregados a', agentsList.querySelectorAll('.agent-item').length, 'agentes');
+                
+                // Verificar inmediatamente después de asignar
+                const immediateCheck = agentsList.querySelectorAll('.agent-info-btn');
+                console.log('🔍 [renderAgents] Verificación inmediata - Botones encontrados:', immediateCheck.length);
+                console.log('🔍 [renderAgents] Verificación inmediata - Botones:', Array.from(immediateCheck).map(btn => ({
+                    exists: !!btn,
+                    classes: btn.className,
+                    dataName: btn.getAttribute('data-agent-name'),
+                    innerHTML: btn.innerHTML
+                })));
+                
+                // Verificar también los agent-items
+                const agentItems = agentsList.querySelectorAll('.agent-item');
+                console.log('🔍 [renderAgents] Total de agent-items encontrados:', agentItems.length);
+                agentItems.forEach((item, idx) => {
+                    const actionsDiv = item.querySelector('.agent-actions');
+                    const infoBtn = item.querySelector('.agent-info-btn');
+                    const addBtn = item.querySelector('button[onclick*="addAgentToFlow"]');
+                    console.log(`  📦 [renderAgents] Agent-item ${idx + 1}:`, {
+                        hasActionsDiv: !!actionsDiv,
+                        hasInfoBtn: !!infoBtn,
+                        hasAddBtn: !!addBtn,
+                        actionsDivChildren: actionsDiv ? actionsDiv.children.length : 0
+                    });
+                    if (actionsDiv) {
+                        console.log(`    🔍 [renderAgents] Agent-item ${idx + 1} - Botones en actionsDiv:`, Array.from(actionsDiv.children).map(child => ({
+                            tag: child.tagName,
+                            classes: child.className,
+                            hasIcon: !!child.querySelector('i')
+                        })));
+                    }
+                });
+                
+                // Agregar event listeners para tooltips de información de agentes
+                setTimeout(() => {
+                    console.log('🔍 [renderAgents] ========== AGREGANDO EVENT LISTENERS ==========');
+                    const infoButtons = agentsList.querySelectorAll('.agent-info-btn');
+                    console.log('🔍 [renderAgents] Botones de información encontrados después de timeout:', infoButtons.length);
+                    
+                    if (infoButtons.length === 0) {
+                        console.error('❌ [renderAgents] ERROR: No se encontraron botones de información después del timeout!');
+                        console.error('❌ [renderAgents] agentsList.innerHTML length:', agentsList.innerHTML.length);
+                        console.error('❌ [renderAgents] agentsList.innerHTML contiene "agent-info-btn":', agentsList.innerHTML.includes('agent-info-btn'));
+                        
+                        // Buscar todos los botones en agent-actions
+                        const allButtons = agentsList.querySelectorAll('.agent-actions button');
+                        console.error('❌ [renderAgents] Total de botones en agent-actions:', allButtons.length);
+                        allButtons.forEach((btn, idx) => {
+                            console.error(`  🔍 Botón ${idx + 1}:`, {
+                                classes: btn.className,
+                                hasAgentInfoBtn: btn.classList.contains('agent-info-btn'),
+                                innerHTML: btn.innerHTML
+                            });
+                        });
+                    } else {
+                        infoButtons.forEach((btn, idx) => {
+                            console.log(`  ✅ [renderAgents] Botón ${idx + 1}:`, {
+                                exists: !!btn,
+                                classes: btn.className,
+                                dataName: btn.getAttribute('data-agent-name'),
+                                innerHTML: btn.innerHTML,
+                                computedDisplay: window.getComputedStyle(btn).display,
+                                computedVisibility: window.getComputedStyle(btn).visibility,
+                                computedOpacity: window.getComputedStyle(btn).opacity,
+                                computedWidth: window.getComputedStyle(btn).width,
+                                computedHeight: window.getComputedStyle(btn).height
+                            });
+                            btn.addEventListener('mouseenter', handleAgentInfoHover);
+                            btn.addEventListener('mouseleave', handleAgentInfoLeave);
+                            console.log(`  ✅ [renderAgents] Event listeners agregados al botón ${idx + 1}`);
+                        });
+                    }
+                    console.log('✅ [renderAgents] ========== FIN DE AGREGADO DE EVENT LISTENERS ==========');
+                }, 100);
+                
+                console.log('✅ [renderAgents] ========== FIN DE RENDERIZADO DE AGENTES ==========');
+            } catch (e) {
+                console.error('❌ [renderAgents] ERROR CRÍTICO:', e);
+                console.error('❌ [renderAgents] Stack trace:', e.stack);
+                console.error('❌ [renderAgents] Mensaje:', e.message);
+            }
         }
 
         // Agregar agente al flujo
@@ -4551,16 +5137,51 @@
             localTemplateCopy.realContent.stages.push(newAgentStage);
             renderTemplateFlow(localTemplateCopy);
             renderAgents();
+            
+            // Si es analista psicométrico, abrir drawer automáticamente en modo creación
+            if (agentId === 'psychometric-analyst') {
+                setTimeout(() => {
+                    if (typeof window.openPsychometricTestsDrawer === 'function') {
+                        // Abrir drawer y establecer directamente en modo creación
+                        if (!localTemplateCopy || !isEditMode) return;
+                        currentPsychometricStageId = newAgentStage.id;
+                        editingTestId = null;
+                        currentDrawerView = 'create'; // Establecer directamente en modo creación
+                        
+                        const drawer = document.getElementById('psychometricTestsDrawer');
+                        if (drawer) {
+                            drawer.classList.add('active');
+                            renderPsychometricTestsView();
+                        }
+                    }
+                }, 300);
+            }
+            
+            // Si es entrevista Serena, abrir drawer de configuración automáticamente
+            if (agentId === 'interview-ia') {
+                setTimeout(() => {
+                    if (typeof window.openSerenaConfigDrawer === 'function') {
+                        window.openSerenaConfigDrawer(newAgentStage.id);
+                    }
+                }, 300);
+            }
         };
 
         // Cambiar tab en la biblioteca
         window.switchTab = function(tabName) {
+            console.log('🔧 [switchTab] ========== CAMBIANDO TAB ==========');
+            console.log('🔧 [switchTab] Tab seleccionado:', tabName);
+            
             const tabs = document.querySelectorAll('#agents-sidebar .tab-button');
             const contents = document.querySelectorAll('#agents-sidebar .tab-content');
+            
+            console.log('🔧 [switchTab] Tabs encontrados:', tabs.length);
+            console.log('🔧 [switchTab] Contents encontrados:', contents.length);
             
             tabs.forEach(tab => {
                 if (tab.dataset.tab === tabName) {
                     tab.classList.add('active');
+                    console.log('✅ [switchTab] Tab activado:', tab.dataset.tab);
                 } else {
                     tab.classList.remove('active');
                 }
@@ -4569,6 +5190,7 @@
             contents.forEach(content => {
                 if (content.id === `${tabName}-tab`) {
                     content.classList.add('active');
+                    console.log('✅ [switchTab] Content activado:', content.id);
                 } else {
                     content.classList.remove('active');
                 }
@@ -4576,10 +5198,36 @@
             
             // Renderizar contenido según el tab seleccionado
             if (tabName === 'stages') {
-                renderStages();
+                console.log('🔧 [switchTab] Llamando a renderStages()...');
+                try {
+                    renderStages();
+                } catch (e) {
+                    console.error('❌ [switchTab] Error al llamar renderStages():', e);
+                }
             } else if (tabName === 'agents') {
-                renderAgents();
+                console.log('🔧 [switchTab] Llamando a renderAgents()...');
+                console.log('🔧 [switchTab] typeof renderAgents:', typeof renderAgents);
+                console.log('🔧 [switchTab] renderAgents es función?:', typeof renderAgents === 'function');
+                try {
+                    if (typeof renderAgents === 'function') {
+                        console.log('🔧 [switchTab] Ejecutando renderAgents()...');
+                        const result = renderAgents();
+                        console.log('🔧 [switchTab] renderAgents() retornó:', result);
+                        console.log('🔧 [switchTab] renderAgents() ejecutado, verificando si hay logs...');
+                    } else {
+                        console.error('❌ [switchTab] renderAgents NO es una función!', renderAgents);
+                    }
+                } catch (e) {
+                    console.error('❌ [switchTab] Error al llamar renderAgents():', e);
+                    console.error('❌ [switchTab] Stack trace:', e.stack);
+                    console.error('❌ [switchTab] Error name:', e.name);
+                    console.error('❌ [switchTab] Error message:', e.message);
+                }
+            } else {
+                console.warn('⚠️ [switchTab] Tab desconocido:', tabName);
             }
+            
+            console.log('✅ [switchTab] ========== FIN DE CAMBIO DE TAB ==========');
         };
 
         // Configurar búsqueda de etapas
@@ -5023,6 +5671,20 @@
             }
         };
 
+        // Mostrar vista de creación de prueba
+        window.showCreateTestView = function() {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            currentDrawerView = 'create';
+            editingTestId = null;
+            renderPsychometricTestsView();
+            
+            // Asegurar que el drawer siga abierto
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+            }
+        };
+
         // Cerrar drawer de pruebas psicométricas
         function closePsychometricTestsDrawer() {
             const drawer = document.getElementById('psychometricTestsDrawer');
@@ -5059,7 +5721,7 @@
         };
 
         // Mostrar vista de lista
-        function showListView(event) {
+        window.showListView = function(event) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -5074,7 +5736,7 @@
             }
             
             return false;
-        }
+        };
 
         // Renderizar vista de pruebas psicométricas
         function renderPsychometricTestsView() {
@@ -5096,8 +5758,144 @@
             
             const drawerFooter = document.querySelector('#psychometricTestsDrawer .drawer-footer');
             
-            if (currentDrawerView === 'list') {
-        if (drawerTitle) drawerTitle.textContent = 'Pruebas psicotécnicas';
+            if (currentDrawerView === 'create') {
+                // Vista de creación
+                console.log('🟢 Renderizando vista de CREACIÓN de prueba psicométrica');
+                if (drawerTitle) drawerTitle.textContent = 'Nueva prueba psicotécnica';
+                
+                // Generar testId único para esta creación
+                const newTestId = 'test-' + Date.now();
+                console.log('  🆔 TestId generado:', newTestId);
+                
+                // Verificar que renderTestForm existe
+                if (typeof renderTestForm !== 'function') {
+                    console.error('❌ renderTestForm no está definida');
+                    return;
+                }
+                
+                // Renderizar formulario
+                const formHTML = renderTestForm(null, newTestId);
+                console.log('  📝 Form HTML generado:', formHTML ? 'Sí' : 'No');
+                listContainer.innerHTML = formHTML;
+                
+                // Asegurar que el footer esté visible en creación
+                if (drawerFooter) {
+                    drawerFooter.style.display = 'flex';
+                    console.log('  ✅ Footer visible');
+                } else {
+                    console.error('❌ drawerFooter no encontrado');
+                }
+                
+                // Renderizar botones en el footer
+                if (drawerFooterActions) {
+                    drawerFooterActions.innerHTML = `
+                        <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="showListView(event)">
+                            <span>Cancelar</span>
+                        </button>
+                        <button class="ubits-button ubits-button--primary ubits-button--md" onclick="savePsychometricTest('${newTestId}')">
+                            <i class="far fa-check"></i>
+                            <span>Guardar</span>
+                        </button>
+                    `;
+                    console.log('  ✅ Botones del footer renderizados');
+                } else {
+                    console.error('❌ drawerFooterActions no encontrado');
+                }
+                
+                // Inicializar inputs del formulario
+                setTimeout(() => {
+                    console.log('  🔧 Inicializando inputs del formulario...');
+                    console.log('  📋 Verificando elementos del DOM...');
+                    const form = document.querySelector('.test-form');
+                    const typeContainer = document.getElementById(`test-form-type-${newTestId}`);
+                    const languageContainer = document.getElementById(`test-form-language-${newTestId}`);
+                    const minScoreContainer = document.getElementById(`test-form-minscore-${newTestId}`);
+                    console.log('  📦 Elementos encontrados:', {
+                        form: !!form,
+                        typeContainer: !!typeContainer,
+                        languageContainer: !!languageContainer,
+                        minScoreContainer: !!minScoreContainer,
+                        createInput: typeof createInput
+                    });
+                    
+                    if (typeof initializeTestFormInputs === 'function') {
+                        initializeTestFormInputs(newTestId);
+                        console.log('  ✅ Inputs inicializados');
+                    } else {
+                        console.error('❌ initializeTestFormInputs no está definida');
+                    }
+                    
+                    // Agregar event listeners para tooltips de información
+                    const drawer = document.getElementById('psychometricTestsDrawer');
+                    if (drawer) {
+                        drawer.querySelectorAll('.test-form-info-btn').forEach(btn => {
+                            // Remover listeners previos si existen para evitar duplicados
+                            btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                            btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                            // Agregar nuevos listeners
+                            btn.addEventListener('mouseenter', handleConfigInfoHover);
+                            btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                        });
+                        console.log('  ✅ Event listeners de tooltips agregados');
+                    }
+                }, 500);
+            } else if (currentDrawerView === 'edit' && editingTestId !== null) {
+                // Vista de edición
+                console.log('🟢 Renderizando vista de EDICIÓN de prueba psicométrica', { editingTestId });
+                if (drawerTitle) drawerTitle.textContent = 'Editar prueba psicotécnica';
+                
+                const testToEdit = tests.find(t => t.id === editingTestId);
+                if (testToEdit) {
+                    console.log('  ✅ Prueba encontrada para editar:', testToEdit);
+                    
+                    // Renderizar formulario con los datos de la prueba
+                    const formHTML = renderTestForm(testToEdit, testToEdit.id);
+                    listContainer.innerHTML = formHTML;
+                    
+                    // Asegurar que el footer esté visible en edición
+                    if (drawerFooter) {
+                        drawerFooter.style.display = 'flex';
+                    }
+                    
+                    // Renderizar botones en el footer
+                    if (drawerFooterActions) {
+                        drawerFooterActions.innerHTML = `
+                            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="showListView(event)">
+                                <span>Cancelar</span>
+                            </button>
+                            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="savePsychometricTest('${testToEdit.id}')">
+                                <i class="far fa-check"></i>
+                                <span>Guardar</span>
+                            </button>
+                        `;
+                    }
+                    
+                    // Inicializar inputs del formulario con los valores de la prueba
+                    setTimeout(() => {
+                        initializeTestFormInputs(testToEdit.id);
+                        
+                        // Agregar event listeners para tooltips de información
+                        const drawer = document.getElementById('psychometricTestsDrawer');
+                        if (drawer) {
+                            drawer.querySelectorAll('.test-form-info-btn').forEach(btn => {
+                                // Remover listeners previos si existen para evitar duplicados
+                                btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                                btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                                // Agregar nuevos listeners
+                                btn.addEventListener('mouseenter', handleConfigInfoHover);
+                                btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                            });
+                        }
+                    }, 300);
+                } else {
+                    console.log('  ⚠️ Prueba no encontrada, volviendo a lista');
+                    // Si no se encuentra la prueba, volver a lista
+                    currentDrawerView = 'list';
+                    editingTestId = null;
+                    renderPsychometricTestsView();
+                }
+            } else if (currentDrawerView === 'list') {
+                if (drawerTitle) drawerTitle.textContent = 'Pruebas psicotécnicas';
                 
                 const hasTests = tests && tests.length > 0;
                 
@@ -5173,47 +5971,393 @@
             }).join('');
         }
 
-        // Agregar prueba psicométrica
+        // Agregar prueba psicométrica (mostrar vista de creación)
         window.addPsychometricTest = function() {
             if (!currentPsychometricStageId || !localTemplateCopy) return;
-            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
-            if (!stage) return;
-            
-            if (!stage.config) stage.config = {};
-            if (!stage.config.tests) stage.config.tests = [];
-            
-            const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
-            if (!agentData) return;
-            
-            const newTest = {
-                id: 'test-' + Date.now(),
-                type: agentData.testTypes?.[0]?.value || 'personalidad-16',
-                minScore: 0
-            };
-            
-            stage.config.tests.push(newTest);
+            currentDrawerView = 'create';
+            editingTestId = null;
             renderPsychometricTestsView();
-            renderTemplateFlow(localTemplateCopy);
+            
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+            }
         };
 
         // Editar prueba psicométrica
         window.editPsychometricTest = function(testId) {
-            // Por ahora solo mostrar toast, se puede expandir después
-            showToast('info', 'La edición de pruebas se implementará próximamente');
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage || !stage.config || !stage.config.tests) return;
+            
+            const test = stage.config.tests.find(t => t.id === testId);
+            if (!test) return;
+            
+            // Establecer modo edición
+            editingTestId = testId;
+            currentDrawerView = 'edit';
+            
+            // Re-renderizar vista
+            renderPsychometricTestsView();
+            
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+            }
         };
 
-        // Eliminar prueba psicométrica
+        // Mostrar vista de edición
+        window.showEditTestView = function(testId) {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage || !stage.config || !stage.config.tests) return;
+            
+            const test = stage.config.tests.find(t => t.id === testId);
+            if (!test) return;
+            
+            editingTestId = testId;
+            currentDrawerView = 'edit';
+            renderPsychometricTestsView();
+            
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.classList.add('active');
+            }
+        };
+
+        // Eliminar prueba psicométrica (sin confirmación)
         window.deletePsychometricTest = function(testId) {
             if (!currentPsychometricStageId || !localTemplateCopy) return;
             const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
             if (!stage || !stage.config || !stage.config.tests) return;
             
-            if (confirm('¿Estás seguro de que quieres eliminar esta prueba?')) {
-                stage.config.tests = stage.config.tests.filter(t => t.id !== testId);
-                renderPsychometricTestsView();
-                renderTemplateFlow(localTemplateCopy);
+            // Eliminar directamente sin confirmación
+            stage.config.tests = stage.config.tests.filter(t => t.id !== testId);
+            renderPsychometricTestsView();
+            renderTemplateFlow(localTemplateCopy);
+            
+            if (typeof showToast === 'function') {
+                showToast('success', 'Prueba eliminada');
             }
         };
+
+        // Guardar prueba psicométrica
+        window.savePsychometricTest = function(testId) {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage) return;
+            
+            if (!stage.config) {
+                stage.config = {};
+            }
+            if (!stage.config.tests) {
+                stage.config.tests = [];
+            }
+            
+            // Si no se proporciona testId, intentar obtenerlo del formulario
+            if (!testId || testId === 'undefined') {
+                const form = document.querySelector('.test-form');
+                if (form) {
+                    testId = form.getAttribute('data-test-id');
+                }
+                if (!testId) {
+                    // Buscar en los contenedores
+                    const typeContainer = document.querySelector('[id^="test-form-type-"]');
+                    if (typeContainer) {
+                        testId = typeContainer.id.replace('test-form-type-', '');
+                    }
+                }
+                if (!testId) {
+                    testId = 'test-' + Date.now();
+                }
+            }
+            
+            console.log('💾 Guardando prueba psicométrica:', { testId, currentPsychometricStageId });
+            
+            // Obtener valores del formulario (componentes UBITS)
+            // Para selects UBITS, el valor está en dataset.selectedValue
+            const typeContainer = document.getElementById(`test-form-type-${testId}`);
+            const languageContainer = document.getElementById(`test-form-language-${testId}`);
+            const minScoreContainer = document.getElementById(`test-form-minscore-${testId}`);
+            
+            console.log('📦 Contenedores encontrados:', {
+                typeContainer: !!typeContainer,
+                languageContainer: !!languageContainer,
+                minScoreContainer: !!minScoreContainer
+            });
+            
+            if (!typeContainer || !languageContainer || !minScoreContainer) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Error: No se encontraron los campos del formulario');
+                }
+                console.error('❌ Contenedores no encontrados');
+                return;
+            }
+            
+            // Obtener input elements de los contenedores
+            const typeInput = typeContainer.querySelector('.ubits-input');
+            const languageInput = languageContainer.querySelector('.ubits-input');
+            const minScoreInput = minScoreContainer.querySelector('.ubits-input');
+            
+            console.log('📝 Inputs encontrados:', {
+                typeInput: !!typeInput,
+                languageInput: !!languageInput,
+                minScoreInput: !!minScoreInput
+            });
+            
+            if (!typeInput || !languageInput || !minScoreInput) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Error: No se encontraron los inputs UBITS');
+                }
+                console.error('❌ Inputs UBITS no encontrados');
+                return;
+            }
+            
+            // Para selects, obtener el valor de dataset.selectedValue, si no existe usar value
+            const testType = typeInput.dataset.selectedValue || typeInput.value || '';
+            const testLanguage = languageInput.dataset.selectedValue || languageInput.value || '';
+            const minScore = parseFloat(minScoreInput.value) || 0;
+            
+            console.log('📋 Valores obtenidos:', { testType, testLanguage, minScore });
+            
+            // Validar que los valores requeridos estén presentes
+            if (!testType || !testLanguage) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Por favor completa todos los campos requeridos');
+                }
+                console.error('❌ Valores requeridos faltantes:', { testType, testLanguage });
+                return;
+            }
+            
+            const testData = {
+                id: testId,
+                type: testType,
+                language: testLanguage,
+                minScore: minScore
+            };
+            
+            // Buscar si la prueba ya existe
+            const testIndex = stage.config.tests.findIndex(t => t.id === testId);
+            
+            if (testIndex !== -1) {
+                // Actualizar prueba existente
+                stage.config.tests[testIndex] = testData;
+                console.log('✅ Prueba actualizada');
+            } else {
+                // Agregar nueva prueba
+                stage.config.tests.push(testData);
+                console.log('✅ Prueba agregada');
+            }
+            
+            // Volver a la vista de lista
+            currentDrawerView = 'list';
+            editingTestId = null;
+            
+            // Re-renderizar
+            renderPsychometricTestsView();
+            renderTemplateFlow(localTemplateCopy);
+            
+            if (typeof showToast === 'function') {
+                showToast('success', 'Prueba guardada exitosamente');
+            }
+        };
+
+        // Renderizar formulario de prueba
+        function renderTestForm(test = null, testId = null) {
+            const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+            if (!agentData) return '';
+            
+            const finalTestId = testId || (test ? test.id : 'test-' + Date.now());
+            
+            return `
+                <div class="test-form" data-test-id="${finalTestId}">
+                    <div class="test-form-fields">
+                        <div class="test-form-field">
+                            <label class="test-form-field-label-wrapper">
+                                <span>Tipo de prueba (CI/CA)</span>
+                                <button type="button" class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only test-form-info-btn" 
+                                        data-tooltip="Selecciona el tipo de prueba psicométrica que se aplicará al candidato. Cada opción evalúa habilidades o aspectos distintos según la configuración de tu plataforma."
+                                        title="Información">
+                                    <i class="far fa-circle-info"></i>
+                                </button>
+                            </label>
+                            <div id="test-form-type-${finalTestId}" class="config-input-container"></div>
+                        </div>
+                        <div class="test-form-field">
+                            <label>Idioma de la prueba</label>
+                            <div id="test-form-language-${finalTestId}" class="config-input-container"></div>
+                        </div>
+                        <div class="test-form-field">
+                            <label class="test-form-field-label-wrapper">
+                                <span>Puntaje CI mínimo</span>
+                                <button type="button" class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only test-form-info-btn" 
+                                        data-tooltip="Puntaje mínimo que el candidato debe lograr en la prueba psicométrica para considerarse aprobado en esta etapa."
+                                        title="Información">
+                                    <i class="far fa-circle-info"></i>
+                                </button>
+                            </label>
+                            <div id="test-form-minscore-${finalTestId}" class="config-input-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicializar inputs del formulario
+        function initializeTestFormInputs(testId = null) {
+            if (!currentPsychometricStageId || !localTemplateCopy) return;
+            
+            const stage = localTemplateCopy.realContent.stages.find(s => s.id === currentPsychometricStageId);
+            if (!stage) return;
+            
+            const agentData = AGENTS.find(a => a.id === 'psychometric-analyst');
+            if (!agentData) return;
+            
+            // Obtener testId del formulario renderizado o del parámetro
+            let finalTestId = testId;
+            if (!finalTestId) {
+                const form = document.querySelector('.test-form');
+                if (form) {
+                    finalTestId = form.getAttribute('data-test-id');
+                }
+            }
+            
+            if (!finalTestId) {
+                // Buscar el testId en los IDs de los contenedores
+                const typeContainer = document.querySelector('[id^="test-form-type-"]');
+                if (typeContainer) {
+                    finalTestId = typeContainer.id.replace('test-form-type-', '');
+                }
+            }
+            
+            if (!finalTestId) {
+                console.error('❌ No se pudo obtener testId');
+                return;
+            }
+            
+            // Obtener valores por defecto o del test existente
+            let testType = agentData.testTypes?.[0]?.value || 'personalidad-16';
+            let testLanguage = agentData.testLanguages?.[0]?.value || 'es';
+            let minScore = 0;
+            
+            if (editingTestId && editingTestId === finalTestId) {
+                const test = stage.config?.tests?.find(t => t.id === editingTestId);
+                if (test) {
+                    testType = test.type;
+                    testLanguage = test.language;
+                    minScore = test.minScore || 0;
+                }
+            }
+            
+            console.log('  🔧 Inicializando inputs con:', { finalTestId, testType, testLanguage, minScore });
+            
+            // Crear select de tipo de prueba con componente UBITS
+            const typeContainer = document.getElementById(`test-form-type-${finalTestId}`);
+            if (typeContainer && typeof createInput !== 'undefined') {
+                typeContainer.innerHTML = '';
+                
+                createInput({
+                    containerId: `test-form-type-${finalTestId}`,
+                    type: 'select',
+                    label: '',
+                    placeholder: 'Selecciona el tipo de prueba...',
+                    value: testType,
+                    selectOptions: agentData.testTypes.map(opt => ({
+                        value: opt.value,
+                        text: opt.text
+                    }))
+                });
+                console.log('  ✅ Select de tipo creado');
+            } else {
+                console.error('❌ typeContainer no encontrado o createInput no disponible');
+            }
+            
+            // Crear select de idioma con componente UBITS
+            const languageContainer = document.getElementById(`test-form-language-${finalTestId}`);
+            if (languageContainer && typeof createInput !== 'undefined') {
+                console.log('  📦 languageContainer encontrado:', languageContainer);
+                console.log('  📋 testLanguage:', testLanguage);
+                console.log('  📋 agentData.testLanguages:', agentData.testLanguages);
+                
+                // Limpiar contenedor antes de crear
+                languageContainer.innerHTML = '';
+                
+                try {
+                    const languageSelectOptions = agentData.testLanguages ? agentData.testLanguages.map(opt => ({
+                        value: opt.value,
+                        text: opt.text
+                    })) : [];
+                    
+                    console.log('  📋 languageSelectOptions:', languageSelectOptions);
+                    
+                    createInput({
+                        containerId: `test-form-language-${finalTestId}`,
+                        type: 'select',
+                        label: '',
+                        placeholder: 'Selecciona el idioma...',
+                        value: testLanguage,
+                        selectOptions: languageSelectOptions
+                    });
+                    
+                    // Asegurar que el texto se establezca después de crear el select
+                    setTimeout(() => {
+                        const input = languageContainer.querySelector('.ubits-input');
+                        if (input && testLanguage) {
+                            // Buscar el texto correspondiente al valor
+                            const option = agentData.testLanguages?.find(opt => opt.value === testLanguage);
+                            if (option) {
+                                input.value = option.text;
+                                input.dataset.selectedValue = testLanguage;
+                            }
+                        }
+                        console.log('  ✅ Select de idioma configurado. Input encontrado:', !!input);
+                    }, 500);
+                    
+                    console.log('  ✅ Select de idioma creado');
+                } catch (error) {
+                    console.error('❌ Error al crear select de idioma:', error);
+                    console.error('  Stack:', error.stack);
+                }
+            } else {
+                console.error('❌ languageContainer no encontrado o createInput no disponible', {
+                    languageContainer: !!languageContainer,
+                    createInput: typeof createInput,
+                    containerId: `test-form-language-${finalTestId}`
+                });
+            }
+            
+            // Crear input de puntaje mínimo con componente UBITS
+            const minScoreContainer = document.getElementById(`test-form-minscore-${finalTestId}`);
+            if (minScoreContainer) {
+                console.log('  📦 minScoreContainer encontrado:', minScoreContainer);
+                if (typeof createInput === 'undefined') {
+                    console.error('❌ createInput no está disponible');
+                    return;
+                }
+                
+                // Limpiar contenedor antes de crear
+                minScoreContainer.innerHTML = '';
+                
+                try {
+                    createInput({
+                        containerId: `test-form-minscore-${finalTestId}`,
+                        type: 'number',
+                        label: '',
+                        placeholder: '0',
+                        value: minScore.toString(),
+                        helperText: 'Opcional: puntaje mínimo que debe obtener el candidato en esta prueba'
+                    });
+                    console.log('  ✅ Input de puntaje mínimo creado');
+                } catch (error) {
+                    console.error('❌ Error al crear input de puntaje mínimo:', error);
+                }
+            } else {
+                console.error('❌ minScoreContainer no encontrado. ID buscado:', `test-form-minscore-${finalTestId}`);
+            }
+        }
 
         // Abrir drawer de configuración de Serena
         window.openSerenaConfigDrawer = function(stageId) {
@@ -5320,12 +6464,18 @@
                         <div class="serena-config-field">
                             <div class="serena-config-field-label-wrapper">
                                 <label class="serena-config-field-label">Días para que expire la entrevista</label>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only config-info-btn" data-tooltip="Cantidad de días que el candidato tiene para completar la entrevista desde que recibe la invitación. Si no responde dentro de ese plazo, la entrevista vence y ya no podrá realizarla." title="Información">
+                                    <i class="far fa-info-circle"></i>
+                                </button>
                             </div>
                             <div id="serena-expiration-days-container"></div>
                         </div>
                         <div class="serena-config-field">
                             <div class="serena-config-field-label-wrapper">
                                 <label class="serena-config-field-label">Puntaje mínimo de la entrevista</label>
+                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only config-info-btn" data-tooltip="Puntaje mínimo que el candidato debe obtener en la entrevista para avanzar a la siguiente etapa del proceso." title="Información">
+                                    <i class="far fa-info-circle"></i>
+                                </button>
                             </div>
                             <div id="serena-min-score-container"></div>
                         </div>
@@ -5402,7 +6552,233 @@
                         }
                     });
                 }
+                
+                // Agregar event listeners para tooltips de campos de configuración
+                const drawer = document.getElementById('serenaConfigDrawer');
+                if (drawer) {
+                    drawer.querySelectorAll('.config-info-btn').forEach(btn => {
+                        btn.addEventListener('mouseenter', handleConfigInfoHover);
+                        btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                    });
+                }
             }, 300);
+        }
+
+        // ========================================
+        // FUNCIONES PARA TOOLTIP DE INFORMACIÓN DE CAMPOS DE CONFIGURACIÓN
+        // ========================================
+        
+        function handleConfigInfoHover(e) {
+            const btn = e.currentTarget;
+            const tooltip = document.getElementById('tooltip');
+            if (!tooltip) {
+                console.warn('⚠️ Tooltip element not found in handleConfigInfoHover');
+                return;
+            }
+            
+            const tooltipText = btn.getAttribute('data-tooltip');
+            if (!tooltipText) {
+                console.warn('⚠️ No tooltip text found on button');
+                return;
+            }
+            
+            // Agregar clase específica para tooltip de configuración
+            tooltip.classList.add('config-info-tooltip');
+            
+            // Asegurar que el tooltip esté por encima del drawer (z-index: 10001)
+            tooltip.style.zIndex = '10002';
+            
+            // Crear contenido del tooltip
+            tooltip.innerHTML = `
+                <div style="font-size: 13px; line-height: 1.4; color: var(--ubits-fg-1-high-static-inverted);">${tooltipText}</div>
+            `;
+            
+            // Mostrar tooltip temporalmente para obtener dimensiones reales
+            tooltip.style.opacity = '0';
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.display = 'block';
+            tooltip.style.position = 'fixed';
+            
+            // Obtener dimensiones reales del tooltip
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const tooltipWidth = tooltipRect.width;
+            const tooltipHeight = tooltipRect.height;
+            
+            // Obtener posición del botón
+            const rect = btn.getBoundingClientRect();
+            const btnCenterX = rect.left + (rect.width / 2);
+            const btnTop = rect.top;
+            
+            // Calcular espacio disponible
+            const spaceTop = rect.top;
+            const spaceBottom = window.innerHeight - rect.bottom;
+            const spaceLeft = rect.left;
+            const spaceRight = window.innerWidth - rect.right;
+            
+            // Posicionar tooltip centrado arriba del botón
+            let finalLeft = btnCenterX - (tooltipWidth / 2);
+            let finalTop = btnTop - tooltipHeight - 8; // 8px de espacio entre botón y tooltip
+            
+            // Ajustar si se sale por la izquierda
+            if (finalLeft < 8) {
+                finalLeft = 8;
+            }
+            
+            // Ajustar si se sale por la derecha
+            if (finalLeft + tooltipWidth > window.innerWidth - 8) {
+                finalLeft = window.innerWidth - tooltipWidth - 8;
+            }
+            
+            // Si no hay espacio arriba, mostrar abajo
+            if (spaceTop < tooltipHeight + 8) {
+                finalTop = rect.bottom + 8;
+            }
+            
+            // Aplicar posición final
+            tooltip.style.left = finalLeft + 'px';
+            tooltip.style.top = finalTop + 'px';
+            tooltip.style.transform = 'none';
+            tooltip.style.visibility = 'visible';
+            tooltip.style.opacity = '1';
+        }
+
+        function handleConfigInfoLeave(e) {
+            const tooltip = document.getElementById('tooltip');
+            if (!tooltip) return;
+            
+            tooltip.style.opacity = '0';
+            tooltip.style.zIndex = '10000'; // Restaurar z-index por defecto
+            tooltip.classList.remove('config-info-tooltip');
+        }
+
+        // ========================================
+        // FUNCIONES PARA TOOLTIP DE INFORMACIÓN DE AGENTES
+        // ========================================
+        
+        function handleAgentInfoHover(e) {
+            const btn = e.currentTarget;
+            const tooltip = document.getElementById('tooltip');
+            if (!tooltip) return;
+            
+            const agentName = btn.getAttribute('data-agent-name');
+            const agentDescription = btn.getAttribute('data-agent-description');
+            
+            // Agregar clase específica para tooltip de agentes
+            tooltip.classList.add('agent-info-tooltip');
+            
+            // Crear contenido del tooltip con título y descripción
+            tooltip.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 4px; color: var(--ubits-fg-1-high-static-inverted);">${agentName}</div>
+                <div style="font-size: 13px; line-height: 1.4; color: var(--ubits-fg-1-high-static-inverted);">${agentDescription}</div>
+            `;
+            
+            // Mostrar tooltip
+            tooltip.style.opacity = '1';
+            
+            // Posicionar tooltip arriba del botón
+            const rect = btn.getBoundingClientRect();
+            
+            // Encontrar la posición exacta del icono dentro del botón
+            const icon = btn.querySelector('i');
+            let iconRect = null;
+            let iconCenterX = rect.left + (rect.width / 2);
+            let iconCenterY = rect.top + (rect.height / 2);
+            
+            if (icon) {
+                iconRect = icon.getBoundingClientRect();
+                iconCenterX = iconRect.left + (iconRect.width / 2);
+                iconCenterY = iconRect.top + (iconRect.height / 2);
+            }
+            
+            // Detectar si el botón está en una card del board (paso del proceso)
+            const isInBoard = btn.closest('.board-container') !== null;
+            const isInBoardStage = btn.closest('.agent-stage-item') !== null;
+            
+            // Calcular espacio disponible a izquierda y derecha
+            const spaceLeft = rect.left;
+            const spaceRight = window.innerWidth - rect.right;
+            
+            // Estimar ancho del tooltip (usar max-width como referencia)
+            const estimatedTooltipWidth = 400; // max-width del tooltip
+            
+            // Decidir posición inicial basada en espacio disponible
+            let initialLeft, initialTransform, finalLeft, finalTop;
+            
+            // Posicionar desde el borde derecho del icono (no desde el centro)
+            const tooltipOffsetFromIcon = 12; // Distancia entre el icono y el tooltip
+            
+            // Calcular posición vertical (arriba del icono)
+            const tooltipTop = iconRect ? (iconRect.top - tooltipOffsetFromIcon) : (rect.top - tooltipOffsetFromIcon);
+            
+            // Usar el borde IZQUIERDO o DERECHO del icono según la ubicación
+            const iconLeftEdge = iconRect ? iconRect.left : rect.left;
+            const iconRightEdge = iconRect ? iconRect.right : rect.right;
+            
+            // Si está en el board (paso del proceso), alinear a la derecha del icono
+            if (isInBoard || isInBoardStage) {
+                const gapFromIcon = 4;
+                
+                if (spaceRight >= estimatedTooltipWidth + gapFromIcon) {
+                    initialLeft = (iconRightEdge + gapFromIcon) + 'px';
+                    initialTransform = 'translateY(-100%)';
+                } else {
+                    initialLeft = iconRightEdge + 'px';
+                    initialTransform = 'translateX(-100%) translateY(-100%)';
+                }
+            } else {
+                // Si está en el sidebar (lista de agentes), mantener alineado a la izquierda
+                if (spaceRight >= 200) {
+                    initialLeft = iconLeftEdge + 'px';
+                    initialTransform = 'translateY(-100%)';
+                } else if (spaceLeft >= 200) {
+                    initialLeft = iconLeftEdge + 'px';
+                    initialTransform = 'translateX(-100%) translateY(-100%)';
+                } else {
+                    if (spaceRight >= spaceLeft) {
+                        initialLeft = iconLeftEdge + 'px';
+                        initialTransform = 'translateY(-100%)';
+                    } else {
+                        initialLeft = iconLeftEdge + 'px';
+                        initialTransform = 'translateX(-100%) translateY(-100%)';
+                    }
+                }
+            }
+            
+            finalLeft = initialLeft;
+            finalTop = tooltipTop + 'px';
+            
+            tooltip.style.left = finalLeft;
+            tooltip.style.top = finalTop;
+            tooltip.style.transform = initialTransform;
+            
+            // Asegurar que el tooltip use position fixed
+            tooltip.style.position = 'fixed';
+            
+            // Calcular el ancho máximo disponible según la dirección de expansión
+            let tooltipMaxWidth = 400;
+            
+            if (isInBoard || isInBoardStage) {
+                const leftPosition = parseFloat(finalLeft.replace('px', ''));
+                
+                if (initialTransform === 'translateY(-100%)') {
+                    const maxAvailableWidth = window.innerWidth - leftPosition - 12;
+                    tooltipMaxWidth = Math.min(400, Math.max(250, maxAvailableWidth));
+                } else {
+                    const maxAvailableWidth = leftPosition - 12;
+                    tooltipMaxWidth = Math.min(400, Math.max(250, maxAvailableWidth));
+                }
+            }
+            
+            tooltip.style.maxWidth = tooltipMaxWidth + 'px';
+        }
+
+        function handleAgentInfoLeave(e) {
+            const tooltip = document.getElementById('tooltip');
+            if (!tooltip) return;
+            
+            tooltip.style.opacity = '0';
+            tooltip.classList.remove('agent-info-tooltip');
+            tooltip.style.transform = '';
         }
 
         // Seleccionar tipo de entrevista
@@ -5531,6 +6907,11 @@
             const agentName = agentItem.getAttribute('data-agent-name');
             const agentIcon = agentItem.getAttribute('data-agent-icon');
             
+            console.log('🔧 [handleAgentDragStart] Iniciando arrastre de agente:', agentName);
+            console.log('🔧 [handleAgentDragStart] agentId:', agentId);
+            console.log('🔧 [handleAgentDragStart] agentName:', agentName);
+            console.log('🔧 [handleAgentDragStart] agentIcon:', agentIcon);
+            
             // Guardar datos del elemento arrastrado
             draggedElement = {
                 type: 'agent',
@@ -5540,21 +6921,28 @@
                 element: agentItem
             };
             
+            console.log('🔧 [handleAgentDragStart] draggedElement guardado:', draggedElement);
+            
             // Agregar clase de arrastre
             agentItem.classList.add('dragging');
             
             // Configurar datos de transferencia
-            e.dataTransfer.setData('text/plain', JSON.stringify({
+            const transferData = {
                 type: 'agent',
                 id: agentId,
                 name: agentName,
                 icon: agentIcon
-            }));
+            };
+            
+            try {
+                e.dataTransfer.setData('text/plain', JSON.stringify(transferData));
+                console.log('✅ [handleAgentDragStart] Datos configurados en dataTransfer:', transferData);
+            } catch (err) {
+                console.error('❌ [handleAgentDragStart] Error al configurar dataTransfer:', err);
+            }
             
             // Configurar efecto de arrastre
             e.dataTransfer.effectAllowed = 'move';
-            
-            console.log('Iniciando arrastre de agente:', agentName);
         }
 
         function handleAgentDragEnd(e) {
@@ -5562,7 +6950,11 @@
             if (agentItem) {
                 agentItem.classList.remove('dragging');
             }
-            draggedElement = null;
+            // NO limpiar draggedElement aquí, se limpiará después de procesar el drop
+            // Usar timeout para limpiar después de que se procese el drop
+            setTimeout(() => {
+                draggedElement = null;
+            }, 100);
         }
 
         // Drag and drop para etapas
@@ -5605,7 +6997,11 @@
             if (stageItem) {
                 stageItem.classList.remove('dragging');
             }
-            draggedElement = null;
+            // NO limpiar draggedElement aquí, se limpiará después de procesar el drop
+            // Usar timeout para limpiar después de que se procese el drop
+            setTimeout(() => {
+                draggedElement = null;
+            }, 100);
         }
 
         // Hacer el board droppable
@@ -5650,17 +7046,69 @@
                 e.preventDefault();
                 boardContainer.classList.remove('drag-over');
                 
+                console.log('🔧 [boardDropHandler] ========== DROP EVENT ==========');
+                console.log('🔧 [boardDropHandler] draggedElement actual:', draggedElement);
+                
                 try {
-                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const rawData = e.dataTransfer.getData('text/plain');
+                    console.log('🔍 [boardDropHandler] rawData recibido en drop:', rawData);
+                    console.log('🔍 [boardDropHandler] rawData length:', rawData ? rawData.length : 0);
+                    
+                    let data = null;
+                    
+                    // Intentar parsear solo si hay datos
+                    if (rawData && rawData.trim().length > 0) {
+                        try {
+                            data = JSON.parse(rawData);
+                            console.log('✅ [boardDropHandler] Datos parseados desde dataTransfer:', data);
+                        } catch (parseError) {
+                            console.warn('⚠️ [boardDropHandler] Error al parsear dataTransfer:', parseError);
+                            console.warn('⚠️ [boardDropHandler] rawData que causó el error:', rawData);
+                        }
+                    } else {
+                        console.warn('⚠️ [boardDropHandler] dataTransfer.getData("text/plain") vacío o inválido');
+                    }
+                    
+                    // Si no se pudo obtener datos desde dataTransfer, usar draggedElement como respaldo
+                    if (!data && draggedElement) {
+                        console.log('🔧 [boardDropHandler] Usando draggedElement como fuente de datos:', draggedElement);
+                        data = {
+                            type: draggedElement.type,
+                            id: draggedElement.id,
+                            name: draggedElement.name,
+                            icon: draggedElement.icon
+                        };
+                    }
+                    
+                    console.log('🔧 [boardDropHandler] data final antes de procesar:', data);
+                    
+                    // Si aún no hay datos válidos, no hacer nada
+                    if (!data || !data.type) {
+                        console.error('❌ [boardDropHandler] No se pudieron obtener datos válidos para el drop.');
+                        console.error('❌ [boardDropHandler] data:', data);
+                        console.error('❌ [boardDropHandler] draggedElement:', draggedElement);
+                        return;
+                    }
+                    
+                    console.log('🔧 [boardDropHandler] Procesando drop con tipo:', data.type);
                     
                     if (data.type === 'stage-template') {
                         handleStageTemplateDrop(data);
                     } else if (data.type === 'agent') {
                         handleAgentDrop(data);
+                    } else {
+                        console.warn('⚠️ [boardDropHandler] Tipo de dato desconocido en drop:', data.type);
                     }
+                    
+                    // Limpiar draggedElement después de procesar exitosamente
+                    draggedElement = null;
+                    console.log('✅ [boardDropHandler] draggedElement limpiado después del drop');
                 } catch (error) {
-                    console.error('Error al procesar drop:', error);
+                    console.error('❌ [boardDropHandler] Error al procesar drop:', error);
+                    console.error('❌ [boardDropHandler] Stack trace:', error.stack);
                 }
+                
+                console.log('✅ [boardDropHandler] ========== FIN DE DROP EVENT ==========');
             };
             
             // Agregar event listeners al board-container
@@ -5756,6 +7204,32 @@
             // Re-renderizar todo
             renderTemplateFlow(localTemplateCopy);
             renderAgents();
+            
+            // Si es analista psicométrico, abrir drawer automáticamente en modo creación
+            if (id === 'psychometric-analyst') {
+                setTimeout(() => {
+                    if (!localTemplateCopy || !isEditMode) return;
+                    // Abrir drawer y establecer directamente en modo creación
+                    currentPsychometricStageId = newAgentStage.id;
+                    editingTestId = null;
+                    currentDrawerView = 'create'; // Establecer directamente en modo creación
+                    
+                    const drawer = document.getElementById('psychometricTestsDrawer');
+                    if (drawer) {
+                        drawer.classList.add('active');
+                        renderPsychometricTestsView();
+                    }
+                }, 300);
+            }
+            
+            // Si es entrevista Serena, abrir drawer de configuración automáticamente
+            if (id === 'interview-ia') {
+                setTimeout(() => {
+                    if (typeof window.openSerenaConfigDrawer === 'function') {
+                        window.openSerenaConfigDrawer(newAgentStage.id);
+                    }
+                }, 300);
+            }
             
             showToast('success', `Agente "${name}" agregado al flujo`);
         }

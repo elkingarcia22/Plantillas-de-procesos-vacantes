@@ -2511,7 +2511,7 @@ function makeBoardDroppable() {
 
 window.addStageToBoard = function(stageTemplateId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -2555,7 +2555,7 @@ window.addStageToBoard = function(stageTemplateId) {
 
 function handleStageTemplateDrop(data) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -2776,9 +2776,9 @@ function updateTemplateInfo() {
         if (templateStatusBadge) {
             const status = currentTemplate.status;
             if (status) {
-                const statusText = status === 'active' ? 'Activa' : 'Borrador';
+                const statusText = status === 'available' ? 'Disponible' : 'Borrador';
                 templateStatusBadge.innerHTML = `<span>${statusText}</span>`;
-                templateStatusBadge.className = 'template-status-badge ' + (status === 'active' ? 'active' : 'draft');
+                templateStatusBadge.className = 'template-status-badge ' + (status === 'available' ? 'active' : 'draft');
                 templateStatusBadge.style.display = 'flex';
             } else {
                 // Ocultar la etiqueta si no hay status
@@ -3591,7 +3591,7 @@ function addNewStage() {
 
 window.moveStageUp = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -3616,7 +3616,7 @@ window.moveStageUp = function(stageId) {
 
 window.moveStageDown = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -3641,7 +3641,7 @@ window.moveStageDown = function(stageId) {
 
 function editStageName(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -3749,7 +3749,7 @@ window.addAgentFromSelector = function(stageId, agentId) {
 
 function removeAgentFromStage(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -3779,7 +3779,7 @@ function removeAgentFromStage(stageId) {
 
 function deleteStage(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -3850,7 +3850,7 @@ function addAgentToStage(stageId, agentId) {
 
 function updateAgentConfig(stageId, configKey, value) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -4176,7 +4176,7 @@ function deleteStageTemplate(stageId) {
     
     // Verificar si la etapa está siendo usada en una plantilla activa
     const templates = JSON.parse(localStorage.getItem('templates') || '[]');
-    const activeTemplates = templates.filter(t => t.status === 'active');
+    const activeTemplates = templates.filter(t => t.status === 'available');
     
     // Buscar si alguna plantilla activa usa esta etapa
     const isUsedInActiveTemplate = activeTemplates.some(template => {
@@ -4314,6 +4314,8 @@ function saveTemplate() {
         return total + (stage.agents ? stage.agents.length : 0);
     }, 0);
     
+    // Guardar con estado 'draft' (borrador)
+    currentTemplate.status = 'draft';
     currentTemplate.lastModified = new Date().toISOString().split('T')[0];
     
     // Guardar en localStorage
@@ -4343,7 +4345,7 @@ function saveTemplate() {
     }
 }
 
-// Terminar plantilla (quitar etiqueta de borrador)
+// Terminar plantilla (marcar como disponible)
 function finishTemplate() {
     console.log('finishTemplate() called');
     
@@ -4354,13 +4356,20 @@ function finishTemplate() {
         return;
     }
     
-    // Guardar primero los cambios
-    saveTemplate();
+    // Verificar que realContent existe
+    if (!currentTemplate.realContent) {
+        console.log('No realContent found, creating it');
+        currentTemplate.realContent = { stages: [] };
+    }
     
-    // Eliminar el status (quitar etiqueta de borrador)
-    delete currentTemplate.status;
+    // Actualizar contadores
+    currentTemplate.stages = currentTemplate.realContent.stages.length;
+    currentTemplate.agents = currentTemplate.realContent.stages.reduce((total, stage) => {
+        return total + (stage.agents ? stage.agents.length : 0);
+    }, 0);
     
-    // Actualizar fecha de modificación
+    // Guardar con estado 'available' (disponible)
+    currentTemplate.status = 'available';
     currentTemplate.lastModified = new Date().toISOString().split('T')[0];
     
     // Guardar en localStorage
@@ -4740,7 +4749,7 @@ window.toggleAgentStageMenu = function(event, stageId) {
 
 window.moveAgentStageUp = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -4765,7 +4774,7 @@ window.moveAgentStageUp = function(stageId) {
 
 window.moveAgentStageDown = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -4790,7 +4799,7 @@ window.moveAgentStageDown = function(stageId) {
 
 window.deleteAgentStage = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -4826,7 +4835,7 @@ window.deleteAgentStage = function(stageId) {
 
 window.toggleAgentStageConfig = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -5022,7 +5031,7 @@ window.toggleAgentStageConfig = function(stageId) {
 
 window.updateAgentStageConfig = function(stageId, configKey, value) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -5058,7 +5067,7 @@ window.updateAgentStageConfig = function(stageId, configKey, value) {
 
 window.toggleCustomStageDescription = function(stageId) {
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -5219,7 +5228,7 @@ function openTemplateCategoryDropdown(event) {
     event.stopPropagation();
     
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         return;
     }
@@ -5599,6 +5608,19 @@ function renderPsychometricTestsView() {
         
         setTimeout(() => {
             initializeTestFormInputs(newTestId);
+            
+            // Agregar event listeners para tooltips de información
+            const drawer = document.getElementById('psychometricTestsDrawer');
+            if (drawer) {
+                drawer.querySelectorAll('.test-form-info-btn').forEach(btn => {
+                    // Remover listeners previos si existen para evitar duplicados
+                    btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                    btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                    // Agregar nuevos listeners
+                    btn.addEventListener('mouseenter', handleConfigInfoHover);
+                    btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                });
+            }
         }, 100);
     } else if (currentDrawerView === 'edit' && editingTestId !== null) {
         console.log('  ✏️ Renderizando vista de EDICIÓN', { editingTestId });
@@ -5632,6 +5654,19 @@ function renderPsychometricTestsView() {
             
             setTimeout(() => {
                 initializeTestFormInputs(testToEdit.id);
+                
+                // Agregar event listeners para tooltips de información
+                const drawer = document.getElementById('psychometricTestsDrawer');
+                if (drawer) {
+                    drawer.querySelectorAll('.test-form-info-btn').forEach(btn => {
+                        // Remover listeners previos si existen para evitar duplicados
+                        btn.removeEventListener('mouseenter', handleConfigInfoHover);
+                        btn.removeEventListener('mouseleave', handleConfigInfoLeave);
+                        // Agregar nuevos listeners
+                        btn.addEventListener('mouseenter', handleConfigInfoHover);
+                        btn.addEventListener('mouseleave', handleConfigInfoLeave);
+                    });
+                }
             }, 200);
         } else {
             console.log('  ⚠️ Prueba no encontrada, volviendo a lista');
@@ -5758,7 +5793,14 @@ function renderTestForm(test = null, testId = null) {
         <div class="test-form" data-test-id="${finalTestId}">
             <div class="test-form-fields">
                 <div class="test-form-field">
-                    <label>Tipo de prueba</label>
+                    <label class="test-form-field-label-wrapper">
+                        <span>Tipo de prueba (CI/CA)</span>
+                        <button type="button" class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only test-form-info-btn" 
+                                data-tooltip="Selecciona el tipo de prueba psicométrica que se aplicará al candidato. Cada opción evalúa habilidades o aspectos distintos según la configuración de tu plataforma."
+                                title="Información">
+                            <i class="far fa-circle-info"></i>
+                        </button>
+                    </label>
                     <div id="test-form-type-${finalTestId}" class="config-input-container"></div>
                 </div>
                 <div class="test-form-field">
@@ -5766,7 +5808,14 @@ function renderTestForm(test = null, testId = null) {
                     <div id="test-form-language-${finalTestId}" class="config-input-container"></div>
                 </div>
                 <div class="test-form-field">
-                    <label>Puntaje mínimo (opcional)</label>
+                    <label class="test-form-field-label-wrapper">
+                        <span>Puntaje CI mínimo</span>
+                        <button type="button" class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only test-form-info-btn" 
+                                data-tooltip="Puntaje mínimo que el candidato debe lograr en la prueba psicométrica para considerarse aprobado en esta etapa."
+                                title="Información">
+                            <i class="far fa-circle-info"></i>
+                        </button>
+                    </label>
                     <div id="test-form-minscore-${finalTestId}" class="config-input-container"></div>
                 </div>
             </div>
@@ -6601,7 +6650,7 @@ function saveSerenaConfig() {
     // pero nosotros ya tenemos el stage, así que actualizamos directamente
     
     // Verificar si la plantilla está activa
-    if (currentTemplate && currentTemplate.status === 'active') {
+    if (currentTemplate && currentTemplate.status === 'available') {
         showCreateNewVersionModal();
         closeSerenaConfigDrawer();
         return;

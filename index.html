@@ -235,6 +235,17 @@
             color: #E0E0E0 !important;
             font-weight: 500;
         }
+        
+        [data-theme="dark"] .template-status.active {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status.active span {
+            color: #E8F8E4 !important;
+            font-weight: 500;
+        }
 
         .status-dot {
             width: 6px;
@@ -248,17 +259,7 @@
             gap: 4px;
         }
 
-        /* Botones UBITS terciarios icon-only ocultos por defecto */
-        .template-actions .ubits-button--tertiary[onclick*="activateTemplate"],
-        .template-actions .ubits-button--tertiary[onclick*="convertToDraft"] {
-            opacity: 0;
-            pointer-events: auto;
-        }
-
-        .template-actions .ubits-button--tertiary[onclick*="activateTemplate"]:hover,
-        .template-actions .ubits-button--tertiary[onclick*="convertToDraft"]:hover {
-            opacity: 1;
-        }
+        /* Botones de activar/editar eliminados - ya no se usan */
 
         /* Botón eliminar con color de error */
         .template-actions .ubits-button--tertiary[onclick*="deleteTemplate"] i {

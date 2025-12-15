@@ -1022,6 +1022,9 @@ function createSelectDropdown(container, inputElement, selectOptions, value, pla
                 if (value && option.value === value) {
                     optionElement.classList.add('ubits-select-option--selected');
                     optionElement.style.backgroundColor = 'var(--ubits-bg-2)';
+                    // Actualizar el texto del input con el texto de la opción
+                    inputElement.value = option.text;
+                    inputElement.dataset.selectedValue = option.value;
                 }
                 
                 // Click handler
@@ -1556,9 +1559,39 @@ function createInput(options = {}) {
 
     // Retornar métodos útiles
     return {
-        getValue: () => inputElement.value,
+        getValue: () => {
+            // Para SELECT, retornar el valor real guardado en dataset
+            if (isSelect && inputElement.dataset.selectedValue) {
+                return inputElement.dataset.selectedValue;
+            }
+            return inputElement.value;
+        },
         setValue: (newValue) => {
-            inputElement.value = newValue;
+            if (isSelect && selectOptions) {
+                // Para SELECT, buscar la opción y actualizar tanto el valor como el texto
+                const option = selectOptions.find(opt => opt.value === newValue);
+                if (option) {
+                    inputElement.value = option.text;
+                    inputElement.dataset.selectedValue = option.value;
+                    // También actualizar la opción seleccionada en el dropdown si ya está cargado
+                    const dropdown = document.getElementById(inputElement.dataset.dropdownId);
+                    if (dropdown) {
+                        dropdown.querySelectorAll('.ubits-select-option--selected').forEach(el => {
+                            el.classList.remove('ubits-select-option--selected');
+                            el.style.backgroundColor = 'transparent';
+                        });
+                        const selectedOption = dropdown.querySelector(`[data-value="${newValue}"]`);
+                        if (selectedOption) {
+                            selectedOption.classList.add('ubits-select-option--selected');
+                            selectedOption.style.backgroundColor = 'var(--ubits-bg-2)';
+                        }
+                    }
+                } else {
+                    inputElement.value = newValue;
+                }
+            } else {
+                inputElement.value = newValue;
+            }
             if (showCounter && counterElement) {
                 updateCounter();
             }

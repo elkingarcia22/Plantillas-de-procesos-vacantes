@@ -41,28 +41,79 @@ function loadTemplatesFromStorage() {
         currentTemplates = JSON.parse(stored);
         console.log('📋 [loadTemplatesFromStorage] Plantillas cargadas:', currentTemplates.length);
         
-        // Actualizar nombres de plantillas por defecto si tienen nombres antiguos
+        // Actualizar nombres y estados de plantillas por defecto si tienen valores antiguos
         let needsUpdate = false;
         currentTemplates.forEach(template => {
             if (template.isDefault) {
-                if (template.id === 'default-template-ia' && template.name === 'Plantilla por defecto – Flujo estándar de selección con IA') {
-                    template.name = 'Plantilla estándar de selección con IA';
+                // Actualizar nombres antiguos
+                if (template.id === 'default-template-ia' && (template.name === 'Plantilla por defecto – Flujo estándar de selección con IA' || template.name === 'Plantilla estándar de selección con IA')) {
+                    template.name = 'Estándar de selección con IA';
                     needsUpdate = true;
-                } else if (template.id === 'default-template-standard' && template.name === 'Plantilla por defecto – Flujo estándar de selección') {
-                    template.name = 'Plantilla flujo estándar de selección';
+                } else if (template.id === 'default-template-standard' && (template.name === 'Plantilla por defecto – Flujo estándar de selección' || template.name === 'Plantilla flujo estándar de selección' || template.name === 'Flujo estándar de selección')) {
+                    template.name = 'Estándar de selección';
                     needsUpdate = true;
                 }
+                
+                // Actualizar estado 'active' a 'available' en plantillas por defecto
+                if (template.status === 'active') {
+                    template.status = 'available';
+                    needsUpdate = true;
+                }
+            }
+            
+            // Actualizar estado 'active' a 'available' en todas las plantillas
+            if (template.status === 'active') {
+                console.log('🔄 [loadTemplatesFromStorage] Actualizando estado de plantilla:', template.id, 'de "active" a "available"');
+                template.status = 'available';
+                needsUpdate = true;
+            }
+            
+            // Debug: Verificar estado de plantilla por defecto IA
+            if (template.id === 'default-template-ia') {
+                console.log('🔍 [loadTemplatesFromStorage] Plantilla IA encontrada:', {
+                    id: template.id,
+                    name: template.name,
+                    status: template.status,
+                    isDefault: template.isDefault
+                });
             }
         });
         
         if (needsUpdate) {
             saveTemplatesToStorage();
-            console.log('📋 [loadTemplatesFromStorage] Nombres de plantillas por defecto actualizados');
+            console.log('📋 [loadTemplatesFromStorage] Nombres y estados de plantillas actualizados');
         }
         
         // Verificar si ya existen las plantillas por defecto
         const hasDefaultTemplates = currentTemplates.some(t => t.isDefault === true);
         console.log('📋 [loadTemplatesFromStorage] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
+        
+        // Verificar que las plantillas por defecto tengan el estado correcto
+        const defaultTemplateIA = currentTemplates.find(t => t.id === 'default-template-ia');
+        if (defaultTemplateIA) {
+            console.log('📋 [loadTemplatesFromStorage] Plantilla IA encontrada, estado actual:', defaultTemplateIA.status);
+            if (defaultTemplateIA.status !== 'available') {
+                console.log('🔄 [loadTemplatesFromStorage] Corrigiendo estado de plantilla IA a "available"');
+                defaultTemplateIA.status = 'available';
+                needsUpdate = true;
+            }
+        }
+        
+        const defaultTemplateStandard = currentTemplates.find(t => t.id === 'default-template-standard');
+        if (defaultTemplateStandard) {
+            console.log('📋 [loadTemplatesFromStorage] Plantilla Standard encontrada, estado actual:', defaultTemplateStandard.status);
+            if (defaultTemplateStandard.status !== 'available') {
+                console.log('🔄 [loadTemplatesFromStorage] Corrigiendo estado de plantilla Standard a "available"');
+                defaultTemplateStandard.status = 'available';
+                needsUpdate = true;
+            }
+        }
+        
+        if (needsUpdate) {
+            saveTemplatesToStorage();
+            console.log('📋 [loadTemplatesFromStorage] Estados de plantillas por defecto actualizados');
+        }
+        
         if (!hasDefaultTemplates) {
             console.log('📋 [loadTemplatesFromStorage] Creando plantillas por defecto...');
             // Agregar plantillas por defecto si no existen
@@ -92,9 +143,9 @@ function createDefaultTemplates() {
     // Plantilla 1: Flujo estándar de selección con IA
     const template1 = {
         id: 'default-template-ia',
-        name: 'Plantilla estándar de selección con IA',
+        name: 'Estándar de selección con IA',
         category: 'reclutamiento',
-        status: 'active',
+        status: 'available',
         createdAt: now,
         lastModified: today,
         author: 'Sistema',
@@ -187,9 +238,9 @@ function createDefaultTemplates() {
     // Plantilla 2: Flujo estándar de selección (sin IA)
     const template2 = {
         id: 'default-template-standard',
-        name: 'Plantilla flujo estándar de selección',
+        name: 'Estándar de selección',
         category: 'reclutamiento',
-        status: 'active',
+        status: 'available',
         createdAt: now,
         lastModified: today,
         author: 'Sistema',
@@ -500,10 +551,24 @@ function renderTemplates() {
 }
 
 function createTemplateCardHTML(template) {
-    // Determinar status class y text (solo si hay status)
-    const hasStatus = template.status !== undefined && template.status !== null;
-    const statusClass = hasStatus ? (template.status === 'active' ? 'active' : 'draft') : '';
-    const statusText = hasStatus ? (template.status === 'active' ? 'Activa' : 'Borrador') : '';
+    // Determinar status class y text
+    // Asegurar que siempre se muestre el badge si hay un estado definido
+    const hasStatus = template.status !== undefined && template.status !== null && template.status !== '';
+    const statusClass = hasStatus ? (template.status === 'available' ? 'active' : 'draft') : '';
+    const statusText = hasStatus ? (template.status === 'available' ? 'Disponible' : 'Borrador') : '';
+    
+    // Debug: Log para verificar el estado
+    if (template.id === 'default-template-ia') {
+        console.log('🔍 [createTemplateCardHTML] Plantilla IA:', {
+            id: template.id,
+            name: template.name,
+            status: template.status,
+            statusType: typeof template.status,
+            hasStatus: hasStatus,
+            statusClass: statusClass,
+            statusText: statusText
+        });
+    }
     
     // Mapear categoría técnica a texto legible
     const categoryMap = {
@@ -528,16 +593,10 @@ function createTemplateCardHTML(template) {
                     <span>${statusText}</span>
                 </div>
                 ` : ''}
+                ${!hasStatus && template.id === 'default-template-ia' ? `
+                <!-- Debug: Badge no mostrado para plantilla IA -->
+                ` : ''}
                 <div class="template-actions">
-                    ${hasStatus && template.status === 'active' ? 
-                        `<button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="convertToDraft('${template.id}')" title="Convertir a borrador">
-                            <i class="far fa-edit"></i>
-                        </button>` : 
-                        hasStatus && template.status === 'draft' ?
-                        `<button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="activateTemplate('${template.id}')" title="Activar">
-                            <i class="far fa-play"></i>
-                        </button>` : ''
-                    }
                     <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm" onclick="cloneTemplate('${template.id}')" title="Clonar">
                         <i class="far fa-copy"></i>
                     </button>
@@ -660,25 +719,8 @@ function openTemplateEditor(templateId) {
     window.location.href = `editor-plantillas.html?id=${templateId}`;
 }
 
-function activateTemplate(templateId) {
-    const template = currentTemplates.find(t => t.id === templateId);
-    if (template) {
-        template.status = 'active';
-        template.lastModified = new Date().toISOString().split('T')[0];
-        saveTemplatesToStorage();
-        renderTemplates();
-    }
-}
-
-function convertToDraft(templateId) {
-    const template = currentTemplates.find(t => t.id === templateId);
-    if (template) {
-        template.status = 'draft';
-        template.lastModified = new Date().toISOString().split('T')[0];
-        saveTemplatesToStorage();
-        renderTemplates();
-    }
-}
+// Funciones activateTemplate y convertToDraft eliminadas
+// Ya no se usan botones de activar/editar en las cards
 
 function cloneTemplate(templateId) {
     const template = currentTemplates.find(t => t.id === templateId);

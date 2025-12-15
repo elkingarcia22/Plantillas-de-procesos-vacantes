@@ -200,9 +200,20 @@
         }
 
         .template-status-badge.active {
-            color: var(--ubits-feedback-accent-success);
-            background: var(--ubits-feedback-bg-success);
-            border-color: var(--ubits-feedback-border-success);
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status-badge.active {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status-badge.active span {
+            color: #E8F8E4 !important;
+            font-weight: 500;
         }
 
         .status-dot {
@@ -303,6 +314,17 @@
             background: #E8F8E4;
             color: #2D5A2D;
             border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status-badge.active {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status-badge.active span {
+            color: #E8F8E4 !important;
+            font-weight: 500;
         }
 
         .status-dot {
@@ -2157,6 +2179,23 @@
             font-size: 13px;
             font-weight: 400;
             color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-form-field-label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-form-field-label-wrapper span {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .test-form-info-btn {
+            flex-shrink: 0;
         }
         
         /* Drawer para configurar entrevista Serena AI */
