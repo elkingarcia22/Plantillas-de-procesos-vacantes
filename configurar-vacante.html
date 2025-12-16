@@ -4725,6 +4725,177 @@
             const messageText = isAgent ? '¿Estás seguro de que quieres quitar este asistente IA del flujo?' : '¿Estás seguro de que quieres quitar esta etapa del flujo?';
             const successMessage = isAgent ? 'Asistente IA quitado del flujo' : 'Etapa quitada del flujo';
             
+            // Función para mover candidatos a la biblioteca
+            const moveCandidatesToLibrary = function() {
+                console.log('🔄 [moveCandidatesToLibrary] Iniciando búsqueda de candidatos...');
+                console.log('🔍 [moveCandidatesToLibrary] Etapa a eliminar:', stageId);
+                
+                try {
+                    // Buscar la primera etapa disponible (biblioteca) después de eliminar la etapa actual
+                    const remainingStages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
+                    const libraryStageId = remainingStages.length > 0 ? remainingStages[0].id : null;
+                    console.log('📚 [moveCandidatesToLibrary] Primera etapa disponible (biblioteca):', libraryStageId);
+                    
+                    if (!libraryStageId) {
+                        console.warn('⚠️ [moveCandidatesToLibrary] No hay etapas disponibles después de eliminar esta etapa');
+                    }
+                    
+                    // Buscar TODAS las claves en localStorage que puedan contener candidatos
+                    const allKeys = Object.keys(localStorage);
+                    console.log('🔍 [moveCandidatesToLibrary] Total de claves en localStorage:', allKeys.length);
+                    
+                    // Filtrar claves que podrían contener candidatos
+                    const candidateKeys = allKeys.filter(key => {
+                        // Excluir claves conocidas que no son candidatos
+                        const excludedKeys = ['templates', 'availableStages', 'availableAgents', 'theme', 'language'];
+                        if (excludedKeys.includes(key)) return false;
+                        
+                        // Incluir claves que mencionan candidatos, aplicantes, o vacantes
+                        const lowerKey = key.toLowerCase();
+                        return lowerKey.includes('candidate') || 
+                               lowerKey.includes('applicant') || 
+                               lowerKey.includes('vacant') ||
+                               lowerKey.includes('job') ||
+                               lowerKey.includes('recruitment') ||
+                               lowerKey.includes('hiring');
+                    });
+                    
+                    console.log('🔍 [moveCandidatesToLibrary] Claves candidatas encontradas:', candidateKeys);
+                    
+                    let candidatesMoved = 0;
+                    
+                    // Función recursiva para buscar candidatos en cualquier estructura
+                    const findAndMoveCandidates = function(obj, path = '') {
+                        if (!obj || typeof obj !== 'object') return;
+                        
+                        // Si es un array, buscar candidatos dentro
+                        if (Array.isArray(obj)) {
+                            obj.forEach((item, index) => {
+                                if (item && typeof item === 'object') {
+                                    // Verificar si es un candidato (tiene propiedades de etapa)
+                                    const hasStageInfo = 'currentStageId' in item || 
+                                                         'stageId' in item || 
+                                                         'stage' in item ||
+                                                         'currentStage' in item ||
+                                                         'stageName' in item;
+                                    
+                                    if (hasStageInfo) {
+                                        const candidateStageId = item.currentStageId || item.stageId || item.stage || item.currentStage;
+                                        
+                                        if (candidateStageId === stageId) {
+                                            console.log(`✅ [moveCandidatesToLibrary] Candidato encontrado en ${path}[${index}]:`, item);
+                                            
+                                            // Mover a la biblioteca (primera etapa disponible)
+                                            if (libraryStageId) {
+                                                if ('currentStageId' in item) item.currentStageId = libraryStageId;
+                                                if ('stageId' in item) item.stageId = libraryStageId;
+                                                if ('stage' in item) item.stage = libraryStageId;
+                                                if ('currentStage' in item) item.currentStage = libraryStageId;
+                                            } else {
+                                                // Si no hay etapas disponibles, poner en null
+                                                if ('currentStageId' in item) item.currentStageId = null;
+                                                if ('stageId' in item) item.stageId = null;
+                                                if ('stage' in item) item.stage = null;
+                                                if ('currentStage' in item) item.currentStage = null;
+                                            }
+                                            candidatesMoved++;
+                                        }
+                                    }
+                                    
+                                    // Buscar recursivamente dentro del objeto
+                                    findAndMoveCandidates(item, `${path}[${index}]`);
+                                }
+                            });
+                        } else {
+                            // Si es un objeto, buscar en sus propiedades
+                            Object.keys(obj).forEach(key => {
+                                const value = obj[key];
+                                if (value && typeof value === 'object') {
+                                    findAndMoveCandidates(value, path ? `${path}.${key}` : key);
+                                }
+                            });
+                        }
+                    };
+                    
+                    // Procesar cada clave que podría contener candidatos
+                    candidateKeys.forEach(key => {
+                        try {
+                            const stored = localStorage.getItem(key);
+                            if (!stored) return;
+                            
+                            let data = null;
+                            try {
+                                data = JSON.parse(stored);
+                            } catch (e) {
+                                // No es JSON, saltar
+                                return;
+                            }
+                            
+                            if (!data) return;
+                            
+                            console.log(`🔍 [moveCandidatesToLibrary] Procesando clave: ${key}`);
+                            
+                            // Buscar candidatos recursivamente
+                            const beforeCount = candidatesMoved;
+                            findAndMoveCandidates(data, key);
+                            
+                            if (candidatesMoved > beforeCount) {
+                                // Guardar datos actualizados
+                                localStorage.setItem(key, JSON.stringify(data));
+                                console.log(`💾 [moveCandidatesToLibrary] Guardados cambios en ${key}`);
+                            }
+                        } catch (error) {
+                            console.warn(`⚠️ [moveCandidatesToLibrary] Error procesando clave ${key}:`, error);
+                        }
+                    });
+                    
+                    // También buscar en todas las claves por si acaso (más exhaustivo)
+                    if (candidatesMoved === 0) {
+                        console.log('🔍 [moveCandidatesToLibrary] No se encontraron candidatos en claves específicas, buscando en todas las claves...');
+                        
+                        allKeys.forEach(key => {
+                            // Saltar claves conocidas que no son candidatos
+                            if (['templates', 'availableStages', 'availableAgents', 'theme', 'language'].includes(key)) return;
+                            
+                            try {
+                                const stored = localStorage.getItem(key);
+                                if (!stored) return;
+                                
+                                let data = null;
+                                try {
+                                    data = JSON.parse(stored);
+                                } catch (e) {
+                                    return;
+                                }
+                                
+                                if (!data || typeof data !== 'object') return;
+                                
+                                const beforeCount = candidatesMoved;
+                                findAndMoveCandidates(data, key);
+                                
+                                if (candidatesMoved > beforeCount) {
+                                    localStorage.setItem(key, JSON.stringify(data));
+                                    console.log(`💾 [moveCandidatesToLibrary] Guardados cambios en ${key} (búsqueda exhaustiva)`);
+                                }
+                            } catch (error) {
+                                // Silenciar errores en búsqueda exhaustiva
+                            }
+                        });
+                    }
+                    
+                    if (candidatesMoved > 0) {
+                        console.log(`✅ [moveCandidatesToLibrary] ${candidatesMoved} candidato(s) movido(s) a la biblioteca`);
+                        if (typeof showToast === 'function') {
+                            showToast('info', `${candidatesMoved} candidato(s) movido(s) a la biblioteca`);
+                        }
+                    } else {
+                        console.log('ℹ️ [moveCandidatesToLibrary] No se encontraron candidatos en la etapa eliminada');
+                    }
+                } catch (error) {
+                    console.error('❌ [moveCandidatesToLibrary] Error al mover candidatos a la biblioteca:', error);
+                }
+            };
+            
             if (typeof showConfirmModal === 'function') {
                 showConfirmModal({
                     title: actionText,
@@ -4733,8 +4904,76 @@
                     cancelText: 'Cancelar',
                     variant: 'primary',
                     onConfirm: () => {
+                        // Mover candidatos a la biblioteca antes de eliminar la etapa
+                        moveCandidatesToLibrary();
+                        
+                        // Si la etapa tiene templateId, asegurarse de que esté disponible en la biblioteca
+                        if (stage && stage.templateId) {
+                            const templateStageId = stage.templateId;
+                            const existsInLibrary = availableStages.find(s => s.id === templateStageId);
+                            
+                            if (!existsInLibrary) {
+                                // Buscar la etapa original en availableStages (puede que se haya eliminado)
+                                // Si no existe, recrearla con los datos de la etapa eliminada
+                                const stageToAdd = {
+                                    id: templateStageId,
+                                    name: stage.name,
+                                    category: stage.category,
+                                    type: stage.type || 'custom',
+                                    description: stage.description || '',
+                                    createdAt: stage.createdAt || new Date().toISOString(),
+                                    isDefault: stage.isDefault || false
+                                };
+                                
+                                availableStages.push(stageToAdd);
+                                saveAvailableStages();
+                                console.log('✅ [deleteAgentStage] Etapa devuelta a la biblioteca:', stageToAdd.name);
+                                
+                                // Re-renderizar la biblioteca para que aparezca la etapa
+                                setTimeout(() => {
+                                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                                    if (activeTab) {
+                                        const tabType = activeTab.dataset.tab;
+                                        if (tabType === 'stages') {
+                                            if (typeof renderAvailableStages === 'function') {
+                                                renderAvailableStages();
+                                            } else if (typeof renderStages === 'function') {
+                                                renderStages();
+                                            }
+                                        }
+                                    }
+                                }, 150);
+                            } else {
+                                console.log('ℹ️ [deleteAgentStage] La etapa ya existe en la biblioteca');
+                                // Aún así, re-renderizar para asegurar que se muestre
+                                setTimeout(() => {
+                                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                                    if (activeTab && activeTab.dataset.tab === 'stages') {
+                                        if (typeof renderAvailableStages === 'function') {
+                                            renderAvailableStages();
+                                        } else if (typeof renderStages === 'function') {
+                                            renderStages();
+                                        }
+                                    }
+                                }, 150);
+                            }
+                        } else {
+                            console.log('ℹ️ [deleteAgentStage] La etapa no tiene templateId (puede ser un agente o etapa creada directamente)');
+                        }
+                        
                         localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                         renderTemplateFlow(localTemplateCopy);
+                        
+                        // Si es un agente IA, re-renderizar la biblioteca de agentes para que vuelva a aparecer
+                        if (isAgent) {
+                            setTimeout(() => {
+                                if (typeof renderAgents === 'function') {
+                                    renderAgents();
+                                    console.log('✅ [deleteAgentStage] Biblioteca de agentes re-renderizada');
+                                }
+                            }, 150);
+                        }
+                        
                         // Actualizar stepper después de un pequeño delay para asegurar que el DOM se actualizó
                         setTimeout(() => {
                             updateStepper();
@@ -4746,8 +4985,76 @@
                 });
             } else {
                 if (confirm(messageText)) {
+                    // Mover candidatos a la biblioteca antes de eliminar la etapa
+                    moveCandidatesToLibrary();
+                    
+                    // Si la etapa tiene templateId, asegurarse de que esté disponible en la biblioteca
+                    if (stage && stage.templateId) {
+                        const templateStageId = stage.templateId;
+                        const existsInLibrary = availableStages.find(s => s.id === templateStageId);
+                        
+                        if (!existsInLibrary) {
+                            // Buscar la etapa original en availableStages (puede que se haya eliminado)
+                            // Si no existe, recrearla con los datos de la etapa eliminada
+                            const stageToAdd = {
+                                id: templateStageId,
+                                name: stage.name,
+                                category: stage.category,
+                                type: stage.type || 'custom',
+                                description: stage.description || '',
+                                createdAt: stage.createdAt || new Date().toISOString(),
+                                isDefault: stage.isDefault || false
+                            };
+                            
+                            availableStages.push(stageToAdd);
+                            saveAvailableStages();
+                            console.log('✅ [deleteAgentStage] Etapa devuelta a la biblioteca:', stageToAdd.name);
+                            
+                            // Re-renderizar la biblioteca para que aparezca la etapa
+                            setTimeout(() => {
+                                const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                                if (activeTab) {
+                                    const tabType = activeTab.dataset.tab;
+                                    if (tabType === 'stages') {
+                                        if (typeof renderAvailableStages === 'function') {
+                                            renderAvailableStages();
+                                        } else if (typeof renderStages === 'function') {
+                                            renderStages();
+                                        }
+                                    }
+                                }
+                            }, 150);
+                        } else {
+                            console.log('ℹ️ [deleteAgentStage] La etapa ya existe en la biblioteca');
+                            // Aún así, re-renderizar para asegurar que se muestre
+                            setTimeout(() => {
+                                const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                                if (activeTab && activeTab.dataset.tab === 'stages') {
+                                    if (typeof renderAvailableStages === 'function') {
+                                        renderAvailableStages();
+                                    } else if (typeof renderStages === 'function') {
+                                        renderStages();
+                                    }
+                                }
+                            }, 150);
+                        }
+                    } else {
+                        console.log('ℹ️ [deleteAgentStage] La etapa no tiene templateId (puede ser un agente o etapa creada directamente)');
+                    }
+                    
                     localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                     renderTemplateFlow(localTemplateCopy);
+                    
+                    // Si es un agente IA, re-renderizar la biblioteca de agentes para que vuelva a aparecer
+                    if (isAgent) {
+                        setTimeout(() => {
+                            if (typeof renderAgents === 'function') {
+                                renderAgents();
+                                console.log('✅ [deleteAgentStage] Biblioteca de agentes re-renderizada');
+                            }
+                        }, 150);
+                    }
+                    
                     // Actualizar stepper después de un pequeño delay para asegurar que el DOM se actualizó
                     setTimeout(() => {
                         updateStepper();

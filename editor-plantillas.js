@@ -4898,6 +4898,33 @@ function finishTemplate() {
         return;
     }
     
+    // Mostrar modal explicativo antes de terminar
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: 'Terminar plantilla',
+            message: `<p style="margin: 0 0 16px 0; font-family: 'Noto Sans', sans-serif; font-size: 14px; line-height: 20px; color: var(--ubits-fg-1-high);">Una vez que termines esta plantilla, quedará disponible para que puedas usarla en la creación de vacantes.</p>
+                     <p style="margin: 0; font-family: 'Noto Sans', sans-serif; font-size: 14px; line-height: 20px; color: var(--ubits-fg-1-medium);">Podrás seleccionarla desde el selector de plantillas al configurar una nueva vacante.</p>`,
+            confirmText: 'Terminar plantilla',
+            cancelText: 'Cancelar',
+            variant: 'primary',
+            onConfirm: () => {
+                // Proceder a terminar la plantilla
+                confirmFinishTemplate();
+            },
+            onCancel: () => {
+                console.log('Terminación de plantilla cancelada');
+            }
+        });
+    } else {
+        // Si no hay showConfirmModal disponible, usar confirm nativo
+        if (confirm('Una vez que termines esta plantilla, quedará disponible para que puedas usarla en la creación de vacantes.\n\n¿Deseas continuar?')) {
+            confirmFinishTemplate();
+        }
+    }
+}
+
+// Función que ejecuta la lógica de terminar la plantilla
+function confirmFinishTemplate() {
     // Verificar que realContent existe
     if (!currentTemplate.realContent) {
         console.log('No realContent found, creating it');
