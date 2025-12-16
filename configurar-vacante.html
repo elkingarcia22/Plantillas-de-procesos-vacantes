@@ -2447,9 +2447,9 @@
                                     <div class="stepper-circle">2</div>
                                     <div class="stepper-label">Flujo del candidato</div>
                                 </div>
-                                <div class="stepper-item">
+                                <div class="stepper-item" id="stepper-step-3" style="display: none;">
                                     <div class="stepper-circle">3</div>
-                                    <div class="stepper-label">Serena AI</div>
+                                    <div class="stepper-label">Preguntas Serena IA</div>
                                 </div>
                                 <div class="stepper-item">
                                     <div class="stepper-circle">4</div>
@@ -2717,6 +2717,11 @@
             createDaysInput();
             
             // El flujo vacío se inicializará automáticamente cuando se seleccione "Personalizada" en createTemplateSelect
+            
+            // Actualizar stepper inicialmente después de un pequeño delay para asegurar que el DOM esté listo
+            setTimeout(() => {
+                updateStepper();
+            }, 500);
 
             // LOGS DE DEPURACIÓN DE SCROLL Y STICKY
             try {
@@ -3592,6 +3597,147 @@
             }, 100);
         }
 
+        // Actualizar stepper según si hay Serena IA en el flujo
+        function updateStepper() {
+            console.log('🔧 [updateStepper] Iniciando actualización del stepper...');
+            
+            if (!localTemplateCopy || !localTemplateCopy.realContent || !localTemplateCopy.realContent.stages) {
+                console.log('🔧 [updateStepper] No hay flujo, ocultando paso 3');
+                // Si no hay flujo, ocultar paso 3
+                const step3 = document.getElementById('stepper-step-3');
+                if (step3) {
+                    step3.style.display = 'none';
+                    console.log('✅ [updateStepper] Paso 3 ocultado');
+                }
+                // Renumerar pasos
+                renumberStepperSteps();
+                // Actualizar mobile stepper: 2/4 (sin paso 3)
+                updateMobileStepper(4);
+                return;
+            }
+
+            // Verificar si hay un agente con agentId === 'interview-ia'
+            const hasSerenaIA = localTemplateCopy.realContent.stages.some(
+                stage => stage.type === 'agent' && stage.agentId === 'interview-ia'
+            );
+
+            console.log('🔧 [updateStepper] ¿Hay Serena IA?', hasSerenaIA);
+            console.log('🔧 [updateStepper] Etapas:', localTemplateCopy.realContent.stages.map(s => ({
+                type: s.type,
+                agentId: s.agentId,
+                name: s.name
+            })));
+
+            const step3 = document.getElementById('stepper-step-3');
+            if (step3) {
+                if (hasSerenaIA) {
+                    step3.style.display = 'flex';
+                    console.log('✅ [updateStepper] Paso 3 mostrado (hay Serena IA)');
+                } else {
+                    step3.style.display = 'none';
+                    console.log('✅ [updateStepper] Paso 3 ocultado (no hay Serena IA)');
+                }
+            } else {
+                console.log('❌ [updateStepper] No se encontró el paso 3');
+            }
+
+            // Renumerar pasos
+            renumberStepperSteps();
+            
+            // Actualizar mobile stepper: 2/5 si hay paso 3, 2/4 si no
+            updateMobileStepper(hasSerenaIA ? 5 : 4);
+        }
+
+        // Actualizar mobile stepper con el total de pasos
+        function updateMobileStepper(totalSteps) {
+            const mobileProgressCircle = document.querySelector('.mobile-progress-circle');
+            if (!mobileProgressCircle) return;
+
+            // Actualizar el texto "2/5" o "2/4"
+            const span = mobileProgressCircle.querySelector('span');
+            if (span) {
+                span.textContent = `2/${totalSteps}`;
+            }
+
+            // Actualizar el atributo data-progress para el cálculo del círculo
+            // 2 de 5 = 40%, 2 de 4 = 50%
+            const progress = totalSteps === 5 ? 40 : 50;
+            mobileProgressCircle.setAttribute('data-progress', progress);
+
+            // Actualizar el stroke-dashoffset del círculo de progreso
+            const progressFill = mobileProgressCircle.querySelector('.mobile-progress-fill');
+            if (progressFill) {
+                const circumference = 2 * Math.PI * 22; // radio = 22
+                const offset = circumference * (1 - progress / 100);
+                progressFill.style.strokeDashoffset = offset;
+            }
+        }
+
+        // Renumerar los pasos del stepper cuando el paso 3 está oculto
+        function renumberStepperSteps() {
+            const step3 = document.getElementById('stepper-step-3');
+            
+            // Verificar si el paso 3 está visible usando getComputedStyle
+            let isStep3Visible = false;
+            if (step3) {
+                const computedStyle = window.getComputedStyle(step3);
+                isStep3Visible = computedStyle.display !== 'none';
+                console.log('🔧 [renumberStepperSteps] Paso 3 visible?', isStep3Visible, 'display:', computedStyle.display);
+            }
+
+            // Obtener todos los pasos del stepper
+            const stepper = document.querySelector('.stepper');
+            if (!stepper) {
+                console.log('❌ [renumberStepperSteps] No se encontró el stepper');
+                return;
+            }
+
+            const steps = Array.from(stepper.querySelectorAll('.stepper-item'));
+            console.log('🔧 [renumberStepperSteps] Total de pasos encontrados:', steps.length);
+            
+            // Renumerar basándonos en el índice original del paso
+            steps.forEach((step, index) => {
+                const circle = step.querySelector('.stepper-circle');
+                if (!circle) return;
+
+                // Si tiene icono, no renumerar (es el paso 1 o el último paso)
+                if (circle.querySelector('.stepper-icon')) {
+                    console.log(`🔧 [renumberStepperSteps] Paso ${index}: tiene icono, no se renumerar`);
+                    return;
+                }
+
+                // Estructura del stepper:
+                // Índice 0: Paso 1 (Información básica) - tiene icono check, no se renumerar
+                // Índice 1: Paso 2 (Flujo del candidato) - siempre es 2
+                // Índice 2: Paso 3 (Preguntas Serena IA) - puede estar oculto
+                // Índice 3: Paso 4 (Añade miembros) - debe ser 3 si paso 3 está oculto, 4 si está visible
+                // Índice 4: Paso 5 (Publícala) - tiene icono paper-plane, no se renumerar
+
+                if (index === 1) {
+                    // Paso 2: siempre es 2
+                    circle.textContent = '2';
+                    console.log(`✅ [renumberStepperSteps] Paso ${index} (Paso 2): renumerado a 2`);
+                } else if (index === 2) {
+                    // Paso 3: solo actualizar si está visible
+                    if (isStep3Visible) {
+                        circle.textContent = '3';
+                        console.log(`✅ [renumberStepperSteps] Paso ${index} (Paso 3): renumerado a 3`);
+                    } else {
+                        console.log(`⏭️ [renumberStepperSteps] Paso ${index} (Paso 3): oculto, no se renumerar`);
+                    }
+                } else if (index === 3) {
+                    // Paso 4: si el paso 3 está oculto, se convierte en paso 3
+                    if (!isStep3Visible) {
+                        circle.textContent = '3';
+                        console.log(`✅ [renumberStepperSteps] Paso ${index} (Paso 4): renumerado a 3 (porque paso 3 está oculto)`);
+                    } else {
+                        circle.textContent = '4';
+                        console.log(`✅ [renumberStepperSteps] Paso ${index} (Paso 4): renumerado a 4 (porque paso 3 está visible)`);
+                    }
+                }
+            });
+        }
+
         // Renderizar el flujo de la plantilla (igual que en el editor)
         function renderTemplateFlow(template) {
             const flowSection = document.getElementById('template-flow-section');
@@ -3853,6 +3999,9 @@
                     }
                 }, 100);
             }
+
+            // Actualizar stepper según si hay Serena IA
+            updateStepper();
         }
 
         // Aplicar modo edición/vista
@@ -4528,6 +4677,10 @@
                     onConfirm: () => {
                         localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                         renderTemplateFlow(localTemplateCopy);
+                        // Actualizar stepper después de un pequeño delay para asegurar que el DOM se actualizó
+                        setTimeout(() => {
+                            updateStepper();
+                        }, 100);
                         if (typeof showToast === 'function') {
                             showToast('success', successMessage);
                         }
@@ -4537,6 +4690,10 @@
                 if (confirm(messageText)) {
                     localTemplateCopy.realContent.stages = localTemplateCopy.realContent.stages.filter(s => s.id !== stageId);
                     renderTemplateFlow(localTemplateCopy);
+                    // Actualizar stepper después de un pequeño delay para asegurar que el DOM se actualizó
+                    setTimeout(() => {
+                        updateStepper();
+                    }, 100);
                     if (typeof showToast === 'function') {
                         showToast('success', successMessage);
                     }
@@ -4889,10 +5046,26 @@
                 return;
             }
             
-            // Cargar etapas si no están cargadas
+            // Cargar etapas si no están cargadas (solo si realmente no hay etapas)
+            // NO recargar si acabamos de hacer una eliminación
             if (availableStages.length === 0) {
-                console.log('🔧 [renderAvailableStages] Cargando etapas disponibles...');
-                loadAvailableStages();
+                const stored = localStorage.getItem('availableStages');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.length > 0) {
+                        // Hay etapas en localStorage pero no en la variable, recargar
+                        console.log('🔧 [renderAvailableStages] Sincronizando con localStorage...');
+                        loadAvailableStages();
+                    } else {
+                        // Realmente no hay etapas, cargar por defecto
+                        console.log('🔧 [renderAvailableStages] No hay etapas, cargando por defecto...');
+                        loadAvailableStages();
+                    }
+                } else {
+                    // No hay nada en localStorage, cargar por defecto
+                    console.log('🔧 [renderAvailableStages] No hay etapas en localStorage, cargando por defecto...');
+                    loadAvailableStages();
+                }
             }
             
             console.log('🔧 [renderAvailableStages] availableStages.length:', availableStages.length);
@@ -5715,7 +5888,20 @@
 
         // Guardar etapas en localStorage
         function saveAvailableStages() {
+            console.log('💾 [saveAvailableStages] Guardando etapas:', availableStages.length);
             localStorage.setItem('availableStages', JSON.stringify(availableStages));
+            
+            // Verificar que se guardó correctamente
+            const stored = localStorage.getItem('availableStages');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed.length !== availableStages.length) {
+                    console.error('❌ [saveAvailableStages] ERROR: Las etapas no se guardaron correctamente');
+                    console.error('   Esperado:', availableStages.length, 'Guardado:', parsed.length);
+                } else {
+                    console.log('✅ [saveAvailableStages] Etapas guardadas correctamente');
+                }
+            }
         }
 
         // Crear etapa template
@@ -5847,26 +6033,59 @@
 
         // Eliminar etapa template
         window.deleteStageTemplate = function(stageId) {
+            const stage = availableStages.find(s => s.id === stageId);
+            if (!stage) {
+                console.error('❌ [deleteStageTemplate] Etapa no encontrada:', stageId);
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Etapa no encontrada');
+                }
+                return;
+            }
+            
             if (typeof showConfirmModal === 'function') {
                 showConfirmModal({
                     title: 'Eliminar etapa',
-                    message: '¿Estás seguro de que quieres eliminar esta etapa? Esta acción no se puede deshacer.',
+                    message: `¿Estás seguro de que quieres eliminar la etapa "${stage.name}"? Esta acción no se puede deshacer.`,
                     confirmText: 'Eliminar',
                     cancelText: 'Cancelar',
-                    variant: 'primary',
+                    variant: 'error',
                     onConfirm: () => {
+                        console.log('🗑️ [deleteStageTemplate] Eliminando etapa:', stageId);
+                        console.log('🔍 [deleteStageTemplate] availableStages antes:', availableStages.length);
+                        
+                        // Filtrar la etapa eliminada
                         availableStages = availableStages.filter(s => s.id !== stageId);
-                        localStorage.setItem('availableStages', JSON.stringify(availableStages));
+                        
+                        console.log('🔍 [deleteStageTemplate] availableStages después:', availableStages.length);
+                        
+                        // Guardar usando la función saveAvailableStages para mantener consistencia
+                        saveAvailableStages();
+                        
+                        // Verificar que se guardó correctamente
+                        const stored = localStorage.getItem('availableStages');
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            console.log('✅ [deleteStageTemplate] Verificación - etapas guardadas en localStorage:', parsed.length);
+                            if (parsed.length !== availableStages.length) {
+                                console.error('❌ [deleteStageTemplate] INCONSISTENCIA: Las etapas no se guardaron correctamente');
+                                // Forzar guardado de nuevo
+                                localStorage.setItem('availableStages', JSON.stringify(availableStages));
+                            }
+                        }
+                        
+                        // Re-renderizar SIN recargar desde localStorage
                         renderAvailableStages();
+                        
                         if (typeof showToast === 'function') {
-                            showToast('success', 'Etapa eliminada');
+                            showToast('success', `Etapa "${stage.name}" eliminada correctamente`);
                         }
                     }
                 });
             } else {
-                if (confirm('¿Estás seguro de que quieres eliminar esta etapa?')) {
+                if (confirm(`¿Estás seguro de que quieres eliminar la etapa "${stage.name}"?`)) {
+                    console.log('🗑️ [deleteStageTemplate] Eliminando etapa (sin modal):', stageId);
                     availableStages = availableStages.filter(s => s.id !== stageId);
-                    localStorage.setItem('availableStages', JSON.stringify(availableStages));
+                    saveAvailableStages();
                     renderAvailableStages();
                 }
             }

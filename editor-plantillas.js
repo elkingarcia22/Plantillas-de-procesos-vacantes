@@ -151,6 +151,277 @@ const STAGE_CATEGORIES = [
     { id: 'decision-final', name: 'Decisión final', icon: 'fa-gavel' }
 ];
 
+// Etapas por defecto que siempre deben estar disponibles
+const DEFAULT_STAGES = [
+    // Categoría: Evaluación inicial
+    {
+        id: 'default-review-cv',
+        name: 'Revisión de CV',
+        category: 'evaluacion-inicial',
+        type: 'custom',
+        description: 'Revisión del currículum para validar experiencia, formación y requisitos mínimos del cargo.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-pre-filter-requirements',
+        name: 'Pre-filtro de requisitos mínimos',
+        category: 'evaluacion-inicial',
+        type: 'custom',
+        description: 'Validación rápida de criterios excluyentes: años de experiencia, nivel educativo, idioma, país/ciudad, etc.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-pre-filter-salary',
+        name: 'Pre-filtro salarial',
+        category: 'evaluacion-inicial',
+        type: 'custom',
+        description: 'Comparación entre la expectativa salarial del candidato y el rango definido para la vacante.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-pre-filter-availability',
+        name: 'Pre-filtro de disponibilidad',
+        category: 'evaluacion-inicial',
+        type: 'custom',
+        description: 'Verifica horario, fecha de ingreso, modalidad de trabajo (remoto/presencial/mixto) u otros aspectos logísticos básicos.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    // Categoría: Entrevistas
+    {
+        id: 'default-interview-pre-screening',
+        name: 'Entrevista de pre-screening',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Primera conversación breve (teléfono o videollamada) para validar interés, motivación y puntos clave del perfil.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-interview-recruiter',
+        name: 'Entrevista con reclutador',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Entrevista más profunda para evaluar competencias blandas, expectativas y encaje general con la empresa.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-interview-hiring-manager',
+        name: 'Entrevista con el área / hiring manager',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Entrevista técnica o funcional con el responsable del área para evaluar ajuste al rol.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-interview-technical',
+        name: 'Entrevista técnica',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Conversación enfocada en conocimientos técnicos, metodologías de trabajo y experiencia práctica.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-interview-culture',
+        name: 'Entrevista de cultura y valores',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Etapa centrada en cultura organizacional, valores y forma de trabajo en equipo.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-interview-final',
+        name: 'Entrevista final',
+        category: 'entrevistas',
+        type: 'custom',
+        description: 'Última entrevista con dirección o stakeholders clave antes de la decisión definitiva.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    // Categoría: Evaluación psicométrica
+    {
+        id: 'default-psychometric-general',
+        name: 'Evaluación psicométrica general',
+        category: 'evaluacion-psicometrica',
+        type: 'custom',
+        description: 'Batería estándar de pruebas para medir habilidades cognitivas y rasgos de personalidad relevantes.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-test-cognitive',
+        name: 'Test de habilidades cognitivas',
+        category: 'evaluacion-psicometrica',
+        type: 'custom',
+        description: 'Mide razonamiento lógico, numérico, verbal u otras capacidades cognitivas.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-test-personality',
+        name: 'Test de personalidad laboral',
+        category: 'evaluacion-psicometrica',
+        type: 'custom',
+        description: 'Evalúa rasgos de personalidad vinculados al estilo de trabajo, liderazgo y trabajo en equipo.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-test-soft-skills',
+        name: 'Test de competencias blandas',
+        category: 'evaluacion-psicometrica',
+        type: 'custom',
+        description: 'Mide competencias como comunicación, resolución de problemas, organización, manejo del estrés, etc.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    // Categoría: Pruebas técnicas
+    {
+        id: 'default-technical-general',
+        name: 'Prueba técnica general',
+        category: 'pruebas-tecnicas',
+        type: 'custom',
+        description: 'Evaluación de conocimientos técnicos básicos requeridos para el rol.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-case-practical',
+        name: 'Caso práctico / Challenge',
+        category: 'pruebas-tecnicas',
+        type: 'custom',
+        description: 'Ejercicio aplicado (ej. resolver un caso, diseñar una solución, elaborar una propuesta) para ver cómo trabaja la persona.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-test-specific-skills',
+        name: 'Prueba de habilidades específicas',
+        category: 'pruebas-tecnicas',
+        type: 'custom',
+        description: 'Prueba focalizada en una herramienta o skill concreta (por ejemplo: Excel avanzado, un CRM, un lenguaje de programación).',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-test-languages',
+        name: 'Prueba de idiomas',
+        category: 'pruebas-tecnicas',
+        type: 'custom',
+        description: 'Evaluación de comprensión y expresión oral/escrita en el idioma requerido por el puesto.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    // Categoría: Verificación
+    {
+        id: 'default-verify-references',
+        name: 'Verificación de referencias laborales',
+        category: 'verificacion',
+        type: 'custom',
+        description: 'Contacto y validación de referencias con jefes o empleadores anteriores.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-verify-background',
+        name: 'Verificación de antecedentes judiciales',
+        category: 'verificacion',
+        type: 'custom',
+        description: 'Revisión de antecedentes según la normativa del país y las políticas internas.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-verify-studies',
+        name: 'Verificación de estudios y certificados',
+        category: 'verificacion',
+        type: 'custom',
+        description: 'Confirmación de títulos académicos, cursos y certificaciones declaradas.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-verify-employment',
+        name: 'Verificación de datos laborales',
+        category: 'verificacion',
+        type: 'custom',
+        description: 'Validación de cargos, fechas y responsabilidades en empleos anteriores.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-verify-documents',
+        name: 'Verificación de documentación',
+        category: 'verificacion',
+        type: 'custom',
+        description: 'Revisión de documentos de identidad, permisos de trabajo u otros requisitos legales.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    // Categoría: Decisión final
+    {
+        id: 'default-final-review',
+        name: 'Revisión final de candidatura',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Etapa donde se consolidan evaluaciones y se define si el candidato avanza a oferta o se descarta.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-approval-offer',
+        name: 'Aprobación para oferta',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Marca al candidato como aprobado internamente y listo para recibir una propuesta.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-offer-sent',
+        name: 'Oferta laboral enviada',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Registro de que se envió la oferta formal (contrato, condiciones, salario, etc.).',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-offer-accepted',
+        name: 'Oferta aceptada',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Candidato acepta la oferta y se confirma su incorporación.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-process-closed',
+        name: 'Proceso cerrado – no seleccionado',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Cierre formal de candidatos descartados en cualquier etapa.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-talent-pool',
+        name: 'Banco de talento',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Candidatos que no fueron seleccionados para esta vacante, pero quedan guardados como potenciales para futuras posiciones.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    }
+];
+
 // Estado global del editor
 let currentTemplate = null;
 let hasUnsavedChanges = false;
@@ -1376,12 +1647,34 @@ function renderAgents() {
 }
 
 function renderAvailableStages() {
+    console.log('🎨 [renderAvailableStages] Iniciando renderizado...');
+    console.log('🔍 [renderAvailableStages] availableStages.length:', availableStages.length);
+    
     const stagesList = document.getElementById('stagesList');
-    if (!stagesList) return;
+    if (!stagesList) {
+        console.error('❌ [renderAvailableStages] stagesList no encontrado');
+        return;
+    }
+    
+    // Verificar consistencia (solo para logging, NO sincronizar automáticamente)
+    const stored = localStorage.getItem('availableStages');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.length !== availableStages.length) {
+            console.warn('⚠️ [renderAvailableStages] INCONSISTENCIA detectada:');
+            console.warn('   Variable availableStages:', availableStages.length);
+            console.warn('   localStorage:', parsed.length);
+            console.warn('   NO sincronizando - usando variable actual');
+        } else {
+            console.log('✅ [renderAvailableStages] Consistencia verificada');
+        }
+    }
     
     // Filtrar etapas que ya están en uso en esta plantilla
     const usedStageIds = currentTemplate.realContent.stages.map(stage => stage.templateId);
     const availableStagesForThisTemplate = availableStages.filter(stage => !usedStageIds.includes(stage.id));
+    
+    console.log('🔍 [renderAvailableStages] Etapas disponibles para esta plantilla:', availableStagesForThisTemplate.length);
     
     // Obtener referencias a elementos que se mostrarán/ocultarán
     const createStageBtn = document.getElementById('createStageBtn');
@@ -3991,17 +4284,67 @@ window.toggleAgentConfig = function(stageId) {
 // ========================================
 
 function loadAvailableStages() {
+    console.log('🔧 [loadAvailableStages] Iniciando carga de etapas...');
     const stored = localStorage.getItem('availableStages');
+    
     if (stored) {
-        availableStages = JSON.parse(stored);
+        const parsedStages = JSON.parse(stored);
+        console.log('🔧 [loadAvailableStages] Etapas encontradas en localStorage:', parsedStages.length);
+        
+        // Verificar si ya se inicializaron las etapas por defecto
+        const hasDefaultStages = parsedStages.some(s => s.isDefault);
+        console.log('🔧 [loadAvailableStages] hasDefaultStages:', hasDefaultStages);
+        
+        if (!hasDefaultStages) {
+            // Si no hay etapas por defecto, agregarlas al inicio
+            console.log('✅ [loadAvailableStages] Restaurando etapas por defecto...');
+            availableStages = [...DEFAULT_STAGES, ...parsedStages];
+            saveAvailableStages();
+            console.log('✅ [loadAvailableStages] Etapas por defecto restauradas. Total:', availableStages.length);
+        } else {
+            // Verificar que todas las etapas por defecto estén presentes
+            const defaultStageIds = DEFAULT_STAGES.map(s => s.id);
+            const existingDefaultIds = parsedStages.filter(s => s.isDefault).map(s => s.id);
+            const missingDefaultIds = defaultStageIds.filter(id => !existingDefaultIds.includes(id));
+            
+            if (missingDefaultIds.length > 0) {
+                console.log('⚠️ [loadAvailableStages] Faltan etapas por defecto:', missingDefaultIds.length);
+                // Restaurar solo las etapas por defecto que faltan
+                const missingDefaultStages = DEFAULT_STAGES.filter(s => missingDefaultIds.includes(s.id));
+                availableStages = [...missingDefaultStages, ...parsedStages];
+                saveAvailableStages();
+                console.log('✅ [loadAvailableStages] Etapas por defecto faltantes restauradas. Total:', availableStages.length);
+            } else {
+                availableStages = parsedStages;
+                console.log('✅ [loadAvailableStages] Todas las etapas por defecto presentes. Total:', availableStages.length);
+            }
+        }
     } else {
-        // Sistema en blanco - sin etapas por defecto
-        availableStages = [];
+        // Si no hay etapas guardadas, usar las por defecto
+        console.log('✅ [loadAvailableStages] No hay etapas en localStorage, inicializando con etapas por defecto...');
+        availableStages = [...DEFAULT_STAGES];
+        saveAvailableStages();
+        console.log('✅ [loadAvailableStages] Etapas por defecto inicializadas. Total:', availableStages.length);
     }
+    
+    console.log('🔧 [loadAvailableStages] Carga completada. availableStages.length:', availableStages.length);
 }
 
 function saveAvailableStages() {
+    console.log('💾 [saveAvailableStages] Guardando etapas:', availableStages.length);
     localStorage.setItem('availableStages', JSON.stringify(availableStages));
+    
+    // Verificar que se guardó correctamente
+    const stored = localStorage.getItem('availableStages');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.length !== availableStages.length) {
+            console.error('❌ [saveAvailableStages] ERROR: Las etapas no se guardaron correctamente');
+            console.error('   Esperado:', availableStages.length, 'Guardado:', parsed.length);
+        } else {
+            console.log('✅ [saveAvailableStages] Etapas guardadas correctamente');
+        }
+    }
 }
 
 function generateStageId() {
@@ -4234,8 +4577,18 @@ function updateStageTemplate(stageId, formData) {
 }
 
 function deleteStageTemplate(stageId) {
+    console.log('🗑️ [deleteStageTemplate] Iniciando eliminación de etapa:', stageId);
+    
     const stage = availableStages.find(s => s.id === stageId);
-    if (!stage) return;
+    if (!stage) {
+        console.error('❌ [deleteStageTemplate] Etapa no encontrada:', stageId);
+        if (typeof showToast === 'function') {
+            showToast('error', 'Etapa no encontrada');
+        }
+        return;
+    }
+    
+    console.log('🔍 [deleteStageTemplate] Etapa encontrada:', stage.name);
     
     // Verificar si la etapa está siendo usada en una plantilla activa
     const templates = JSON.parse(localStorage.getItem('templates') || '[]');
@@ -4250,6 +4603,7 @@ function deleteStageTemplate(stageId) {
     });
     
     if (isUsedInActiveTemplate) {
+        console.log('⚠️ [deleteStageTemplate] Etapa en uso en plantilla activa');
         // Mostrar modal de advertencia
         showConfirmModal({
             title: 'No se puede eliminar',
@@ -4265,6 +4619,8 @@ function deleteStageTemplate(stageId) {
         return;
     }
     
+    console.log('✅ [deleteStageTemplate] Etapa no está en uso, procediendo con eliminación');
+    
     // Si no está en uso, proceder con la confirmación normal
     showConfirmModal({
         title: 'Eliminar etapa',
@@ -4273,26 +4629,76 @@ function deleteStageTemplate(stageId) {
         cancelText: 'Cancelar',
         variant: 'error',
         onConfirm: () => {
+            console.log('✅ [deleteStageTemplate] Usuario confirmó eliminación');
             confirmDeleteStageTemplate(stageId);
         },
         onCancel: () => {
-            // No hacer nada
+            console.log('❌ [deleteStageTemplate] Usuario canceló eliminación');
         }
     });
 }
 
+// Exponer función globalmente para acceso desde HTML
+window.deleteStageTemplate = deleteStageTemplate;
+
 function confirmDeleteStageTemplate(stageId) {
+    const stage = availableStages.find(s => s.id === stageId);
+    if (!stage) {
+        console.error('❌ [confirmDeleteStageTemplate] Etapa no encontrada:', stageId);
+        if (typeof showToast === 'function') {
+            showToast('error', 'Etapa no encontrada');
+        }
+        return;
+    }
+    
+    // Prevenir eliminación de etapas por defecto
+    if (stage.isDefault) {
+        console.warn('⚠️ [confirmDeleteStageTemplate] Intento de eliminar etapa por defecto:', stage.name);
+        if (typeof showToast === 'function') {
+            showToast('warning', 'No se pueden eliminar las etapas por defecto. Se restaurarán automáticamente al recargar la página.');
+        }
+        // Aún así, permitir eliminación temporal pero se restaurarán al recargar
+    }
+    
+    console.log('🗑️ [confirmDeleteStageTemplate] Eliminando etapa:', stageId, stage.name);
+    console.log('🔍 [confirmDeleteStageTemplate] availableStages antes:', availableStages.length);
+    
     // Remover de la lista de etapas disponibles
     availableStages = availableStages.filter(s => s.id !== stageId);
     
+    console.log('🔍 [confirmDeleteStageTemplate] availableStages después:', availableStages.length);
+    
     // Guardar en localStorage
     saveAvailableStages();
+    
+    // Verificar que se guardó correctamente
+    const stored = localStorage.getItem('availableStages');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('✅ [confirmDeleteStageTemplate] Verificación - etapas guardadas en localStorage:', parsed.length);
+        if (parsed.length !== availableStages.length) {
+            console.error('❌ [confirmDeleteStageTemplate] INCONSISTENCIA: Las etapas no se guardaron correctamente');
+            console.error('   Esperado:', availableStages.length, 'Guardado:', parsed.length);
+            // Forzar guardado de nuevo
+            localStorage.setItem('availableStages', JSON.stringify(availableStages));
+            console.log('🔄 [confirmDeleteStageTemplate] Reintentando guardado...');
+        }
+    }
     
     // Re-renderizar la lista de etapas
     renderAvailableStages();
     
     // Marcar como cambios sin guardar
     markAsUnsaved();
+    
+    // Mostrar toast de éxito (o advertencia si es por defecto)
+    if (typeof showToast === 'function') {
+        if (stage.isDefault) {
+            showToast('info', `Etapa "${stage.name}" eliminada temporalmente. Se restaurará al recargar la página.`);
+        } else {
+            showToast('success', `Etapa "${stage.name}" eliminada correctamente`);
+        }
+    }
 }
 
 function handleStageTemplateDragStart(event) {

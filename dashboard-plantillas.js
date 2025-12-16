@@ -295,7 +295,7 @@ function createDefaultTemplates() {
     const template1 = {
         id: 'default-template-ia',
         name: 'Estándar de selección con IA',
-        category: 'reclutamiento',
+        category: 'contratacion-general',
         status: 'available',
         createdAt: now,
         lastModified: today,
@@ -390,7 +390,7 @@ function createDefaultTemplates() {
     const template2 = {
         id: 'default-template-standard',
         name: 'Estándar de selección',
-        category: 'reclutamiento',
+        category: 'contratacion-general',
         status: 'available',
         createdAt: now,
         lastModified: today,
@@ -519,82 +519,120 @@ function handleSearch(value) {
     applyTemplateFilters();
 }
 
+// Variable para prevenir loops infinitos y debounce
+let isApplyingFilters = false;
+let applyFiltersTimeout = null;
+
 // Función para aplicar todos los filtros (búsqueda + filtros del drawer)
 function applyTemplateFilters() {
-    const searchInput = document.getElementById('searchTemplates');
-    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    
-    // Empezar con todas las plantillas
-    let templates = [...currentTemplates];
-    
-    // Aplicar búsqueda
-    if (searchQuery) {
-        templates = templates.filter(template => 
-            template.name.toLowerCase().includes(searchQuery) ||
-            template.category.toLowerCase().includes(searchQuery) ||
-            template.author.toLowerCase().includes(searchQuery) ||
-            (template.description && template.description.toLowerCase().includes(searchQuery))
-        );
+    // Cancelar timeout anterior si existe
+    if (applyFiltersTimeout) {
+        clearTimeout(applyFiltersTimeout);
+        applyFiltersTimeout = null;
     }
     
-    // Aplicar filtros del drawer
-    if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
-        const filters = window.activeFilters;
-        
-        // Filtro de estado
-        if (filters.status && filters.status.length > 0) {
-            templates = templates.filter(template => filters.status.includes(template.status));
-        }
-        
-        // Filtro de rango de fecha
-        if (filters.dateFrom) {
-            templates = templates.filter(template => {
-                const templateDate = new Date(template.lastModified);
-                const fromDate = new Date(filters.dateFrom);
-                return templateDate >= fromDate;
-            });
-        }
-        
-        if (filters.dateTo) {
-            templates = templates.filter(template => {
-                const templateDate = new Date(template.lastModified);
-                const toDate = new Date(filters.dateTo);
-                toDate.setHours(23, 59, 59, 999); // Incluir todo el día
-                return templateDate <= toDate;
-            });
-        }
-        
-        // Filtro de agentes
-        if (filters.hasAgents !== null) {
-            templates = templates.filter(template => {
-                const agentsCount = template.agents || 0;
-                if (filters.hasAgents === true) {
-                    return agentsCount > 0;
-                } else {
-                    return agentsCount === 0;
-                }
-            });
-        }
+    // Prevenir loops infinitos
+    if (isApplyingFilters) {
+        // Si ya está aplicando, programar una nueva ejecución después
+        applyFiltersTimeout = setTimeout(() => {
+            applyTemplateFilters();
+        }, 150);
+        return;
     }
     
-    // Actualizar plantillas filtradas
-    filteredTemplates = templates;
+    isApplyingFilters = true;
     
-    // Si estamos en modo "ver seleccionados", aplicar ese filtro también
-    if (isViewingSelected) {
-        const selectedIds = getSelectedTemplateIds();
-        if (selectedIds.length > 0) {
-            filteredTemplates = filteredTemplates.filter(template => selectedIds.includes(template.id));
-        } else {
-            // Si no hay selección, desactivar modo
-            isViewingSelected = false;
+    try {
+        const searchInput = document.getElementById('searchTemplates');
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        
+        // Empezar con todas las plantillas
+        let templates = [...currentTemplates];
+    
+        // Aplicar búsqueda
+        if (searchQuery) {
+            templates = templates.filter(template => 
+                template.name.toLowerCase().includes(searchQuery) ||
+                template.category.toLowerCase().includes(searchQuery) ||
+                template.author.toLowerCase().includes(searchQuery) ||
+                (template.description && template.description.toLowerCase().includes(searchQuery))
+            );
         }
+        
+        // Aplicar filtros del drawer
+        if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
+            const filters = window.activeFilters;
+            
+            console.log('🔍 [applyTemplateFilters] Filtros activos:', filters);
+            console.log('🔍 [applyTemplateFilters] Plantillas antes de filtrar:', templates.length);
+            
+            // Filtro de estado
+            if (filters.status && filters.status.length > 0) {
+                console.log('🔍 [applyTemplateFilters] Aplicando filtro de estado:', filters.status);
+                const beforeCount = templates.length;
+                templates = templates.filter(template => {
+                    const matches = filters.status.includes(template.status);
+                    if (!matches) {
+                        console.log(`  - ${template.name}: status="${template.status}", NO coincide con ${filters.status.join(', ')}`);
+                    }
+                    return matches;
+                });
+                console.log(`✅ [applyTemplateFilters] Filtrado de estado: ${beforeCount} -> ${templates.length}`);
+            }
+            
+            // Filtro de rango de fecha
+            if (filters.dateFrom) {
+                templates = templates.filter(template => {
+                    const templateDate = new Date(template.lastModified);
+                    const fromDate = new Date(filters.dateFrom);
+                    return templateDate >= fromDate;
+                });
+            }
+            
+            if (filters.dateTo) {
+                templates = templates.filter(template => {
+                    const templateDate = new Date(template.lastModified);
+                    const toDate = new Date(filters.dateTo);
+                    toDate.setHours(23, 59, 59, 999); // Incluir todo el día
+                    return templateDate <= toDate;
+                });
+            }
+            
+            // Filtro de agentes
+            if (filters.hasAgents !== null) {
+                templates = templates.filter(template => {
+                    const agentsCount = template.agents || 0;
+                    if (filters.hasAgents === true) {
+                        return agentsCount > 0;
+                    } else {
+                        return agentsCount === 0;
+                    }
+                });
+            }
+        }
+        
+        // Actualizar plantillas filtradas
+        filteredTemplates = templates;
+        
+        // Si estamos en modo "ver seleccionados", aplicar ese filtro también
+        if (isViewingSelected) {
+            const selectedIds = getSelectedTemplateIds();
+            if (selectedIds.length > 0) {
+                filteredTemplates = filteredTemplates.filter(template => selectedIds.includes(template.id));
+            } else {
+                // Si no hay selección, desactivar modo
+                isViewingSelected = false;
+            }
+        }
+        
+        // Aplicar ordenamiento y renderizar
+        applySorting();
+        renderTemplates();
+        updateTemplatesCount();
+    } finally {
+        // Liberar el flag inmediatamente después de completar
+        isApplyingFilters = false;
     }
-    
-    // Aplicar ordenamiento y renderizar
-    applySorting();
-    renderTemplates();
-    updateTemplatesCount();
 }
 
 function clearSearch() {
@@ -608,6 +646,114 @@ function clearSearch() {
         if (clearBtn) {
             clearBtn.style.display = 'none';
         }
+    }
+}
+
+// Función para verificar si hay filtros activos (excluyendo búsqueda)
+function hasActiveFilters() {
+    if (typeof window.activeFilters === 'undefined' || !window.activeFilters) {
+        return false;
+    }
+    
+    const filters = window.activeFilters;
+    
+    // Verificar si hay filtros de estado
+    if (filters.status && filters.status.length > 0) {
+        return true;
+    }
+    
+    // Verificar si hay filtros de fecha
+    if (filters.dateFrom || filters.dateTo) {
+        return true;
+    }
+    
+    // Verificar si hay filtro de agentes
+    if (filters.hasAgents !== null && filters.hasAgents !== undefined) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Función para limpiar todos los filtros
+function clearAllFilters() {
+    // Prevenir múltiples llamadas
+    if (isApplyingFilters) {
+        console.log('⏸️ [clearAllFilters] Ya está aplicando filtros, saltando...');
+        return;
+    }
+    
+    // Limpiar búsqueda
+    const searchInput = document.getElementById('searchTemplates');
+    if (searchInput) {
+        searchInput.value = '';
+        isSearching = false;
+        const clearBtn = document.getElementById('clearSearchTemplates');
+        if (clearBtn) {
+            clearBtn.style.display = 'none';
+        }
+    }
+    
+    // Limpiar filtros del drawer
+    if (typeof window.activeFilters !== 'undefined') {
+        window.activeFilters = {
+            status: [],
+            dateFrom: null,
+            dateTo: null,
+            hasAgents: null
+        };
+    }
+    
+    // Limpiar inputs del drawer si existen
+    if (window.filterStatusSelectInstance) {
+        try {
+            window.filterStatusSelectInstance.setValue('Todos los estados');
+        } catch (e) {
+            console.warn('Error limpiando select de estado:', e);
+        }
+    }
+    if (window.filterDateFromInstance) {
+        try {
+            window.filterDateFromInstance.setValue('');
+        } catch (e) {
+            console.warn('Error limpiando fecha desde:', e);
+        }
+    }
+    if (window.filterDateToInstance) {
+        try {
+            window.filterDateToInstance.setValue('');
+        } catch (e) {
+            console.warn('Error limpiando fecha hasta:', e);
+        }
+    }
+    
+    // Limpiar radio buttons de agentes
+    const agentsYes = document.getElementById('filter-agents-yes');
+    const agentsNo = document.getElementById('filter-agents-no');
+    if (agentsYes) agentsYes.checked = false;
+    if (agentsNo) agentsNo.checked = false;
+    
+    // Actualizar badge
+    if (typeof updateFilterBadge === 'function') {
+        updateFilterBadge();
+    }
+    
+    // Cerrar drawer si está abierto
+    if (typeof closeFilterDrawer === 'function') {
+        closeFilterDrawer();
+    }
+    
+    // Aplicar filtros (ahora sin filtros) - solo una vez
+    applyTemplateFilters();
+}
+
+// Exponer función globalmente para que index.html pueda usarla
+window.clearAllFiltersFromDashboard = clearAllFilters;
+
+// Función para abrir el drawer de filtros
+function openFilterDrawer() {
+    if (typeof toggleFilterDrawer === 'function') {
+        toggleFilterDrawer();
     }
 }
 
@@ -754,8 +900,49 @@ function renderTemplates() {
         });
         
         // Verificar si hay plantillas
+        const tableContainer = document.getElementById('templatesTableContainer');
+        
+        // Crear o obtener contenedor de empty state
+        let emptyStateContainer = document.getElementById('emptyStateContainer');
+        if (!emptyStateContainer) {
+            emptyStateContainer = document.createElement('div');
+            emptyStateContainer.id = 'emptyStateContainer';
+            emptyStateContainer.className = 'empty-state-container';
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+                contentArea.appendChild(emptyStateContainer);
+            }
+        }
+        
+        // Verificar si hay búsqueda o filtros activos
+        const searchInput = document.getElementById('searchTemplates');
+        const hasSearchQuery = searchInput && searchInput.value.trim().length > 0;
+        const hasFilters = hasActiveFilters();
+        const hasAnyFilter = hasSearchQuery || hasFilters || isViewingSelected;
+        
         if (!filteredTemplates || !Array.isArray(filteredTemplates) || filteredTemplates.length === 0) {
-            // Manejar empty state o no results
+            // Si no hay filtros y no hay plantillas, mostrar empty state fuera del contenedor
+            if (!hasAnyFilter && currentTemplates.length === 0) {
+                // Ocultar contenedor de tabla y header
+                if (tableContainer) {
+                    tableContainer.style.display = 'none';
+                }
+                
+                // Mostrar empty state fuera del contenedor
+                emptyStateContainer.innerHTML = getEmptyStateHTML();
+                emptyStateContainer.style.display = 'block';
+                isRendering = false;
+                return;
+            }
+            
+            // Hay filtros o búsqueda: mostrar dentro del contenedor (SIEMPRE mostrar tabla cuando hay filtros)
+            if (tableContainer) {
+                tableContainer.style.display = 'block';
+            }
+            if (emptyStateContainer) {
+                emptyStateContainer.style.display = 'none';
+            }
+            
             if (isTableViewActive) {
                 renderTemplatesTable(); // La tabla maneja su propio empty state
             } else if (isCardsViewActive) {
@@ -771,6 +958,14 @@ function renderTemplates() {
             }
             isRendering = false;
             return;
+        }
+        
+        // Hay plantillas: mostrar contenedor y ocultar empty state
+        if (tableContainer) {
+            tableContainer.style.display = 'block';
+        }
+        if (emptyStateContainer) {
+            emptyStateContainer.style.display = 'none';
         }
         
         // Renderizar según la vista activa
@@ -816,26 +1011,33 @@ let isRenderingTable = false;
 function renderTemplatesTable() {
     // Prevenir múltiples renderizados simultáneos
     if (isRenderingTable) {
+        console.log('⏸️ [renderTemplatesTable] Ya está renderizando, saltando...');
         return;
     }
     
     isRenderingTable = true;
+    console.log('🔄 [renderTemplatesTable] Iniciando renderizado de tabla');
     
     try {
         const tableBody = document.getElementById('templatesTableBody');
         if (!tableBody) {
+            console.error('❌ [renderTemplatesTable] No se encontró templatesTableBody');
             isRenderingTable = false;
             return;
         }
         
         if (!filteredTemplates || !Array.isArray(filteredTemplates)) {
+            console.log('⚠️ [renderTemplatesTable] filteredTemplates no es válido');
             tableBody.innerHTML = '';
             isRenderingTable = false;
             return;
         }
         
+        console.log('🔍 [renderTemplatesTable] Plantillas filtradas:', filteredTemplates.length);
+        
         if (filteredTemplates.length === 0) {
-            tableBody.innerHTML = '';
+            // Renderizar empty state simple y limpio
+            tableBody.innerHTML = renderTableEmptyState();
             isRenderingTable = false;
             return;
         }
@@ -898,7 +1100,12 @@ function renderTemplatesTable() {
                         <input type="checkbox" class="template-checkbox" data-template-id="${template.id}" ${isSelected ? 'checked' : ''}>
                     </td>
                     <td data-column="name" class="table-name column-name">${template.name || 'Sin nombre'}</td>
-                    <td data-column="type" class="table-type column-type">${categoryText}</td>
+                    <td data-column="category" class="table-category column-category">
+                        <span class="table-category-badge" data-template-id="${template.id}" data-current-category="${template.category || 'contratacion-general'}" style="cursor: pointer;" title="Click para cambiar categoría">
+                            ${categoryText}
+                            <i class="far fa-chevron-down" style="margin-left: 6px; font-size: 10px; opacity: 0.7;"></i>
+                        </span>
+                    </td>
                     <td data-column="status" class="table-status column-status">
                         <span class="table-status-badge ${statusClass}" data-template-id="${template.id}" data-current-status="${template.status || 'draft'}" style="cursor: pointer;" title="Click para cambiar estado">
                             ${statusText}
@@ -927,6 +1134,7 @@ function renderTemplatesTable() {
         
         // Agregar event listeners para cambio de estado
         setupStatusChangeListeners();
+        setupCategoryChangeListeners();
     } catch (error) {
         console.error('Error en renderTemplatesTable:', error);
     } finally {
@@ -1118,6 +1326,13 @@ function getSelectedTemplateIds() {
 }
 
 // Función para ver plantillas seleccionadas
+// Función para limpiar la vista de seleccionados (usada desde el empty state)
+function clearSelectedView() {
+    if (isViewingSelected) {
+        viewSelectedTemplates();
+    }
+}
+
 function viewSelectedTemplates() {
     const viewSelectedButton = document.getElementById('viewSelectedButton');
     const viewSelectedIcon = viewSelectedButton ? viewSelectedButton.querySelector('i') : null;
@@ -1489,15 +1704,28 @@ function deleteSelectedTemplates() {
                 currentTemplates = templates;
                 filteredTemplates = [...currentTemplates];
                 
+                // Actualizar filteredTemplates aplicando filtros actuales
+                const searchInput = document.getElementById('searchTemplates');
+                const searchQuery = searchInput ? searchInput.value.trim() : '';
+                
+                if (searchQuery || hasActiveFilters() || isViewingSelected) {
+                    // Si hay filtros activos, aplicar la búsqueda para actualizar filteredTemplates
+                    if (typeof handleSearch === 'function') {
+                        handleSearch(searchQuery);
+                    } else {
+                        filteredTemplates = [...currentTemplates];
+                    }
+                } else {
+                    // Sin filtros, simplemente copiar todas las plantillas
+                    filteredTemplates = [...currentTemplates];
+                }
+                
                 // Mostrar confirmación
                 if (typeof showToast === 'function') {
                     showToast('success', `${selectedIds.length} plantilla(s) eliminada(s) exitosamente`);
                 }
                 
-                // Recargar y renderizar la tabla
-                if (typeof loadTemplatesFromStorage === 'function') {
-                    loadTemplatesFromStorage();
-                }
+                // Renderizar la tabla con las plantillas actualizadas
                 if (typeof renderTemplates === 'function') {
                     renderTemplates();
                 }
@@ -1536,17 +1764,29 @@ function deleteSelectedTemplates() {
             
             // Actualizar variables globales
             currentTemplates = templates;
+            
+            // Actualizar filteredTemplates aplicando filtros actuales
+            const searchInput = document.getElementById('searchTemplates');
+            const searchQuery = searchInput ? searchInput.value.trim() : '';
+            
+            if (searchQuery || hasActiveFilters() || isViewingSelected) {
+                // Si hay filtros activos, aplicar la búsqueda para actualizar filteredTemplates
+                if (typeof handleSearch === 'function') {
+                    handleSearch(searchQuery);
+                } else {
             filteredTemplates = [...currentTemplates];
+                }
+            } else {
+                // Sin filtros, simplemente copiar todas las plantillas
+                filteredTemplates = [...currentTemplates];
+            }
             
             // Mostrar confirmación
             if (typeof showToast === 'function') {
                 showToast('success', `${selectedIds.length} plantilla(s) eliminada(s) exitosamente`);
             }
             
-            // Recargar y renderizar la tabla
-            if (typeof loadTemplatesFromStorage === 'function') {
-                loadTemplatesFromStorage();
-            }
+            // Renderizar la tabla con las plantillas actualizadas
             if (typeof renderTemplates === 'function') {
                 renderTemplates();
             }
@@ -1939,6 +2179,157 @@ function toggleTemplateStatus(templateId, currentStatus, newStatus) {
     }
 }
 
+// Función para configurar event listeners de cambio de categoría
+function setupCategoryChangeListeners() {
+    const categoryBadges = document.querySelectorAll('.table-category-badge[data-template-id]');
+    
+    categoryBadges.forEach(badge => {
+        badge.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevenir que se abra el editor
+            
+            const templateId = this.dataset.templateId;
+            const currentCategory = this.dataset.currentCategory || 'contratacion-general';
+            
+            if (templateId) {
+                showCategoryDropdown(this, templateId, currentCategory);
+            }
+        });
+    });
+}
+
+// Función para mostrar dropdown de categoría
+function showCategoryDropdown(badgeElement, templateId, currentCategory) {
+    // Cerrar otros dropdowns abiertos
+    document.querySelectorAll('.category-dropdown-menu').forEach(menu => {
+        menu.remove();
+    });
+    
+    // Crear dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'category-dropdown-menu';
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '10000';
+    
+    // Posicionar el dropdown
+    const badgeRect = badgeElement.getBoundingClientRect();
+    dropdown.style.top = (badgeRect.bottom + 4) + 'px';
+    dropdown.style.left = badgeRect.left + 'px';
+    dropdown.style.minWidth = Math.max(180, badgeRect.width) + 'px';
+    
+    // Opciones de categoría
+    const categoryOptions = [
+        { value: 'administracion', text: 'Administración' },
+        { value: 'atencion-cliente', text: 'Atención al cliente' },
+        { value: 'contratacion-general', text: 'Contratación general' },
+        { value: 'diseno-creatividad', text: 'Diseño y creatividad' },
+        { value: 'finanzas-contabilidad', text: 'Finanzas y contabilidad' },
+        { value: 'ingenieria', text: 'Ingeniería' },
+        { value: 'operaciones', text: 'Operaciones' },
+        { value: 'reclutamiento', text: 'Recursos humanos' },
+        { value: 'tecnologia-desarrollo', text: 'Tecnología / Desarrollo' },
+        { value: 'ventas-marketing', text: 'Ventas y marketing' }
+    ];
+    
+    // Crear items del dropdown
+    categoryOptions.forEach(option => {
+        const item = document.createElement('div');
+        item.className = 'category-dropdown-item';
+        if (option.value === currentCategory) {
+            item.classList.add('active');
+        }
+        
+        item.textContent = option.text;
+        
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (option.value !== currentCategory) {
+                toggleTemplateCategory(templateId, currentCategory, option.value);
+            }
+            dropdown.remove();
+        });
+        
+        dropdown.appendChild(item);
+    });
+    
+    // Agregar al body
+    document.body.appendChild(dropdown);
+    
+    // Cerrar al hacer click fuera
+    const closeDropdown = (e) => {
+        if (!dropdown.contains(e.target) && !badgeElement.contains(e.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', closeDropdown);
+        }
+    };
+    
+    setTimeout(() => {
+        document.addEventListener('click', closeDropdown);
+    }, 0);
+}
+
+// Función para cambiar la categoría de una plantilla
+function toggleTemplateCategory(templateId, currentCategory, newCategory) {
+    try {
+        // Si la categoría es la misma, no hacer nada
+        if (newCategory === currentCategory) {
+            return;
+        }
+        
+        // Encontrar la plantilla
+        const templateIndex = currentTemplates.findIndex(t => t.id === templateId);
+        
+        if (templateIndex === -1) {
+            console.error('Plantilla no encontrada:', templateId);
+            return;
+        }
+        
+        const template = currentTemplates[templateIndex];
+        
+        // Cambiar la categoría
+        template.category = newCategory;
+        
+        // Actualizar fecha de modificación
+        template.lastModified = new Date().toISOString().split('T')[0];
+        
+        // Guardar en localStorage
+        saveTemplatesToStorage();
+        
+        // Actualizar filteredTemplates si la plantilla está ahí
+        const filteredIndex = filteredTemplates.findIndex(t => t.id === templateId);
+        if (filteredIndex !== -1) {
+            filteredTemplates[filteredIndex] = template;
+        }
+        
+        // Re-renderizar la tabla
+        renderTemplatesTable();
+        
+        // Mostrar toast de confirmación
+        if (typeof showToast === 'function') {
+            const categoryMap = {
+                'administracion': 'Administración',
+                'atencion-cliente': 'Atención al cliente',
+                'contratacion-general': 'Contratación general',
+                'diseno-creatividad': 'Diseño y creatividad',
+                'finanzas-contabilidad': 'Finanzas y contabilidad',
+                'ingenieria': 'Ingeniería',
+                'operaciones': 'Operaciones',
+                'reclutamiento': 'Recursos humanos',
+                'tecnologia-desarrollo': 'Tecnología / Desarrollo',
+                'ventas-marketing': 'Ventas y marketing'
+            };
+            const categoryText = categoryMap[newCategory] || newCategory;
+            showToast('success', `Categoría cambiada a "${categoryText}"`);
+        }
+        
+        console.log(`Categoría de plantilla ${templateId} cambiada de ${currentCategory} a ${newCategory}`);
+    } catch (error) {
+        console.error('Error al cambiar categoría de plantilla:', error);
+        if (typeof showToast === 'function') {
+            showToast('error', 'Error al cambiar la categoría');
+        }
+    }
+}
+
 function createTemplateCardHTML(template) {
     // Determinar status class y text
     // Asegurar que siempre se muestre el badge si hay un estado definido
@@ -2048,7 +2439,7 @@ function getEmptyStateHTML() {
             </div>
             <h3 class="empty-title">Crea tu primera plantilla de proceso</h3>
             <p class="empty-description">Diseña un flujo de reclutamiento que puedas reutilizar en todos tus procesos. Automatiza tareas, ahorra tiempo y evalúa a tus candidatos de forma consistente.</p>
-            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="openCreateTemplateModal()">
+            <button class="ubits-button ubits-button--primary ubits-button--md ubits-button--no-hover" onclick="openCreateTemplateModal()" style="background: #0c5bef !important; background-color: #0c5bef !important; border-color: #0c5bef !important; border: 1px solid #0c5bef !important; color: #ffffff !important; transition: none !important;">
                 <i class="far fa-plus"></i>
                 <span>Crear mi primera plantilla</span>
             </button>
@@ -2057,7 +2448,8 @@ function getEmptyStateHTML() {
 }
 
 function getNoResultsHTML() {
-    return `
+    console.log('🔍 [getNoResultsHTML] Generando HTML de no resultados (cards)');
+    const html = `
         <div class="no-results-state">
             <img src="images/empty-states/sin-resultados-img.svg" alt="Sin resultados">
             <h3>No se encontraron plantillas</h3>
@@ -2068,7 +2460,302 @@ function getNoResultsHTML() {
             </button>
         </div>
     `;
+    
+    // Aplicar estilos inline para prevenir hover
+    setTimeout(() => {
+        const emptyState = document.querySelector('.no-results-state');
+        if (emptyState) {
+            const buttons = emptyState.querySelectorAll('.ubits-button');
+            console.log('🔍 [getNoResultsHTML] Aplicando estilos anti-hover a botones:', buttons.length);
+            buttons.forEach((btn, index) => {
+                const isPrimary = btn.classList.contains('ubits-button--primary');
+                const isSecondary = btn.classList.contains('ubits-button--secondary');
+                
+                // Agregar clase especial para deshabilitar hover
+                btn.classList.add('ubits-button--no-hover');
+                console.log(`  ✅ Clase 'ubits-button--no-hover' agregada al botón ${index + 1}`);
+                
+                if (isSecondary) {
+                    btn.style.setProperty('background', 'var(--ubits-btn-secondary-bg-default)', 'important');
+                    btn.style.setProperty('border-color', 'var(--ubits-btn-secondary-border)', 'important');
+                    btn.style.setProperty('color', 'var(--ubits-btn-secondary-fg-default)', 'important');
+                } else if (isPrimary) {
+                    btn.style.setProperty('background', 'var(--ubits-button-primary-bg-default)', 'important');
+                    btn.style.setProperty('border-color', 'var(--ubits-button-primary-bg-default)', 'important');
+                    btn.style.setProperty('color', 'var(--ubits-btn-primary-fg)', 'important');
+                }
+                console.log(`  ✅ Estilos aplicados al botón ${index + 1}`);
+                
+                // Función para forzar estilos - FORZAR EN CADA FRAME
+                const forceStyles = function() {
+                    const isSecondary = this.classList.contains('ubits-button--secondary');
+                    const isPrimary = this.classList.contains('ubits-button--primary');
+                    
+                    // Deshabilitar transición completamente
+                    this.style.setProperty('transition', 'none', 'important');
+                    this.style.setProperty('-webkit-transition', 'none', 'important');
+                    this.style.setProperty('-moz-transition', 'none', 'important');
+                    this.style.setProperty('-o-transition', 'none', 'important');
+                    
+                    if (isSecondary) {
+                        // Usar valores hardcodeados directamente
+                        this.style.setProperty('background', '#ffffff', 'important');
+                        this.style.setProperty('background-color', '#ffffff', 'important');
+                        this.style.setProperty('border-color', '#d0d2d5', 'important');
+                        this.style.setProperty('border', '1px solid #d0d2d5', 'important');
+                        this.style.setProperty('color', '#303a47', 'important');
+                    } else if (isPrimary) {
+                        this.style.setProperty('background', '#0c5bef', 'important');
+                        this.style.setProperty('background-color', '#0c5bef', 'important');
+                        this.style.setProperty('border-color', '#0c5bef', 'important');
+                        this.style.setProperty('border', '1px solid #0c5bef', 'important');
+                        this.style.setProperty('color', '#ffffff', 'important');
+                    }
+                };
+                
+                // Forzar estilos constantemente mientras está en hover usando requestAnimationFrame
+                let hoverInterval = null;
+                btn.addEventListener('mouseenter', function() {
+                    console.log(`🚨 [HOVER DETECTADO] Botón ${index + 1} - Iniciando loop de forzado...`);
+                    // Forzar inmediatamente
+                    forceStyles.call(this);
+                    
+                    // Forzar en cada frame mientras está en hover
+                    const forceLoop = () => {
+                        forceStyles.call(this);
+                        hoverInterval = requestAnimationFrame(forceLoop);
+                    };
+                    hoverInterval = requestAnimationFrame(forceLoop);
+                }, {capture: true, passive: false});
+                
+                btn.addEventListener('mouseleave', function() {
+                    if (hoverInterval) {
+                        cancelAnimationFrame(hoverInterval);
+                        hoverInterval = null;
+                    }
+                }, {capture: true, passive: false});
+                
+                // También agregar mouseover como backup
+                btn.addEventListener('mouseover', forceStyles, {capture: true, passive: false});
+            });
+        }
+    }, 100);
+    
+    return html;
 }
+
+// Función para obtener HTML del empty state de la tabla
+// Función para obtener HTML del empty state principal (cuando no hay plantillas)
+
+// Función simple para renderizar empty state de la tabla
+function renderTableEmptyState() {
+    console.log('🔍 [renderTableEmptyState] Iniciando renderizado de empty state');
+    
+    const searchInput = document.getElementById('searchTemplates');
+    const hasSearchQuery = searchInput && searchInput.value.trim().length > 0;
+    const hasFilters = hasActiveFilters();
+    
+    console.log('🔍 [renderTableEmptyState] Estado:', {
+        hasSearchQuery,
+        hasFilters,
+        isViewingSelected,
+        searchValue: searchInput ? searchInput.value : 'no input'
+    });
+    
+    let message = 'No se encontraron plantillas';
+    let description = 'Intenta ajustar los criterios de búsqueda o filtros.';
+    let iconClass = 'far fa-file-lines';
+    let buttonHTML = '';
+    
+    if (hasSearchQuery && hasFilters) {
+        message = 'No se encontraron plantillas';
+        description = `No hay resultados para "${searchInput.value}" con los filtros aplicados.`;
+        iconClass = 'far fa-magnifying-glass';
+        buttonHTML = `
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openFilterDrawer()" style="pointer-events: auto;">
+                    <i class="far fa-filter"></i>
+                    <span>Ajustar filtros</span>
+                </button>
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="clearAllFilters()" style="pointer-events: auto;">
+                    <i class="far fa-times"></i>
+                    <span>Limpiar filtros</span>
+                </button>
+            </div>
+        `;
+    } else if (hasSearchQuery) {
+        message = 'No se encontraron plantillas';
+        description = `No hay resultados para "${searchInput.value}". Intenta con otros términos de búsqueda.`;
+        iconClass = 'far fa-magnifying-glass';
+        buttonHTML = `
+            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="clearSearch()" style="pointer-events: auto;">
+                <i class="far fa-times"></i>
+                <span>Limpiar búsqueda</span>
+            </button>
+        `;
+    } else if (hasFilters) {
+        message = 'No se encontraron plantillas';
+        description = 'No hay resultados con los filtros aplicados. Intenta ajustar los criterios de filtrado.';
+        iconClass = 'far fa-filter';
+        buttonHTML = `
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="openFilterDrawer()" style="pointer-events: auto;">
+                    <i class="far fa-filter"></i>
+                    <span>Ajustar filtros</span>
+                </button>
+                <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="clearAllFilters()" style="pointer-events: auto;">
+                    <i class="far fa-times"></i>
+                    <span>Limpiar filtros</span>
+                </button>
+            </div>
+        `;
+    } else if (isViewingSelected) {
+        message = 'No hay plantillas seleccionadas';
+        description = 'Selecciona algunas plantillas para verlas aquí.';
+        iconClass = 'far fa-eye-slash';
+        buttonHTML = `
+            <button class="ubits-button ubits-button--secondary ubits-button--md" onclick="clearSelectedView()" style="pointer-events: auto;">
+                <i class="far fa-eye"></i>
+                <span>Ver todas las plantillas</span>
+            </button>
+        `;
+    } else {
+        message = 'No hay plantillas';
+        description = 'Crea tu primera plantilla para comenzar.';
+        iconClass = 'far fa-file-lines';
+        buttonHTML = `
+            <button class="ubits-button ubits-button--primary ubits-button--md" onclick="createNewTemplate()" style="pointer-events: auto;">
+                <i class="far fa-plus"></i>
+                <span>Crear plantilla</span>
+            </button>
+        `;
+    }
+    
+    const html = `
+        <tr class="table-empty-row">
+            <td colspan="8" class="table-empty-cell">
+                <div class="table-empty-content">
+                    <div class="table-empty-icon">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <h3 class="table-empty-title">${message}</h3>
+                    <p class="table-empty-description">${description}</p>
+                    ${buttonHTML}
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    // Agregar logs detallados después de renderizar
+    setTimeout(() => {
+        console.log('🔍 [renderTableEmptyState] Analizando estilos aplicados después de renderizar...');
+        
+        const emptyRow = document.querySelector('.table-empty-row');
+        const emptyCell = document.querySelector('.table-empty-cell');
+        const emptyContent = document.querySelector('.table-empty-content');
+        
+        if (emptyRow) {
+            const rowStyles = getComputedStyle(emptyRow);
+            console.log('📋 [renderTableEmptyState] Estilos de .table-empty-row:', {
+                background: rowStyles.background,
+                backgroundColor: rowStyles.backgroundColor,
+                transition: rowStyles.transition,
+                hoverStyles: 'Verificando...'
+            });
+            
+            // Verificar qué reglas CSS se aplican
+            const allStylesheets = Array.from(document.styleSheets);
+            console.log('🔍 [renderTableEmptyState] Buscando reglas CSS que afecten .table-empty-row...');
+            allStylesheets.forEach((sheet, sheetIndex) => {
+                try {
+                    const rules = Array.from(sheet.cssRules || []);
+                    rules.forEach((rule, ruleIndex) => {
+                        if (rule.selectorText && (
+                            rule.selectorText.includes('table-empty-row') ||
+                            rule.selectorText.includes('tbody tr:hover') ||
+                            rule.selectorText.includes('ubits-table tbody tr')
+                        )) {
+                            console.log(`  📄 Stylesheet ${sheetIndex}, Regla ${ruleIndex}:`, {
+                                selector: rule.selectorText,
+                                background: rule.style.background,
+                                backgroundColor: rule.style.backgroundColor,
+                                transition: rule.style.transition
+                            });
+                        }
+                    });
+                } catch (e) {
+                    // Ignorar errores de CORS
+                }
+            });
+        }
+        
+        if (emptyCell) {
+            const cellStyles = getComputedStyle(emptyCell);
+            console.log('📋 [renderTableEmptyState] Estilos de .table-empty-cell:', {
+                background: cellStyles.background,
+                backgroundColor: cellStyles.backgroundColor,
+                transition: cellStyles.transition
+            });
+        }
+        
+        if (emptyContent) {
+            const contentStyles = getComputedStyle(emptyContent);
+            console.log('📋 [renderTableEmptyState] Estilos de .table-empty-content:', {
+                background: contentStyles.background,
+                backgroundColor: contentStyles.backgroundColor,
+                transition: contentStyles.transition,
+                boxShadow: contentStyles.boxShadow,
+                transform: contentStyles.transform
+            });
+            
+            // Agregar event listener para detectar hover
+            emptyContent.addEventListener('mouseenter', function() {
+                console.log('🚨 [HOVER DETECTADO] Mouse entró en .table-empty-content');
+                const computed = getComputedStyle(this);
+                console.log('  📋 Estilos computados EN HOVER:', {
+                    background: computed.background,
+                    backgroundColor: computed.backgroundColor,
+                    boxShadow: computed.boxShadow,
+                    transform: computed.transform,
+                    transition: computed.transition
+                });
+                
+                // Verificar estilos inline
+                console.log('  📝 Estilos inline:', {
+                    styleBackground: this.style.background,
+                    styleBackgroundColor: this.style.backgroundColor,
+                    styleCssText: this.style.cssText.substring(0, 200)
+                });
+                
+                // Verificar elemento padre (td)
+                const parent = this.parentElement;
+                if (parent) {
+                    const parentComputed = getComputedStyle(parent);
+                    console.log('  👨‍👩‍👧 Estilos del padre (td):', {
+                        background: parentComputed.background,
+                        backgroundColor: parentComputed.backgroundColor,
+                        transition: parentComputed.transition
+                    });
+                }
+                
+                // Verificar elemento abuelo (tr)
+                const grandparent = parent ? parent.parentElement : null;
+                if (grandparent) {
+                    const grandparentComputed = getComputedStyle(grandparent);
+                    console.log('  👴 Estilos del abuelo (tr):', {
+                        background: grandparentComputed.background,
+                        backgroundColor: grandparentComputed.backgroundColor,
+                        transition: grandparentComputed.transition,
+                        className: grandparent.className
+                    });
+                }
+            }, {capture: true});
+        }
+    }, 200);
+    
+    return html;
+}
+
 
 
 // ========================================
@@ -2162,8 +2849,24 @@ function deleteTemplate(templateId) {
         onConfirm: () => {
             const templateName = template.name;
             currentTemplates = currentTemplates.filter(t => t.id !== templateId);
-            filteredTemplates = filteredTemplates.filter(t => t.id !== templateId);
             saveTemplatesToStorage();
+            
+            // Actualizar filteredTemplates aplicando filtros actuales
+            const searchInput = document.getElementById('searchTemplates');
+            const searchQuery = searchInput ? searchInput.value.trim() : '';
+            
+            if (searchQuery || hasActiveFilters() || isViewingSelected) {
+                // Si hay filtros activos, aplicar la búsqueda para actualizar filteredTemplates
+                if (typeof handleSearch === 'function') {
+                    handleSearch(searchQuery);
+                } else {
+                    filteredTemplates = filteredTemplates.filter(t => t.id !== templateId);
+                }
+            } else {
+                // Sin filtros, simplemente filtrar de filteredTemplates también
+                filteredTemplates = filteredTemplates.filter(t => t.id !== templateId);
+            }
+            
             renderTemplates();
             updateTemplatesCount();
             
