@@ -4576,12 +4576,23 @@ function handleLinkClick(event) {
         // Mostrar modal UBITS
         const modal = showConfirmModal({
             title: 'Cambios sin guardar',
-            message: 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?',
-            confirmText: 'Salir sin guardar',
-            cancelText: 'Cancelar',
+            message: 'Tienes cambios sin guardar. ¿Qué deseas hacer?',
+            confirmText: 'Guardar',
+            cancelText: 'Salir sin guardar',
             variant: 'primary',
             onConfirm: () => {
-                console.log('Usuario confirmó salir sin guardar - guardando automáticamente como borrador');
+                console.log('Usuario eligió guardar');
+                // Guardar la plantilla
+                saveTemplate();
+                // Marcar como guardado
+                hasUnsavedChanges = false;
+                // Ir al dashboard después de guardar
+                setTimeout(() => {
+                    goToDashboard();
+                }, 300);
+            },
+            onCancel: () => {
+                console.log('Usuario eligió salir sin guardar - guardando automáticamente como borrador');
                 
                 // Guardar automáticamente con estado draft antes de salir
                 if (currentTemplate) {
@@ -4617,10 +4628,6 @@ function handleLinkClick(event) {
                 
                 hasUnsavedChanges = false;
                 goToDashboard();
-            },
-            onCancel: () => {
-                console.log('Usuario canceló la salida');
-                // No hacer nada
             }
         });
         

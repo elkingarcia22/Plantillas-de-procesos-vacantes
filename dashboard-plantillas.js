@@ -866,8 +866,22 @@ function renderTemplatesTable() {
             // Verificar si esta plantilla está seleccionada
             const isSelected = selectedIds.includes(template.id);
             
-            // Calcular participantes (stages + agents)
-            const participants = (template.stages || 0) + (template.agents || 0);
+            // Calcular etapas (todas las etapas del flujo, incluyendo agentes IA)
+            // Usar realContent.stages.length si existe, sino usar template.stages como fallback
+            const stagesCount = template.realContent && template.realContent.stages 
+                ? template.realContent.stages.length 
+                : (template.stages || 0);
+            
+            // Log para debuggear cálculo de etapas
+            if (template.id === 'default-template-ia') {
+                console.log('🔍 [Etapas] Plantilla IA:', {
+                    id: template.id,
+                    name: template.name,
+                    realContentStages: template.realContent?.stages?.length || 'no existe',
+                    templateStages: template.stages || 0,
+                    stagesCount: stagesCount
+                });
+            }
             
             // Formatear fecha de creación
             const createdDate = template.createdAt ? formatDateForTable(template.createdAt) : 'N/A';
@@ -894,7 +908,7 @@ function renderTemplatesTable() {
                     <td data-column="created" class="table-date column-created">${createdDate}</td>
                     <td data-column="modified" class="table-date column-modified">${modifiedDate}</td>
                     <td data-column="agents" class="table-agents column-agents">${agentsCount}</td>
-                    <td data-column="participants" class="table-participants column-participants">${participants}</td>
+                    <td data-column="stages" class="table-stages column-stages">${stagesCount}</td>
                 </tr>
             `;
         }).join('');
@@ -1694,9 +1708,14 @@ function sortTableBy(field) {
                     ? aValue - bValue
                     : bValue - aValue;
             
-            case 'participants':
-                aValue = (a.stages || 0) + (a.agents || 0);
-                bValue = (b.stages || 0) + (b.agents || 0);
+            case 'stages':
+                // Contar todas las etapas del flujo (incluyendo agentes IA)
+                aValue = a.realContent && a.realContent.stages 
+                    ? a.realContent.stages.length 
+                    : (a.stages || 0);
+                bValue = b.realContent && b.realContent.stages 
+                    ? b.realContent.stages.length 
+                    : (b.stages || 0);
                 return currentTableSortDirection === 'asc' 
                     ? aValue - bValue
                     : bValue - aValue;

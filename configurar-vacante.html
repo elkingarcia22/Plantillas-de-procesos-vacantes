@@ -4994,7 +4994,7 @@
             
             // Renderizar etapas disponibles
             try {
-                stagesList.innerHTML = availableStagesForThisTemplate.map(stage => {
+                const stagesHTML = availableStagesForThisTemplate.map(stage => {
                     const category = STAGE_CATEGORIES.find(cat => cat.id === stage.category);
                     return `
                         <div class="stage-item" 
@@ -5038,6 +5038,13 @@
                 
                 // Agregar event listeners para drag and drop
                 if (stagesList) {
+                    stagesList.querySelectorAll('.stage-item').forEach(item => {
+                        // Remover listeners anteriores si existen
+                        const newItem = item.cloneNode(true);
+                        item.parentNode.replaceChild(newItem, item);
+                    });
+                    
+                    // Agregar listeners a los nuevos elementos
                     stagesList.querySelectorAll('.stage-item').forEach(item => {
                         item.addEventListener('dragstart', handleStageTemplateDragStart);
                         item.addEventListener('dragend', handleStageTemplateDragEnd);
@@ -7220,17 +7227,27 @@
             stageItem.classList.add('dragging');
             
             // Configurar datos de transferencia
-            event.dataTransfer.setData('text/plain', JSON.stringify({
+            const dragData = {
                 type: 'stage-template',
                 id: stageId,
                 name: stageName,
                 category: stageCategory
-            }));
+            };
+            
+            // Intentar múltiples formatos para compatibilidad
+            try {
+                event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+                event.dataTransfer.setData('application/json', JSON.stringify(dragData));
+            } catch (e) {
+                console.error('Error al configurar dataTransfer:', e);
+            }
             
             // Configurar efecto de arrastre
             event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.dropEffect = 'move';
             
-            console.log('Iniciando arrastre de etapa:', stageName);
+            console.log('🔧 [handleStageTemplateDragStart] Iniciando arrastre de etapa:', stageName);
+            console.log('🔧 [handleStageTemplateDragStart] Datos configurados:', dragData);
         }
 
         function handleStageTemplateDragEnd(event) {
@@ -7291,7 +7308,12 @@
                 console.log('🔧 [boardDropHandler] draggedElement actual:', draggedElement);
                 
                 try {
-                    const rawData = e.dataTransfer.getData('text/plain');
+                    // Intentar obtener datos de múltiples formatos
+                    let rawData = e.dataTransfer.getData('text/plain');
+                    if (!rawData || rawData.trim().length === 0) {
+                        rawData = e.dataTransfer.getData('application/json');
+                    }
+                    
                     console.log('🔍 [boardDropHandler] rawData recibido en drop:', rawData);
                     console.log('🔍 [boardDropHandler] rawData length:', rawData ? rawData.length : 0);
                     
@@ -7307,16 +7329,18 @@
                             console.warn('⚠️ [boardDropHandler] rawData que causó el error:', rawData);
                         }
                     } else {
-                        console.warn('⚠️ [boardDropHandler] dataTransfer.getData("text/plain") vacío o inválido');
+                        console.warn('⚠️ [boardDropHandler] dataTransfer.getData() vacío o inválido');
+                        console.warn('⚠️ [boardDropHandler] Intentando usar draggedElement como respaldo...');
                     }
                     
                     // Si no se pudo obtener datos desde dataTransfer, usar draggedElement como respaldo
                     if (!data && draggedElement) {
                         console.log('🔧 [boardDropHandler] Usando draggedElement como fuente de datos:', draggedElement);
                         data = {
-                            type: draggedElement.type,
+                            type: draggedElement.type || 'stage-template',
                             id: draggedElement.id,
                             name: draggedElement.name,
+                            category: draggedElement.category,
                             icon: draggedElement.icon
                         };
                     }

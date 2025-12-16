@@ -753,6 +753,15 @@
         .view-container {
             width: 100%;
             min-height: 200px;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que el view-container dentro de templates-table-container respete el padding */
+        .templates-table-container .view-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         #cardsViewContainer {
@@ -1182,7 +1191,7 @@
             margin-top: 0;
             background: var(--ubits-bg-1);
             border-radius: 8px;
-            overflow: visible;
+            overflow: hidden;
             border: none;
             padding: 16px !important;
             box-sizing: border-box;
@@ -1268,6 +1277,19 @@
             font-family: 'Noto Sans', sans-serif;
             border: none;
             table-layout: auto;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que la tabla y su contenedor respeten el padding */
+        .templates-table-container .view-container {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .templates-table-container .ubits-table {
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .ubits-table thead {
@@ -1577,7 +1599,7 @@
             font-weight: 500;
         }
         
-        .ubits-table td.table-participants {
+        .ubits-table td.table-stages {
             color: var(--ubits-fg-1-high);
             text-align: right;
             font-weight: 500;
@@ -1686,9 +1708,9 @@
                                                 <input type="checkbox" id="column-agents" data-column="agents" checked onchange="toggleColumnVisibility('agents', this.checked)">
                                                 <span class="column-filter-label">Agentes IA</span>
                                             </label>
-                                            <label class="column-filter-item" for="column-participants">
-                                                <input type="checkbox" id="column-participants" data-column="participants" checked onchange="toggleColumnVisibility('participants', this.checked)">
-                                                <span class="column-filter-label">Participantes</span>
+                                            <label class="column-filter-item" for="column-stages">
+                                                <input type="checkbox" id="column-stages" data-column="stages" checked onchange="toggleColumnVisibility('stages', this.checked)">
+                                                <span class="column-filter-label">Etapas</span>
                                             </label>
                                             <label class="column-filter-item" for="column-created">
                                                 <input type="checkbox" id="column-created" data-column="created" checked onchange="toggleColumnVisibility('created', this.checked)">
@@ -1778,10 +1800,10 @@
                                             </button>
                                         </div>
                                     </th>
-                                    <th data-column="participants" class="column-participants">
+                                    <th data-column="stages" class="column-stages">
                                         <div class="table-header-content">
-                                            <span>Participantes</span>
-                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="participants" title="Ordenar por participantes">
+                                            <span>Etapas</span>
+                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="stages" title="Ordenar por etapas">
                                                 <i class="far fa-arrow-down-arrow-up"></i>
                                             </button>
                                         </div>
@@ -2227,7 +2249,7 @@
         // Cargar preferencias de columnas al inicializar
         function loadColumnPreferences() {
             const preferences = JSON.parse(localStorage.getItem('tableColumnPreferences') || '{}');
-            const columns = ['name', 'type', 'status', 'created', 'modified', 'agents', 'participants'];
+            const columns = ['name', 'type', 'status', 'created', 'modified', 'agents', 'stages'];
             
             columns.forEach(columnName => {
                 const checkbox = document.getElementById(`column-${columnName}`);
