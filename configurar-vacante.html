@@ -3010,6 +3010,7 @@
                 id: 'cv-analyzer', 
                 name: 'Analizador CV', 
                 icon: 'fa-file-alt',
+                description: 'Analiza CV y asigna puntaje',
                 hasConfig: true,
                 config: {
                     salaryPercentage: { 
@@ -3041,6 +3042,7 @@
                 id: 'interview-ia', 
                 name: 'Entrevista Serena', 
                 icon: 'fa-comments',
+                description: 'Genera preguntas y analiza respuestas',
                 hasConfig: true,
                 config: {
                     interviewType: {
@@ -3095,6 +3097,7 @@
                 id: 'psychometric-analyst', 
                 name: 'Analista psicométrico', 
                 icon: 'fa-brain',
+                description: 'Evalúa mediante pruebas psicométricas',
                 hasConfig: true,
                 config: {
                     minScore: { 
@@ -3127,6 +3130,7 @@
                 id: 'background-check', 
                 name: 'Antecedentes judiciales', 
                 icon: 'fa-shield-alt',
+                description: 'Verifica certificado de antecedentes judiciales',
                 hasConfig: false
             }
         ];
@@ -4221,13 +4225,23 @@
                 return '';
             }
 
+            // Descripción corta para mostrar en la card
             const agentDescriptions = {
+                'cv-analyzer': 'Analiza CV y asigna puntaje',
+                'interview-ia': 'Genera preguntas y analiza respuestas',
+                'psychometric-analyst': 'Evalúa mediante pruebas psicométricas',
+                'background-check': 'Verifica certificado de antecedentes judiciales'
+            };
+            const agentDescription = agentDescriptions[stage.agentId] || agentData.description;
+            
+            // Descripción larga para el tooltip del botón de información
+            const agentTooltips = {
                 'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
                 'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
                 'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
                 'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
             };
-            const agentDescription = agentDescriptions[stage.agentId] || agentData.description;
+            const agentTooltip = agentTooltips[stage.agentId] || agentDescription;
 
             // Obtener categoría
             const categoryName = stage.category || 'Sin categoría';
@@ -4475,7 +4489,7 @@
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn"
                                         data-agent-id="${stage.agentId}"
                                         data-agent-name="${agentData.name}"
-                                        data-agent-description="${agentDescription.replace(/"/g, '&quot;')}"
+                                        data-agent-description="${agentTooltip.replace(/"/g, '&quot;')}"
                                         title="Ver más información">
                                     <i class="far fa-circle-info"></i>
                                 </button>
@@ -4727,8 +4741,8 @@
                 containerId: 'days-input-container',
                 label: 'Enviar correo de rechazo a los: (días)',
                 type: 'number',
-                placeholder: '0',
-                value: '0',
+                placeholder: '3',
+                value: '3',
                 onChange: function(value) {
                     console.log('Days value:', value);
                 }
@@ -5337,13 +5351,23 @@
                 console.log('🔧 [renderAgents] Generando HTML para', availableAgents.length, 'agentes...');
                 
                 const agentsHTML = availableAgents.map((agent, index) => {
+                // Descripción corta para mostrar en la card
                 const descriptions = {
+                    'cv-analyzer': 'Analiza CV y asigna puntaje',
+                    'interview-ia': 'Genera preguntas y analiza respuestas',
+                    'psychometric-analyst': 'Evalúa mediante pruebas psicométricas',
+                    'background-check': 'Verifica certificado de antecedentes judiciales'
+                };
+                const agentDescription = descriptions[agent.id] || agent.description;
+                
+                // Descripción larga para el tooltip del botón de información
+                const agentTooltips = {
                     'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
                     'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
                     'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
                     'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
                 };
-                const agentDescription = descriptions[agent.id] || agent.description;
+                const agentTooltip = agentTooltips[agent.id] || agentDescription;
                 
                 console.log(`🔧 [renderAgents] Agente ${index + 1}/${availableAgents.length}:`, {
                     id: agent.id,
@@ -5368,10 +5392,10 @@
                                     title="Agregar al flujo">
                                 <i class="far fa-plus"></i>
                             </button>
-                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn" 
+                            <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn"
                                     data-agent-id="${agent.id}"
                                     data-agent-name="${agent.name}"
-                                    data-agent-description="${agentDescription.replace(/"/g, '&quot;')}"
+                                    data-agent-description="${agentTooltip.replace(/"/g, '&quot;')}"
                                     title="Ver más información">
                                 <i class="far fa-circle-info"></i>
                             </button>
@@ -7302,13 +7326,23 @@
             }
             
             agentsList.innerHTML = availableAgents.map(agent => {
+                // Descripción corta para mostrar en la card
                 const descriptions = {
+                    'cv-analyzer': 'Analiza CV y asigna puntaje',
+                    'interview-ia': 'Genera preguntas y analiza respuestas',
+                    'psychometric-analyst': 'Evalúa mediante pruebas psicométricas',
+                    'background-check': 'Verifica certificado de antecedentes judiciales'
+                };
+                const agentDescription = descriptions[agent.id] || agent.description;
+                
+                // Descripción larga para el tooltip del botón de información
+                const agentTooltips = {
                     'cv-analyzer': 'Este agente revisa automáticamente los CV, evalúa la experiencia del candidato y verifica que su expectativa salarial esté alineada con el rango de la vacante.',
                     'interview-ia': 'Esta IA realiza entrevistas automáticas por teléfono o entrevista virtual, analiza las respuestas del candidato y asigna un puntaje según sus competencias y forma de responder.',
                     'psychometric-analyst': 'Este agente aplica pruebas psicométricas al candidato y calcula un puntaje que refleja sus capacidades cognitivas y/o rasgos relevantes para el puesto.',
                     'background-check': 'Permite generar y verificar el certificado de antecedentes judiciales del candidato para validar su historial legal de forma segura.'
                 };
-                const agentDescription = descriptions[agent.id] || agent.description;
+                const agentTooltip = agentTooltips[agent.id] || agentDescription;
                 
                 return `
                 <div class="agent-item" 
