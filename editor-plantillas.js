@@ -172,24 +172,6 @@ const DEFAULT_STAGES = [
         createdAt: new Date().toISOString(),
         isDefault: true
     },
-    {
-        id: 'default-pre-filter-salary',
-        name: 'Pre-filtro salarial',
-        category: 'evaluacion-inicial',
-        type: 'custom',
-        description: 'Comparación entre la expectativa salarial del candidato y el rango definido para la vacante.',
-        createdAt: new Date().toISOString(),
-        isDefault: true
-    },
-    {
-        id: 'default-pre-filter-availability',
-        name: 'Pre-filtro de disponibilidad',
-        category: 'evaluacion-inicial',
-        type: 'custom',
-        description: 'Verifica horario, fecha de ingreso, modalidad de trabajo (remoto/presencial/mixto) u otros aspectos logísticos básicos.',
-        createdAt: new Date().toISOString(),
-        isDefault: true
-    },
     // Categoría: Entrevistas
     {
         id: 'default-interview-pre-screening',
@@ -224,15 +206,6 @@ const DEFAULT_STAGES = [
         category: 'entrevistas',
         type: 'custom',
         description: 'Conversación enfocada en conocimientos técnicos, metodologías de trabajo y experiencia práctica.',
-        createdAt: new Date().toISOString(),
-        isDefault: true
-    },
-    {
-        id: 'default-interview-culture',
-        name: 'Entrevista de cultura y valores',
-        category: 'entrevistas',
-        type: 'custom',
-        description: 'Etapa centrada en cultura organizacional, valores y forma de trabajo en equipo.',
         createdAt: new Date().toISOString(),
         isDefault: true
     },
@@ -348,15 +321,6 @@ const DEFAULT_STAGES = [
         isDefault: true
     },
     {
-        id: 'default-verify-employment',
-        name: 'Verificación de datos laborales',
-        category: 'verificacion',
-        type: 'custom',
-        description: 'Validación de cargos, fechas y responsabilidades en empleos anteriores.',
-        createdAt: new Date().toISOString(),
-        isDefault: true
-    },
-    {
         id: 'default-verify-documents',
         name: 'Verificación de documentación',
         category: 'verificacion',
@@ -417,6 +381,15 @@ const DEFAULT_STAGES = [
         category: 'decision-final',
         type: 'custom',
         description: 'Candidatos que no fueron seleccionados para esta vacante, pero quedan guardados como potenciales para futuras posiciones.',
+        createdAt: new Date().toISOString(),
+        isDefault: true
+    },
+    {
+        id: 'default-hired',
+        name: 'Contratado',
+        category: 'decision-final',
+        type: 'custom',
+        description: 'Candidato ha sido contratado y se ha incorporado exitosamente a la empresa.',
         createdAt: new Date().toISOString(),
         isDefault: true
     }
@@ -1550,7 +1523,7 @@ function renderAgents() {
                 <div class="empty-icon">
                     <i class="far fa-check-circle"></i>
                 </div>
-                <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
+                <p class="empty-text">Todas las etapas con IA están en uso en esta plantilla</p>
             </div>
         `;
         return;
@@ -2174,7 +2147,7 @@ function renderStages() {
         stagesContainer.innerHTML = `
             <div class="board-header-section">
                 <h3 class="board-empty-title">Flujo del candidato</h3>
-                <p class="board-empty-instruction">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
+                <p class="board-empty-instruction">Arrastra aquí las etapas y etapas con IA en el orden en que el candidato las irá completando.</p>
             </div>
             <div class="board-drop-slots">
                 <div class="board-drop-slot" data-slot-number="1">
@@ -4291,33 +4264,55 @@ function loadAvailableStages() {
         const parsedStages = JSON.parse(stored);
         console.log('🔧 [loadAvailableStages] Etapas encontradas en localStorage:', parsedStages.length);
         
-        // Verificar si ya se inicializaron las etapas por defecto
-        const hasDefaultStages = parsedStages.some(s => s.isDefault);
-        console.log('🔧 [loadAvailableStages] hasDefaultStages:', hasDefaultStages);
+        // IDs de etapas por defecto que ya no deben existir (eliminadas)
+        const removedDefaultStageIds = [
+            'default-pre-filter-salary',
+            'default-pre-filter-availability',
+            'default-interview-culture',
+            'default-verify-employment'
+        ];
         
-        if (!hasDefaultStages) {
-            // Si no hay etapas por defecto, agregarlas al inicio
-            console.log('✅ [loadAvailableStages] Restaurando etapas por defecto...');
-            availableStages = [...DEFAULT_STAGES, ...parsedStages];
-            saveAvailableStages();
-            console.log('✅ [loadAvailableStages] Etapas por defecto restauradas. Total:', availableStages.length);
-        } else {
-            // Verificar que todas las etapas por defecto estén presentes
-            const defaultStageIds = DEFAULT_STAGES.map(s => s.id);
-            const existingDefaultIds = parsedStages.filter(s => s.isDefault).map(s => s.id);
-            const missingDefaultIds = defaultStageIds.filter(id => !existingDefaultIds.includes(id));
-            
+        // IDs de etapas por defecto actuales que deben existir
+        const currentDefaultStageIds = DEFAULT_STAGES.map(s => s.id);
+        
+        // Filtrar etapas: eliminar las que ya no deben existir y las personalizadas
+        const customStages = parsedStages.filter(s => !s.isDefault);
+        const validDefaultStages = parsedStages.filter(s => 
+            s.isDefault && 
+            !removedDefaultStageIds.includes(s.id) && 
+            currentDefaultStageIds.includes(s.id)
+        );
+        
+        // Identificar etapas por defecto que faltan
+        const existingDefaultIds = validDefaultStages.map(s => s.id);
+        const missingDefaultIds = currentDefaultStageIds.filter(id => !existingDefaultIds.includes(id));
+        
+        // Verificar si hay etapas obsoletas que eliminar
+        const hasObsoleteStages = parsedStages.some(s => 
+            s.isDefault && removedDefaultStageIds.includes(s.id)
+        );
+        
+        // Si faltan etapas por defecto o hay etapas obsoletas, actualizar
+        if (missingDefaultIds.length > 0 || hasObsoleteStages || parsedStages.length !== (validDefaultStages.length + customStages.length)) {
             if (missingDefaultIds.length > 0) {
                 console.log('⚠️ [loadAvailableStages] Faltan etapas por defecto:', missingDefaultIds.length);
-                // Restaurar solo las etapas por defecto que faltan
-                const missingDefaultStages = DEFAULT_STAGES.filter(s => missingDefaultIds.includes(s.id));
-                availableStages = [...missingDefaultStages, ...parsedStages];
-                saveAvailableStages();
-                console.log('✅ [loadAvailableStages] Etapas por defecto faltantes restauradas. Total:', availableStages.length);
-            } else {
-                availableStages = parsedStages;
-                console.log('✅ [loadAvailableStages] Todas las etapas por defecto presentes. Total:', availableStages.length);
             }
+            if (hasObsoleteStages) {
+                console.log('🔄 [loadAvailableStages] Eliminando etapas obsoletas...');
+            }
+            
+            // Agregar las etapas por defecto que faltan
+            const missingDefaultStages = missingDefaultIds.length > 0 
+                ? DEFAULT_STAGES.filter(s => missingDefaultIds.includes(s.id))
+                : [];
+            
+            // Combinar: nuevas etapas por defecto + etapas válidas existentes + etapas personalizadas
+            availableStages = [...missingDefaultStages, ...validDefaultStages, ...customStages];
+            saveAvailableStages();
+            console.log('✅ [loadAvailableStages] Etapas actualizadas. Total:', availableStages.length);
+        } else {
+            availableStages = parsedStages;
+            console.log('✅ [loadAvailableStages] Todas las etapas están actualizadas. Total:', availableStages.length);
         }
     } else {
         // Si no hay etapas guardadas, usar las por defecto

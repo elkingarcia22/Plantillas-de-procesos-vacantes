@@ -1520,11 +1520,11 @@
 
         .action-button-delete {
             border: 1px solid var(--ubits-feedback-accent-error) !important;
-            background: var(--ubits-bg-1) !important;
+            background: var(--ubits-feedback-bg-error-subtle) !important;
         }
 
         .action-button-delete:hover {
-            background: var(--ubits-feedback-accent-error) !important;
+            background: var(--ubits-feedback-bg-error-subtle-hover) !important;
             border-color: var(--ubits-feedback-accent-error) !important;
         }
 
@@ -1533,7 +1533,26 @@
         }
 
         .action-button-delete:hover i {
-            color: var(--ubits-bg-1) !important;
+            color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        /* Modo oscuro para botón de eliminar */
+        [data-theme="dark"] .action-button-delete {
+            border: 1px solid var(--ubits-feedback-accent-error-inverted) !important;
+            background: var(--ubits-feedback-bg-error-subtle-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete:hover {
+            background: var(--ubits-feedback-bg-error-subtle-inverted-hover) !important;
+            border-color: var(--ubits-feedback-accent-error-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete i {
+            color: var(--ubits-feedback-accent-error-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete:hover i {
+            color: var(--ubits-feedback-accent-error-inverted) !important;
         }
 
         /* Barra de búsqueda dentro del contenedor de la tabla */

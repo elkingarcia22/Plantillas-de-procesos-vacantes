@@ -258,6 +258,46 @@ function loadTemplatesFromStorage() {
                 defaultTemplateStandard.status = 'available';
                 needsUpdate = true;
             }
+            
+            // Actualizar estructura de plantilla Standard si es necesario
+            const defaultTemplates = createDefaultTemplates();
+            const newStandardTemplate = defaultTemplates.find(t => t.id === 'default-template-standard');
+            if (newStandardTemplate && defaultTemplateStandard.realContent) {
+                const currentStagesCount = defaultTemplateStandard.realContent.stages?.length || 0;
+                const newStagesCount = newStandardTemplate.realContent.stages?.length || 0;
+                
+                // Si el número de etapas es diferente o la versión es antigua, actualizar
+                if (currentStagesCount !== newStagesCount || defaultTemplateStandard.version < newStandardTemplate.version) {
+                    console.log('🔄 [loadTemplatesFromStorage] Actualizando estructura de plantilla Standard...');
+                    defaultTemplateStandard.realContent = JSON.parse(JSON.stringify(newStandardTemplate.realContent));
+                    defaultTemplateStandard.stages = newStandardTemplate.stages;
+                    defaultTemplateStandard.agents = newStandardTemplate.agents;
+                    defaultTemplateStandard.version = newStandardTemplate.version;
+                    defaultTemplateStandard.lastModified = newStandardTemplate.lastModified;
+                    needsUpdate = true;
+                }
+            }
+        }
+        
+        // Actualizar estructura de plantilla IA si es necesario
+        if (defaultTemplateIA && defaultTemplateIA.realContent) {
+            const defaultTemplates = createDefaultTemplates();
+            const newIATemplate = defaultTemplates.find(t => t.id === 'default-template-ia');
+            if (newIATemplate) {
+                const currentStagesCount = defaultTemplateIA.realContent.stages?.length || 0;
+                const newStagesCount = newIATemplate.realContent.stages?.length || 0;
+                
+                // Si el número de etapas es diferente o la versión es antigua, actualizar
+                if (currentStagesCount !== newStagesCount || defaultTemplateIA.version < newIATemplate.version) {
+                    console.log('🔄 [loadTemplatesFromStorage] Actualizando estructura de plantilla IA...');
+                    defaultTemplateIA.realContent = JSON.parse(JSON.stringify(newIATemplate.realContent));
+                    defaultTemplateIA.stages = newIATemplate.stages;
+                    defaultTemplateIA.agents = newIATemplate.agents;
+                    defaultTemplateIA.version = newIATemplate.version;
+                    defaultTemplateIA.lastModified = newIATemplate.lastModified;
+                    needsUpdate = true;
+                }
+            }
         }
         
         if (needsUpdate) {
@@ -301,14 +341,22 @@ function createDefaultTemplates() {
         lastModified: today,
         author: 'Sistema',
         avatar: 'images/Profile-image.jpg',
-        version: 1,
+        version: 2,
         stages: 8,
-        agents: 5,
+        agents: 4,
         isDefault: true,
         realContent: {
             stages: [
                 {
                     id: 'stage-1',
+                    type: 'custom',
+                    name: 'Preguntas de filtro / formulario',
+                    category: 'evaluacion-inicial',
+                    description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
+                    templateId: 'default-pre-filter-requirements'
+                },
+                {
+                    id: 'stage-2',
                     type: 'agent',
                     agentId: 'cv-analyzer',
                     name: 'Analizador de CV',
@@ -320,23 +368,12 @@ function createDefaultTemplates() {
                     }
                 },
                 {
-                    id: 'stage-2',
-                    type: 'custom',
-                    name: 'Preguntas de filtro / formulario',
-                    category: 'evaluacion-inicial',
-                    description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
-                    templateId: 'default-pre-filter-requirements'
-                },
-                {
                     id: 'stage-3',
-                    type: 'agent',
-                    agentId: 'psychometric-analyst',
-                    name: 'Analista psicométrico',
-                    category: 'evaluacion-psicometrica',
-                    config: {
-                        minScore: 0,
-                        tests: []
-                    }
+                    type: 'custom',
+                    name: 'Entrevista con reclutador',
+                    category: 'entrevistas',
+                    description: 'Entrevista más profunda para evaluar competencias blandas, expectativas y encaje general con la empresa.',
+                    templateId: 'default-interview-recruiter'
                 },
                 {
                     id: 'stage-4',
@@ -353,18 +390,21 @@ function createDefaultTemplates() {
                 },
                 {
                     id: 'stage-5',
-                    type: 'custom',
-                    name: 'Entrevista con el reclutador',
-                    category: 'entrevistas',
-                    description: 'Etapa manual para las personas que pasaron todos los filtros automáticos.',
-                    templateId: 'default-interview-recruiter'
+                    type: 'agent',
+                    agentId: 'psychometric-analyst',
+                    name: 'Analista psicométrico',
+                    category: 'evaluacion-psicometrica',
+                    config: {
+                        minScore: 0,
+                        tests: []
+                    }
                 },
                 {
                     id: 'stage-6',
                     type: 'custom',
                     name: 'Entrevista con el hiring manager',
                     category: 'entrevistas',
-                    description: 'Validación final del área.',
+                    description: 'Entrevista técnica o funcional con el responsable del área para evaluar ajuste al rol.',
                     templateId: 'default-interview-hiring-manager'
                 },
                 {
@@ -396,8 +436,8 @@ function createDefaultTemplates() {
         lastModified: today,
         author: 'Sistema',
         avatar: 'images/Profile-image.jpg',
-        version: 1,
-        stages: 8,
+        version: 2,
+        stages: 7,
         agents: 0,
         isDefault: true,
         realContent: {
@@ -405,37 +445,21 @@ function createDefaultTemplates() {
                 {
                     id: 'stage-1',
                     type: 'custom',
-                    name: 'Revisión de CV',
-                    category: 'evaluacion-inicial',
-                    description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
-                    templateId: 'default-review-cv'
-                },
-                {
-                    id: 'stage-2',
-                    type: 'custom',
                     name: 'Preguntas de filtro / formulario inicial',
                     category: 'evaluacion-inicial',
                     description: 'Cuestionario con preguntas knockout: disponibilidad, ubicación, experiencia mínima, etc.',
                     templateId: 'default-pre-filter-requirements'
                 },
                 {
+                    id: 'stage-2',
+                    type: 'custom',
+                    name: 'Revisión de CV',
+                    category: 'evaluacion-inicial',
+                    description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
+                    templateId: 'default-review-cv'
+                },
+                {
                     id: 'stage-3',
-                    type: 'custom',
-                    name: 'Evaluación psicométrica',
-                    category: 'evaluacion-psicometrica',
-                    description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
-                    templateId: 'default-psychometric-general'
-                },
-                {
-                    id: 'stage-4',
-                    type: 'custom',
-                    name: 'Entrevista inicial',
-                    category: 'entrevistas',
-                    description: 'Primera entrevista estructurada para evaluar motivación y competencias básicas.',
-                    templateId: 'default-interview-pre-screening'
-                },
-                {
-                    id: 'stage-5',
                     type: 'custom',
                     name: 'Entrevista con el reclutador',
                     category: 'entrevistas',
@@ -443,7 +467,15 @@ function createDefaultTemplates() {
                     templateId: 'default-interview-recruiter'
                 },
                 {
-                    id: 'stage-6',
+                    id: 'stage-4',
+                    type: 'custom',
+                    name: 'Evaluación psicométrica',
+                    category: 'evaluacion-psicometrica',
+                    description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
+                    templateId: 'default-psychometric-general'
+                },
+                {
+                    id: 'stage-5',
                     type: 'custom',
                     name: 'Entrevista con el hiring manager / área',
                     category: 'entrevistas',
@@ -451,7 +483,7 @@ function createDefaultTemplates() {
                     templateId: 'default-interview-hiring-manager'
                 },
                 {
-                    id: 'stage-7',
+                    id: 'stage-6',
                     type: 'custom',
                     name: 'Verificación de antecedentes judiciales',
                     category: 'verificacion',
@@ -459,7 +491,7 @@ function createDefaultTemplates() {
                     templateId: 'default-verify-background'
                 },
                 {
-                    id: 'stage-8',
+                    id: 'stage-7',
                     type: 'custom',
                     name: 'Cierre del proceso',
                     category: 'decision-final',

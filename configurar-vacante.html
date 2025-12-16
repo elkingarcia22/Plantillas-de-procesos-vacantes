@@ -2522,8 +2522,8 @@
                             <div class="agents-sidebar" id="agents-sidebar">
                                 <!-- Título y descripción de la sección -->
                                 <div class="agents-header-section">
-                                    <h3 class="agents-title">Biblioteca de etapas y agentes IA</h3>
-                                    <p class="agents-description-main">Crea y gestiona las etapas y agentes de IA que podrás usar en el flujo del candidato.</p>
+                                    <h3 class="agents-title">Biblioteca de etapas y etapas con IA</h3>
+                                    <p class="agents-description-main">Crea y gestiona las etapas y etapas con IA que podrás usar en el flujo del candidato.</p>
                                 </div>
                                 
                                 <!-- Tabs -->
@@ -2534,7 +2534,7 @@
                                     </button>
                                     <button class="tab-button" data-tab="agents" onclick="switchTab('agents')">
                                         <i class="far fa-users"></i>
-                                        <span>Agentes IA</span>
+                                        <span>Etapas con IA</span>
                                     </button>
                                 </div>
                                 
@@ -2581,7 +2581,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Tab Agentes IA -->
+                                <!-- Tab Etapas con IA -->
                                 <div class="tab-content" id="agents-tab">
                                     <div class="agents-list" id="agentsList">
                                         <!-- Los agentes se cargarán dinámicamente -->
@@ -3163,14 +3163,22 @@
                 lastModified: today,
                 author: 'Sistema',
                 avatar: 'images/Profile-image.jpg',
-                version: 1,
+                version: 2,
                 stages: 8,
-                agents: 5,
+                agents: 4,
                 isDefault: true,
                 realContent: {
                     stages: [
                         {
                             id: 'stage-1',
+                            type: 'custom',
+                            name: 'Preguntas de filtro / formulario',
+                            category: 'evaluacion-inicial',
+                            description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
+                            templateId: 'default-pre-filter-requirements'
+                        },
+                        {
+                            id: 'stage-2',
                             type: 'agent',
                             agentId: 'cv-analyzer',
                             name: 'Analizador de CV',
@@ -3182,23 +3190,12 @@
                             }
                         },
                         {
-                            id: 'stage-2',
-                            type: 'custom',
-                            name: 'Preguntas de filtro / formulario',
-                            category: 'evaluacion-inicial',
-                            description: 'Knockout questions simples: disponibilidad, ubicación, experiencia mínima, etc.',
-                            templateId: 'default-pre-filter-requirements'
-                        },
-                        {
                             id: 'stage-3',
-                            type: 'agent',
-                            agentId: 'psychometric-analyst',
-                            name: 'Analista psicométrico',
-                            category: 'evaluacion-psicometrica',
-                            config: {
-                                minScore: 0,
-                                tests: []
-                            }
+                            type: 'custom',
+                            name: 'Entrevista con reclutador',
+                            category: 'entrevistas',
+                            description: 'Entrevista más profunda para evaluar competencias blandas, expectativas y encaje general con la empresa.',
+                            templateId: 'default-interview-recruiter'
                         },
                         {
                             id: 'stage-4',
@@ -3215,18 +3212,21 @@
                         },
                         {
                             id: 'stage-5',
-                            type: 'custom',
-                            name: 'Entrevista con el reclutador',
-                            category: 'entrevistas',
-                            description: 'Etapa manual para las personas que pasaron todos los filtros automáticos.',
-                            templateId: 'default-interview-recruiter'
+                            type: 'agent',
+                            agentId: 'psychometric-analyst',
+                            name: 'Analista psicométrico',
+                            category: 'evaluacion-psicometrica',
+                            config: {
+                                minScore: 0,
+                                tests: []
+                            }
                         },
                         {
                             id: 'stage-6',
                             type: 'custom',
                             name: 'Entrevista con el hiring manager',
                             category: 'entrevistas',
-                            description: 'Validación final del área.',
+                            description: 'Entrevista técnica o funcional con el responsable del área para evaluar ajuste al rol.',
                             templateId: 'default-interview-hiring-manager'
                         },
                         {
@@ -3258,8 +3258,8 @@
                 lastModified: today,
                 author: 'Sistema',
                 avatar: 'images/Profile-image.jpg',
-                version: 1,
-                stages: 8,
+                version: 2,
+                stages: 7,
                 agents: 0,
                 isDefault: true,
                 realContent: {
@@ -3267,37 +3267,21 @@
                         {
                             id: 'stage-1',
                             type: 'custom',
-                            name: 'Revisión de CV',
-                            category: 'evaluacion-inicial',
-                            description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
-                            templateId: 'default-review-cv'
-                        },
-                        {
-                            id: 'stage-2',
-                            type: 'custom',
                             name: 'Preguntas de filtro / formulario inicial',
                             category: 'evaluacion-inicial',
                             description: 'Cuestionario con preguntas knockout: disponibilidad, ubicación, experiencia mínima, etc.',
                             templateId: 'default-pre-filter-requirements'
                         },
                         {
+                            id: 'stage-2',
+                            type: 'custom',
+                            name: 'Revisión de CV',
+                            category: 'evaluacion-inicial',
+                            description: 'Revisión inicial del currículum para validar requisitos clave y rango salarial esperado.',
+                            templateId: 'default-review-cv'
+                        },
+                        {
                             id: 'stage-3',
-                            type: 'custom',
-                            name: 'Evaluación psicométrica',
-                            category: 'evaluacion-psicometrica',
-                            description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
-                            templateId: 'default-psychometric-general'
-                        },
-                        {
-                            id: 'stage-4',
-                            type: 'custom',
-                            name: 'Entrevista inicial',
-                            category: 'entrevistas',
-                            description: 'Primera entrevista estructurada para evaluar motivación y competencias básicas.',
-                            templateId: 'default-interview-pre-screening'
-                        },
-                        {
-                            id: 'stage-5',
                             type: 'custom',
                             name: 'Entrevista con el reclutador',
                             category: 'entrevistas',
@@ -3305,7 +3289,15 @@
                             templateId: 'default-interview-recruiter'
                         },
                         {
-                            id: 'stage-6',
+                            id: 'stage-4',
+                            type: 'custom',
+                            name: 'Evaluación psicométrica',
+                            category: 'evaluacion-psicometrica',
+                            description: 'Aplicación y revisión de pruebas psicométricas según el tipo de rol.',
+                            templateId: 'default-psychometric-general'
+                        },
+                        {
+                            id: 'stage-5',
                             type: 'custom',
                             name: 'Entrevista con el hiring manager / área',
                             category: 'entrevistas',
@@ -3313,7 +3305,7 @@
                             templateId: 'default-interview-hiring-manager'
                         },
                         {
-                            id: 'stage-7',
+                            id: 'stage-6',
                             type: 'custom',
                             name: 'Verificación de antecedentes judiciales',
                             category: 'verificacion',
@@ -3321,7 +3313,7 @@
                             templateId: 'default-verify-background'
                         },
                         {
-                            id: 'stage-8',
+                            id: 'stage-7',
                             type: 'custom',
                             name: 'Cierre del proceso',
                             category: 'decision-final',
@@ -3365,6 +3357,58 @@
                 // Verificar si ya existen las plantillas por defecto
                 const hasDefaultTemplates = allTemplates.some(t => t.isDefault === true);
                 console.log('📋 [loadTemplates] ¿Tiene plantillas por defecto?', hasDefaultTemplates);
+                
+                // Actualizar plantillas por defecto existentes
+                const defaultTemplateIA = allTemplates.find(t => t.id === 'default-template-ia');
+                const defaultTemplateStandard = allTemplates.find(t => t.id === 'default-template-standard');
+                
+                if (defaultTemplateIA || defaultTemplateStandard) {
+                    const defaultTemplates = createDefaultTemplates();
+                    
+                    // Actualizar plantilla IA
+                    if (defaultTemplateIA && defaultTemplateIA.realContent) {
+                        const newIATemplate = defaultTemplates.find(t => t.id === 'default-template-ia');
+                        if (newIATemplate) {
+                            const currentStagesCount = defaultTemplateIA.realContent.stages?.length || 0;
+                            const newStagesCount = newIATemplate.realContent.stages?.length || 0;
+                            
+                            if (currentStagesCount !== newStagesCount || defaultTemplateIA.version < newIATemplate.version) {
+                                console.log('🔄 [loadTemplates] Actualizando estructura de plantilla IA...');
+                                defaultTemplateIA.realContent = JSON.parse(JSON.stringify(newIATemplate.realContent));
+                                defaultTemplateIA.stages = newIATemplate.stages;
+                                defaultTemplateIA.agents = newIATemplate.agents;
+                                defaultTemplateIA.version = newIATemplate.version;
+                                defaultTemplateIA.lastModified = newIATemplate.lastModified;
+                                needsUpdate = true;
+                            }
+                        }
+                    }
+                    
+                    // Actualizar plantilla Standard
+                    if (defaultTemplateStandard && defaultTemplateStandard.realContent) {
+                        const newStandardTemplate = defaultTemplates.find(t => t.id === 'default-template-standard');
+                        if (newStandardTemplate) {
+                            const currentStagesCount = defaultTemplateStandard.realContent.stages?.length || 0;
+                            const newStagesCount = newStandardTemplate.realContent.stages?.length || 0;
+                            
+                            if (currentStagesCount !== newStagesCount || defaultTemplateStandard.version < newStandardTemplate.version) {
+                                console.log('🔄 [loadTemplates] Actualizando estructura de plantilla Standard...');
+                                defaultTemplateStandard.realContent = JSON.parse(JSON.stringify(newStandardTemplate.realContent));
+                                defaultTemplateStandard.stages = newStandardTemplate.stages;
+                                defaultTemplateStandard.agents = newStandardTemplate.agents;
+                                defaultTemplateStandard.version = newStandardTemplate.version;
+                                defaultTemplateStandard.lastModified = newStandardTemplate.lastModified;
+                                needsUpdate = true;
+                            }
+                        }
+                    }
+                    
+                    if (needsUpdate) {
+                        localStorage.setItem('templates', JSON.stringify(allTemplates));
+                        console.log('📋 [loadTemplates] Plantillas por defecto actualizadas');
+                    }
+                }
+                
                 if (!hasDefaultTemplates) {
                     console.log('📋 [loadTemplates] Creando plantillas por defecto...');
                     // Agregar plantillas por defecto si no existen
@@ -3760,7 +3804,7 @@
                         <div class="board-header-top">
                             <div class="board-header-title-wrapper">
                                 <h3 class="board-header-title">Flujo del candidato</h3>
-                                ${isEditMode ? '<p class="board-header-description">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>' : ''}
+                                ${isEditMode ? '<p class="board-header-description">Arrastra aquí las etapas y etapas con IA en el orden en que el candidato las irá completando.</p>' : ''}
                             </div>
                             <div class="board-header-actions">
                                 <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()">
@@ -3779,7 +3823,7 @@
                         <div class="board-header-top">
                             <div class="board-header-title-wrapper">
                                 <h3 class="board-header-title">Flujo del candidato</h3>
-                                <p class="board-header-description">Arrastra aquí las etapas y agentes de IA en el orden en que el candidato las irá completando.</p>
+                                <p class="board-header-description">Arrastra aquí las etapas y etapas con IA en el orden en que el candidato las irá completando.</p>
                             </div>
                             <div class="board-header-actions">
                                 <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="saveAsTemplate()" id="saveTemplateBtn">
@@ -4771,24 +4815,6 @@
                 createdAt: new Date().toISOString(),
                 isDefault: true
             },
-            {
-                id: 'default-pre-filter-salary',
-                name: 'Pre-filtro salarial',
-                category: 'evaluacion-inicial',
-                type: 'custom',
-                description: 'Comparación entre la expectativa salarial del candidato y el rango definido para la vacante.',
-                createdAt: new Date().toISOString(),
-                isDefault: true
-            },
-            {
-                id: 'default-pre-filter-availability',
-                name: 'Pre-filtro de disponibilidad',
-                category: 'evaluacion-inicial',
-                type: 'custom',
-                description: 'Verifica horario, fecha de ingreso, modalidad de trabajo (remoto/presencial/mixto) u otros aspectos logísticos básicos.',
-                createdAt: new Date().toISOString(),
-                isDefault: true
-            },
             // Categoría: Entrevistas
             {
                 id: 'default-interview-pre-screening',
@@ -4823,15 +4849,6 @@
                 category: 'entrevistas',
                 type: 'custom',
                 description: 'Conversación enfocada en conocimientos técnicos, metodologías de trabajo y experiencia práctica.',
-                createdAt: new Date().toISOString(),
-                isDefault: true
-            },
-            {
-                id: 'default-interview-culture',
-                name: 'Entrevista de cultura y valores',
-                category: 'entrevistas',
-                type: 'custom',
-                description: 'Etapa centrada en cultura organizacional, valores y forma de trabajo en equipo.',
                 createdAt: new Date().toISOString(),
                 isDefault: true
             },
@@ -4947,15 +4964,6 @@
                 isDefault: true
             },
             {
-                id: 'default-verify-employment',
-                name: 'Verificación de datos laborales',
-                category: 'verificacion',
-                type: 'custom',
-                description: 'Validación de cargos, fechas y responsabilidades en empleos anteriores.',
-                createdAt: new Date().toISOString(),
-                isDefault: true
-            },
-            {
                 id: 'default-verify-documents',
                 name: 'Verificación de documentación',
                 category: 'verificacion',
@@ -5018,6 +5026,15 @@
                 description: 'Candidatos que no fueron seleccionados para esta vacante, pero quedan guardados como potenciales para futuras posiciones.',
                 createdAt: new Date().toISOString(),
                 isDefault: true
+            },
+            {
+                id: 'default-hired',
+                name: 'Contratado',
+                category: 'decision-final',
+                type: 'custom',
+                description: 'Candidato ha sido contratado y se ha incorporado exitosamente a la empresa.',
+                createdAt: new Date().toISOString(),
+                isDefault: true
             }
         ];
 
@@ -5029,17 +5046,55 @@
             if (stored) {
                 const parsedStages = JSON.parse(stored);
                 console.log('🔧 [loadAvailableStages] parsedStages.length:', parsedStages.length);
-                // Si hay etapas guardadas, verificar si ya se inicializaron las por defecto
-                const hasDefaultStages = parsedStages.some(s => s.isDefault);
-                console.log('🔧 [loadAvailableStages] hasDefaultStages:', hasDefaultStages);
-                if (!hasDefaultStages) {
-                    // Si no hay etapas por defecto, agregarlas al inicio
-                    availableStages = [...DEFAULT_STAGES, ...parsedStages];
+                // IDs de etapas por defecto que ya no deben existir (eliminadas)
+                const removedDefaultStageIds = [
+                    'default-pre-filter-salary',
+                    'default-pre-filter-availability',
+                    'default-interview-culture',
+                    'default-verify-employment'
+                ];
+                
+                // IDs de etapas por defecto actuales que deben existir
+                const currentDefaultStageIds = DEFAULT_STAGES.map(s => s.id);
+                
+                // Filtrar etapas: eliminar las que ya no deben existir y las personalizadas
+                const customStages = parsedStages.filter(s => !s.isDefault);
+                const validDefaultStages = parsedStages.filter(s => 
+                    s.isDefault && 
+                    !removedDefaultStageIds.includes(s.id) && 
+                    currentDefaultStageIds.includes(s.id)
+                );
+                
+                // Identificar etapas por defecto que faltan
+                const existingDefaultIds = validDefaultStages.map(s => s.id);
+                const missingDefaultIds = currentDefaultStageIds.filter(id => !existingDefaultIds.includes(id));
+                
+                // Verificar si hay etapas obsoletas que eliminar
+                const hasObsoleteStages = parsedStages.some(s => 
+                    s.isDefault && removedDefaultStageIds.includes(s.id)
+                );
+                
+                // Si faltan etapas por defecto o hay etapas obsoletas, actualizar
+                if (missingDefaultIds.length > 0 || hasObsoleteStages || parsedStages.length !== (validDefaultStages.length + customStages.length)) {
+                    if (missingDefaultIds.length > 0) {
+                        console.log('⚠️ [loadAvailableStages] Faltan etapas por defecto:', missingDefaultIds.length);
+                    }
+                    if (hasObsoleteStages) {
+                        console.log('🔄 [loadAvailableStages] Eliminando etapas obsoletas...');
+                    }
+                    
+                    // Agregar las etapas por defecto que faltan
+                    const missingDefaultStages = missingDefaultIds.length > 0 
+                        ? DEFAULT_STAGES.filter(s => missingDefaultIds.includes(s.id))
+                        : [];
+                    
+                    // Combinar: nuevas etapas por defecto + etapas válidas existentes + etapas personalizadas
+                    availableStages = [...missingDefaultStages, ...validDefaultStages, ...customStages];
                     saveAvailableStages();
-                    console.log('✅ [loadAvailableStages] Etapas por defecto agregadas');
+                    console.log('✅ [loadAvailableStages] Etapas actualizadas. Total:', availableStages.length);
                 } else {
                     availableStages = parsedStages;
-                    console.log('✅ [loadAvailableStages] Etapas cargadas desde localStorage');
+                    console.log('✅ [loadAvailableStages] Todas las etapas están actualizadas. Total:', availableStages.length);
                 }
             } else {
                 // Si no hay etapas guardadas, usar las por defecto
@@ -5342,7 +5397,7 @@
                             <div class="empty-icon">
                                 <i class="far fa-check-circle"></i>
                             </div>
-                            <p class="empty-text">Todos los agentes de IA están en uso en esta plantilla</p>
+                            <p class="empty-text">Todas las etapas con IA están en uso en esta plantilla</p>
                         </div>
                     `;
                     return;
