@@ -93,3 +93,4 @@ overview.html
 # 2. Genera nuevas credenciales
 # 3. Actualiza el .gitignore
 # 4. Considera cambiar el historial de Git si es necesario
+.vercel

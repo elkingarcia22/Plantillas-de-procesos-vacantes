@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="components/profile-menu.css">
     <link rel="stylesheet" href="components/input.css">
     <link rel="stylesheet" href="components/button.css">
+    <link rel="stylesheet" href="components/alert.css">
     <link rel="stylesheet" href="components/modal.css">
     <link rel="stylesheet" href="components/toast.css">
     <link rel="stylesheet" href="profile.css">
@@ -2712,11 +2713,19 @@
                 setActiveDirectLinkReclutamiento('vacantes');
             }, 500);
             
-            // Crear inputs UBITS
-            createTemplateSelect();
-            createDaysInput();
+            // Verificar si hay un ID de vacante en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const vacanteId = urlParams.get('id');
             
-            // El flujo vacío se inicializará automáticamente cuando se seleccione "Personalizada" en createTemplateSelect
+            if (vacanteId) {
+                // Cargar vacante existente
+                console.log('📋 [DOMContentLoaded] Cargando vacante con ID:', vacanteId);
+                loadVacanteFromStorage(vacanteId);
+            } else {
+                // Nueva vacante - inicializar directamente en paso 2 (flujo del candidato)
+                console.log('📋 [DOMContentLoaded] Nueva vacante - inicializando flujo del candidato');
+                initializeNewVacante();
+            }
             
             // Actualizar stepper inicialmente después de un pequeño delay para asegurar que el DOM esté listo
             setTimeout(() => {
@@ -3003,6 +3012,8 @@
         let localTemplateCopy = null; // Copia local para editar sin modificar la original
         let allTemplates = [];
         let isEditMode = true; // Modo edición activo por defecto
+        let isEditingVacanteWithIATemplate = false; // Indica si estamos editando una vacante con plantilla IA (solo desde home-vacantes.html)
+        let isEditingVacanteWithDefaultTemplate = false; // Indica si estamos editando una vacante con plantilla por defecto (IA o estándar) desde home-vacantes.html
 
         // Agentes disponibles (mismo que en editor-plantillas.js)
         const AGENTS = [
@@ -3435,7 +3446,9 @@
 
         // Crear selector de plantilla con UBITS Input
         function createTemplateSelect(initialValue = 'custom') {
-            const allTemplates = loadTemplates();
+            // Cargar plantillas y actualizar la variable global
+            const loadedTemplates = loadTemplates();
+            allTemplates = loadedTemplates;
             
             // Filtrar solo plantillas disponibles (status === 'available')
             const availableTemplates = allTemplates.filter(template => template.status === 'available');
@@ -3515,6 +3528,10 @@
                 // Asegurar que estamos en modo edición
                 isEditMode = true;
                 
+                // Asegurar que NO estamos editando una vacante con plantilla por defecto
+                isEditingVacanteWithIATemplate = false;
+                isEditingVacanteWithDefaultTemplate = false;
+                
                 // Mostrar la sección de flujo
                 const flowSection = document.getElementById('template-flow-section');
                 const libraryWidget = document.getElementById('library-widget');
@@ -3528,21 +3545,50 @@
                     libraryWidget.style.display = 'flex';
                 }
                 
+                // Asegurar que las etapas estén cargadas antes de renderizar
+                if (availableStages.length === 0 && typeof loadAvailableStages === 'function') {
+                    loadAvailableStages();
+                }
+                
                 // Renderizar el flujo vacío
                 renderTemplateFlow(localTemplateCopy);
                 
                 // Aplicar modo edición
                 applyEditMode();
                 
-                // Renderizar contenido de la biblioteca
+                // Configurar drag and drop y renderizar biblioteca después de renderizar
                 setTimeout(() => {
-                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
-                    if (activeTab && activeTab.dataset.tab === 'stages') {
-                        renderStages();
-                    } else {
-                        renderAgents();
+                    // Configurar drag and drop
+                    if (typeof makeBoardDroppable === 'function') {
+                        makeBoardDroppable();
                     }
-                }, 100);
+                    
+                    // Renderizar contenido de la biblioteca
+                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                    if (activeTab) {
+                        const tabType = activeTab.dataset.tab;
+                        if (tabType === 'stages') {
+                            if (typeof renderStages === 'function') {
+                                renderStages();
+                            } else if (typeof renderAvailableStages === 'function') {
+                                renderAvailableStages();
+                            }
+                        } else {
+                            if (typeof renderAgents === 'function') {
+                                renderAgents();
+                            } else if (typeof window.renderAgents === 'function') {
+                                window.renderAgents();
+                            }
+                        }
+                    } else {
+                        // Si no hay tab activo, renderizar etapas por defecto
+                        if (typeof renderStages === 'function') {
+                            renderStages();
+                        } else if (typeof renderAvailableStages === 'function') {
+                            renderAvailableStages();
+                        }
+                    }
+                }, 300);
                 
                 return;
             }
@@ -3556,6 +3602,11 @@
             selectedTemplate = template;
             // Crear copia local profunda para editar sin modificar la original
             localTemplateCopy = JSON.parse(JSON.stringify(template));
+            
+            // Si estamos editando una vacante con plantilla por defecto, forzar modo edición
+            if (isEditingVacanteWithDefaultTemplate) {
+                isEditMode = true;
+            }
             
             // Inicializar configuraciones faltantes para agentes existentes
             if (localTemplateCopy.realContent && localTemplateCopy.realContent.stages) {
@@ -3582,21 +3633,56 @@
                 });
             }
             
-            // Cargar en modo vista (no edición)
-            isEditMode = false;
+            // Si estamos editando una vacante con plantilla por defecto, mantener modo edición
+            // De lo contrario, cargar en modo vista (no edición)
+            if (!isEditingVacanteWithDefaultTemplate) {
+                isEditMode = false;
+            } else {
+                isEditMode = true;
+            }
+            
             const libraryWidget = document.getElementById('library-widget');
             const flowSection = document.getElementById('template-flow-section');
+            
             if (libraryWidget) {
-                libraryWidget.style.display = 'none'; // Ocultar biblioteca en modo vista
+                if (isEditingVacanteWithDefaultTemplate) {
+                    libraryWidget.style.display = 'flex'; // Mostrar biblioteca en modo edición
+                } else {
+                    libraryWidget.style.display = 'none'; // Ocultar biblioteca en modo vista
+                }
             }
+            
             if (flowSection) {
-                flowSection.className = 'section-single'; // Solo mostrar el flujo en modo vista
+                if (isEditingVacanteWithDefaultTemplate) {
+                    flowSection.className = 'section-dual'; // Mostrar biblioteca y flujo en modo edición
+                } else {
+                    flowSection.className = 'section-single'; // Solo mostrar el flujo en modo vista
+                }
                 flowSection.style.display = 'flex';
             }
             
             renderTemplateFlow(localTemplateCopy);
-            // Aplicar modo vista después de renderizar
+            // Aplicar modo edición/vista después de renderizar
             applyEditMode();
+            
+            // Si estamos en modo edición, renderizar contenido de la biblioteca
+            if (isEditingVacanteWithDefaultTemplate) {
+                setTimeout(() => {
+                    const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
+                    if (activeTab) {
+                        const tabType = activeTab.dataset.tab;
+                        if (tabType === 'stages') {
+                            if (typeof renderStages === 'function') {
+                                renderStages();
+                            }
+                        } else {
+                            if (typeof renderAgents === 'function') {
+                                renderAgents();
+                            }
+                        }
+                    }
+                }, 100);
+            }
         }
         
         // Inicializar flujo vacío por defecto
@@ -3796,6 +3882,28 @@
             // Mostrar la sección
             flowSection.style.display = 'flex';
 
+            // Alerta de información cuando se edita vacante con plantilla IA (solo si hay etapas con IA)
+            let defaultTemplateAlertHTML = '';
+            if (isEditingVacanteWithIATemplate) {
+                // Verificar si hay etapas con IA en el template
+                const hasAgentStages = template.realContent && template.realContent.stages && 
+                    template.realContent.stages.some(stage => stage.type === 'agent' && stage.agentId);
+                
+                // Solo mostrar alerta si hay etapas con IA
+                if (hasAgentStages) {
+                    defaultTemplateAlertHTML = `
+                        <div class="ubits-alert ubits-alert--info ubits-alert--no-close" style="margin-top: 16px;">
+                            <div class="ubits-alert__icon">
+                                <i class="far fa-circle-info"></i>
+                            </div>
+                            <div class="ubits-alert__content">
+                                <div class="ubits-alert__text">Las etapas con IA no se pueden editar, configurar ni eliminar. Solo puedes cambiar su orden arrastrándolas.</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
             // Verificar si tiene etapas
             if (!template.realContent || !template.realContent.stages || template.realContent.stages.length === 0) {
                 // Header con título y botones (solo si hay plantilla seleccionada)
@@ -3811,12 +3919,15 @@
                                     <i class="far fa-external-link"></i>
                                     <span>Ir a la plantilla</span>
                                 </button>
-                                <button class="ubits-button ubits-button--primary ubits-button--sm" id="editFlowBtn" onclick="toggleEditMode()">
-                                    <i class="far fa-edit"></i>
-                                    <span>Editar flujo</span>
-                                </button>
+                                ${!isEditingVacanteWithIATemplate ? `
+                                    <button class="ubits-button ubits-button--primary ubits-button--sm" id="editFlowBtn" onclick="toggleEditMode()">
+                                        <i class="far fa-edit"></i>
+                                        <span>Editar flujo</span>
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
+                        ${defaultTemplateAlertHTML}
                     </div>
                 ` : (isEditMode ? `
                     <div class="board-header-section">
@@ -3832,6 +3943,7 @@
                                 </button>
                             </div>
                         </div>
+                        ${defaultTemplateAlertHTML}
                     </div>
                 ` : '');
                 
@@ -3879,16 +3991,19 @@
             let headerActionsHTML = '';
             if (selectedTemplate) {
                 // Si hay plantilla seleccionada, mostrar botones de ir a plantilla y editar
+                // NO mostrar botón "Editar flujo" si estamos editando una vacante con plantilla IA (ya está en modo edición)
                 headerActionsHTML = `
                     <div class="flow-header-actions">
                         <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
                             <i class="far fa-external-link"></i>
                             <span>Ir a la plantilla</span>
                         </button>
-                        <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
-                            <i class="far fa-edit"></i>
-                            <span>Editar flujo</span>
-                        </button>
+                        ${!isEditingVacanteWithDefaultTemplate ? `
+                            <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
+                                <i class="far fa-edit"></i>
+                                <span>Editar flujo</span>
+                            </button>
+                        ` : ''}
                     </div>
                 `;
             } else if (!selectedTemplate && localTemplateCopy) {
@@ -3913,6 +4028,7 @@
                         </div>
                         ${headerActionsHTML}
                     </div>
+                    ${defaultTemplateAlertHTML}
                 </div>
                 ${stagesHTML}
                 ${nextSlotHTML}
@@ -4054,13 +4170,18 @@
 
         // Aplicar modo edición/vista
         function applyEditMode() {
+            // Si estamos editando una vacante con plantilla por defecto, forzar modo edición
+            if (isEditingVacanteWithDefaultTemplate) {
+                isEditMode = true;
+            }
+            
             const stageActions = document.querySelectorAll('.stage-actions');
             const stageDragHandles = document.querySelectorAll('.stage-drag-handle');
             const editFlowBtn = document.getElementById('editFlowBtn');
             const dropSlots = document.querySelector('.board-drop-slots');
             const boardContainer = document.querySelector('.board-container');
             const widgetTemplateFlow = document.querySelector('.widget-template-flow');
-            
+
             if (isEditMode) {
                 // Modo edición: mostrar botones y iconos de arrastrar
                 stageActions.forEach(actions => {
@@ -4072,8 +4193,14 @@
                 if (dropSlots) {
                     dropSlots.classList.add('editing-mode');
                 }
+                // Ocultar botón "Editar flujo" si estamos editando una vacante con plantilla IA
                 if (editFlowBtn) {
-                    editFlowBtn.innerHTML = '<i class="far fa-eye"></i><span>Ver flujo</span>';
+                    if (isEditingVacanteWithIATemplate) {
+                        editFlowBtn.style.display = 'none';
+                    } else {
+                        editFlowBtn.style.display = '';
+                        editFlowBtn.innerHTML = '<i class="far fa-eye"></i><span>Ver flujo</span>';
+                    }
                 }
                 // Agregar clase de edición para mostrar fondo de las cards
                 if (boardContainer) {
@@ -4092,6 +4219,7 @@
                     dropSlots.classList.remove('editing-mode');
                 }
                 if (editFlowBtn) {
+                    editFlowBtn.style.display = '';
                     editFlowBtn.innerHTML = '<i class="far fa-edit"></i><span>Editar flujo</span>';
                 }
                 // Agregar clase de vista para quitar fondo de las cards
@@ -4104,6 +4232,11 @@
 
         // Toggle modo edición
         window.toggleEditMode = function() {
+            // Prevenir cambiar modo si estamos editando una vacante con plantilla por defecto
+            if (isEditingVacanteWithDefaultTemplate) {
+                return;
+            }
+            
             isEditMode = !isEditMode;
             
             // Mostrar/ocultar biblioteca
@@ -4144,7 +4277,8 @@
         // Ir a la plantilla
         window.goToTemplate = function() {
             if (selectedTemplate) {
-                window.location.href = `editor-plantillas.html?id=${selectedTemplate.id}`;
+                // Abrir en una nueva pestaña para no salir de la página de vacantes
+                window.open(`editor-plantillas.html?id=${selectedTemplate.id}`, '_blank');
             }
         };
 
@@ -4426,8 +4560,9 @@
 
             // Renderizar configuración si el agente tiene config (solo en modo edición)
             // Excluir psychometric-analyst (tiene drawer) e interview-ia (tiene drawer)
+            // NO mostrar configuración si estamos editando una vacante con plantilla IA
             let configHTML = '';
-            if (isEditMode && agentData.hasConfig && agentData.config && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia') {
+            if (isEditMode && !isEditingVacanteWithIATemplate && agentData.hasConfig && agentData.config && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia') {
                 configHTML = `
                     ${isExpanded ? '<div class="agent-stage-divider"></div>' : ''}
                     <div class="agent-stage-config ${configClass}" id="agent-config-${stage.id}">
@@ -4503,19 +4638,21 @@
                                 </div>
                             </div>
                             <div class="stage-actions">
-                                ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
-                                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Pruebas psicotécnicas">
-                                        <i class="far fa-list"></i>
-                                        <span>Pruebas (${stage.config?.tests?.length || 0})</span>
-                                    </button>
-                                ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
-                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
-                                        <i class="far fa-gear"></i>
-                                    </button>
-                                ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia' ? `
-                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only ${isExpanded ? 'ubits-button--active' : ''}" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
-                                        <i class="far fa-gear" id="chevron-${stage.id}"></i>
-                                    </button>
+                                ${!isEditingVacanteWithIATemplate ? `
+                                    ${agentData.hasConfig && stage.agentId === 'psychometric-analyst' ? `
+                                        <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="openPsychometricTestsDrawer('${stage.id}')" title="Pruebas psicotécnicas">
+                                            <i class="far fa-list"></i>
+                                            <span>Pruebas (${stage.config?.tests?.length || 0})</span>
+                                        </button>
+                                    ` : agentData.hasConfig && stage.agentId === 'interview-ia' ? `
+                                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="openSerenaConfigDrawer('${stage.id}')" title="Configurar entrevista Serena">
+                                            <i class="far fa-gear"></i>
+                                        </button>
+                                    ` : agentData.hasConfig && stage.agentId !== 'psychometric-analyst' && stage.agentId !== 'interview-ia' ? `
+                                        <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only ${isExpanded ? 'ubits-button--active' : ''}" onclick="toggleAgentStageConfig('${stage.id}')" title="Expandir/Contraer configuración">
+                                            <i class="far fa-gear" id="chevron-${stage.id}"></i>
+                                        </button>
+                                    ` : ''}
                                 ` : ''}
                                 ${index > 0 ? `
                                     <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="moveAgentStageUp('${stage.id}')" title="Subir">
@@ -4527,9 +4664,11 @@
                                         <i class="far fa-arrow-down"></i>
                                     </button>
                                 ` : ''}
-                                <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar agente" style="color: var(--ubits-feedback-accent-error);">
-                                    <i class="far fa-trash"></i>
-                                </button>
+                                ${!isEditingVacanteWithIATemplate ? `
+                                    <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only" onclick="deleteAgentStage('${stage.id}')" title="Quitar agente" style="color: var(--ubits-feedback-accent-error);">
+                                        <i class="far fa-trash"></i>
+                                    </button>
+                                ` : ''}
                                 <button class="ubits-button ubits-button--tertiary ubits-button--sm ubits-button--icon-only agent-info-btn"
                                         data-agent-id="${stage.agentId}"
                                         data-agent-name="${agentData.name}"
@@ -4640,6 +4779,15 @@
         // Funciones de edición (disponibles globalmente)
         window.toggleAgentStageConfig = function(stageId) {
             if (!localTemplateCopy || !isEditMode) return;
+            
+            // Prevenir configuración solo si estamos editando una vacante con plantilla IA
+            if (isEditingVacanteWithIATemplate) {
+                if (typeof showToast === 'function') {
+                    showToast('info', 'No se puede configurar etapas con IA en vacantes con plantilla IA.');
+                }
+                return;
+            }
+            
             const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
             if (!stage) return;
 
@@ -4717,6 +4865,20 @@
         window.deleteAgentStage = function(stageId) {
             if (!localTemplateCopy || !isEditMode) return;
             
+            // Prevenir eliminación solo si estamos editando una vacante con plantilla IA y la etapa es con IA
+            if (isEditingVacanteWithIATemplate) {
+                const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
+                const isAgent = stage && stage.type === 'agent' && stage.agentId;
+                
+                // Solo prevenir si es una etapa con IA
+                if (isAgent) {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'No se pueden eliminar etapas con IA en vacantes con plantilla IA. Solo puedes cambiar su orden.');
+                    }
+                    return;
+                }
+            }
+
             // Determinar si es una etapa o un agente IA
             const stage = localTemplateCopy.realContent.stages.find(s => s.id === stageId);
             const isAgent = stage && stage.type === 'agent';
@@ -5098,6 +5260,107 @@
                     console.log('Days value:', value);
                 }
             });
+        }
+
+        // Inicializar nueva vacante
+        function initializeNewVacante() {
+            console.log('📋 [initializeNewVacante] Inicializando nueva vacante');
+            
+            // Inicializar estado de la vacante primero
+            selectedTemplate = null;
+            localTemplateCopy = null;
+            isEditMode = true;
+            isEditingVacanteWithIATemplate = false;
+            isEditingVacanteWithDefaultTemplate = false;
+            
+            // Asegurar que las etapas estén cargadas
+            if (availableStages.length === 0 && typeof loadAvailableStages === 'function') {
+                loadAvailableStages();
+            }
+            
+            // Crear input de plantillas
+            setTimeout(() => {
+                createTemplateSelect('custom');
+            }, 100);
+            
+            // Crear input de días
+            setTimeout(() => {
+                createDaysInput();
+            }, 200);
+        }
+
+        // Cargar vacante existente desde localStorage
+        function loadVacanteFromStorage(vacanteId) {
+            console.log('📋 [loadVacanteFromStorage] Cargando vacante con ID:', vacanteId);
+            
+            try {
+                // Cargar todas las vacantes
+                const stored = localStorage.getItem('vacantes');
+                if (!stored) {
+                    console.error('❌ [loadVacanteFromStorage] No hay vacantes guardadas');
+                    initializeNewVacante();
+                    return;
+                }
+                
+                const vacantes = JSON.parse(stored);
+                const vacante = vacantes.find(v => v.id === vacanteId);
+                
+                if (!vacante) {
+                    console.error('❌ [loadVacanteFromStorage] Vacante no encontrada:', vacanteId);
+                    initializeNewVacante();
+                    return;
+                }
+                
+                console.log('✅ [loadVacanteFromStorage] Vacante encontrada:', vacante);
+                
+                // Obtener el templateId de la vacante (puede ser null o un ID de plantilla)
+                const templateId = vacante.templateId || 'custom';
+                const daysValue = vacante.days || '3';
+                
+                // Detectar si estamos editando una vacante con plantilla IA
+                isEditingVacanteWithIATemplate = (templateId === 'default-template-ia');
+                
+                // Detectar si estamos editando una vacante con plantilla por defecto (IA o estándar)
+                isEditingVacanteWithDefaultTemplate = (templateId === 'default-template-ia' || templateId === 'default-template-standard');
+                
+                // Si estamos editando una vacante con plantilla por defecto, forzar modo edición
+                if (isEditingVacanteWithDefaultTemplate) {
+                    isEditMode = true;
+                }
+                
+                console.log('📋 [loadVacanteFromStorage] Template ID:', templateId);
+                console.log('📋 [loadVacanteFromStorage] Days:', daysValue);
+                console.log('📋 [loadVacanteFromStorage] Is editing vacante with IA template:', isEditingVacanteWithIATemplate);
+                console.log('📋 [loadVacanteFromStorage] Is editing vacante with default template:', isEditingVacanteWithDefaultTemplate);
+                console.log('📋 [loadVacanteFromStorage] Edit mode:', isEditMode);
+                
+                // Crear input de plantillas con el templateId de la vacante
+                setTimeout(() => {
+                    createTemplateSelect(templateId);
+                }, 100);
+                
+                // Crear input de días con el valor guardado
+                setTimeout(() => {
+                    createInput({
+                        containerId: 'days-input-container',
+                        label: 'Enviar correo de rechazo a los: (días)',
+                        type: 'number',
+                        placeholder: '3',
+                        value: daysValue,
+                        onChange: function(value) {
+                            console.log('Days value:', value);
+                        }
+                    });
+                }, 200);
+                
+                // Si tiene una plantilla, selectTemplate ya se llamará automáticamente desde createTemplateSelect
+                // No necesitamos llamarlo manualmente aquí porque createTemplateSelect lo hace
+                
+            } catch (error) {
+                console.error('❌ [loadVacanteFromStorage] Error:', error);
+                // Si hay error, inicializar como nueva vacante
+                initializeNewVacante();
+            }
         }
 
         // Renderizar etapas en la biblioteca
@@ -6511,6 +6774,15 @@
         // Abrir drawer de pruebas psicométricas
         window.openPsychometricTestsDrawer = function(stageId) {
             if (!isEditMode || !localTemplateCopy) return;
+            
+            // Prevenir abrir pruebas solo si estamos editando una vacante con plantilla IA
+            if (isEditingVacanteWithIATemplate) {
+                if (typeof showToast === 'function') {
+                    showToast('info', 'No se pueden configurar pruebas en etapas con IA cuando se edita una vacante con plantilla IA.');
+                }
+                return;
+            }
+            
             currentPsychometricStageId = stageId;
             editingTestId = null;
             currentDrawerView = 'list';
@@ -7213,6 +7485,15 @@
         // Abrir drawer de configuración de Serena
         window.openSerenaConfigDrawer = function(stageId) {
             if (!isEditMode || !localTemplateCopy) return;
+            
+            // Prevenir abrir configuración solo si estamos editando una vacante con plantilla IA
+            if (isEditingVacanteWithIATemplate) {
+                if (typeof showToast === 'function') {
+                    showToast('info', 'No se puede configurar etapas con IA cuando se edita una vacante con plantilla IA.');
+                }
+                return;
+            }
+            
             currentSerenaStageId = stageId;
             
             const drawer = document.getElementById('serenaConfigDrawer');

@@ -1,0 +1,3282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBITS - Dashboard de Vacantes</title>
+    
+    <!-- Estilos UBITS oficiales -->
+    <link rel="stylesheet" href="ubits-colors.css">
+    <link rel="stylesheet" href="ubits-typography.css">
+    <link rel="stylesheet" href="fontawesome-icons.css">
+    <link rel="stylesheet" href="components/sub-nav.css">
+    <link rel="stylesheet" href="components-sidebar.css">
+    <link rel="stylesheet" href="components/tab-bar-reclutamiento.css">
+    <link rel="stylesheet" href="components/floating-menu.css">
+    <link rel="stylesheet" href="components/profile-menu.css">
+    <link rel="stylesheet" href="components/button.css">
+    <link rel="stylesheet" href="components/input.css">
+    <link rel="stylesheet" href="components/modal.css">
+    <link rel="stylesheet" href="components/toast.css">
+    <link rel="stylesheet" href="components/card-content.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="profile.css">
+    
+    <style>
+        /* OVERRIDE BUTTON.CSS - FORZAR ESTILOS EN TODOS LOS ESTADOS */
+        /* Sobrescribir TODOS los estados para que siempre sean iguales */
+        .table-empty-state button.ubits-button--secondary,
+        .table-empty-state button.ubits-button--secondary:link,
+        .table-empty-state button.ubits-button--secondary:visited,
+        .table-empty-state button.ubits-button--secondary:hover,
+        .table-empty-state button.ubits-button--secondary:active,
+        .table-empty-state button.ubits-button--secondary:focus,
+        .table-empty-state button.ubits-button--secondary:focus-visible,
+        .no-results-state button.ubits-button--secondary,
+        .no-results-state button.ubits-button--secondary:link,
+        .no-results-state button.ubits-button--secondary:visited,
+        .no-results-state button.ubits-button--secondary:hover,
+        .no-results-state button.ubits-button--secondary:active,
+        .no-results-state button.ubits-button--secondary:focus,
+        .no-results-state button.ubits-button--secondary:focus-visible,
+        .board-empty-state-full button.ubits-button--secondary,
+        .board-empty-state-full button.ubits-button--secondary:link,
+        .board-empty-state-full button.ubits-button--secondary:visited,
+        .board-empty-state-full button.ubits-button--secondary:hover,
+        .board-empty-state-full button.ubits-button--secondary:active,
+        .board-empty-state-full button.ubits-button--secondary:focus,
+        .board-empty-state-full button.ubits-button--secondary:focus-visible {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
+            border-color: #d0d2d5 !important;
+            border: 1px solid #d0d2d5 !important;
+            color: #303a47 !important;
+            transform: none !important;
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        
+        .table-empty-state button.ubits-button--primary,
+        .table-empty-state button.ubits-button--primary:link,
+        .table-empty-state button.ubits-button--primary:visited,
+        .table-empty-state button.ubits-button--primary:hover,
+        .table-empty-state button.ubits-button--primary:active,
+        .table-empty-state button.ubits-button--primary:focus,
+        .table-empty-state button.ubits-button--primary:focus-visible,
+        .no-results-state button.ubits-button--primary,
+        .no-results-state button.ubits-button--primary:link,
+        .no-results-state button.ubits-button--primary:visited,
+        .no-results-state button.ubits-button--primary:hover,
+        .no-results-state button.ubits-button--primary:active,
+        .no-results-state button.ubits-button--primary:focus,
+        .no-results-state button.ubits-button--primary:focus-visible,
+        .board-empty-state-full button.ubits-button--primary,
+        .board-empty-state-full button.ubits-button--primary:link,
+        .board-empty-state-full button.ubits-button--primary:visited,
+        .board-empty-state-full button.ubits-button--primary:hover,
+        .board-empty-state-full button.ubits-button--primary:active,
+        .board-empty-state-full button.ubits-button--primary:focus,
+        .board-empty-state-full button.ubits-button--primary:focus-visible {
+            background: #0c5bef !important;
+            background-color: #0c5bef !important;
+            background-image: none !important;
+            border-color: #0c5bef !important;
+            border: 1px solid #0c5bef !important;
+            color: #ffffff !important;
+            transform: none !important;
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        /* FORZAR SIN BORDES - Máxima especificidad */
+        .dashboard-plantillas .templates-grid .template-card,
+        .templates-grid .template-card,
+        .template-card {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        .dashboard-plantillas .templates-grid .template-card:hover,
+        .templates-grid .template-card:hover,
+        .template-card:hover {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .template-meta,
+        .template-content .template-meta,
+        .template-meta {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .meta-item,
+        .template-meta .meta-item,
+        .meta-item {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        
+        .dashboard-plantillas .template-stats,
+        .template-card .template-stats,
+        .template-stats {
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+        /* Estilos específicos para el dashboard de plantillas */
+        .dashboard-plantillas {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            overflow: visible;
+            max-height: none;
+        }
+
+        /* Mostrar sub-nav en el dashboard de plantillas */
+        #top-nav-container {
+            display: block;
+            margin-bottom: 0;
+        }
+
+        /* Header del dashboard */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-title-section {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .dashboard-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+
+        .templates-count-number {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .header-controls-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Asegurar que todos los botones de control tengan el mismo tamaño */
+        .header-controls-section .ubits-button--secondary.ubits-button--icon-only.ubits-button--sm {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            box-sizing: border-box;
+        }
+
+        /* Centrar iconos dentro de los botones */
+        .header-controls-section .ubits-button--secondary.ubits-button--icon-only i {
+            font-size: 14px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-button {
+            min-width: 32px;
+            width: 32px;
+            height: 32px;
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Asegurar que los botones secundarios icon-only sean cuadrados */
+        .header-controls-section .ubits-button--secondary.ubits-button--icon-only {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-button.active {
+            background: var(--ubits-bg-2);
+        }
+
+        .control-button.active i {
+            color: var(--ubits-accent-brand);
+        }
+
+        /* Contenedor de búsqueda que alterna entre botón e input */
+        .search-toggle-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 300px;
+        }
+
+        .search-input-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--ubits-fg-1-medium);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .search-input-field {
+            width: 100%;
+            padding-left: 36px;
+            padding-right: 36px;
+        }
+
+        .search-input-clear {
+            position: absolute;
+            right: 12px;
+            color: var(--ubits-fg-1-medium);
+            z-index: 1;
+        }
+
+        .search-input-clear:hover {
+            color: var(--ubits-fg-1-high);
+        }
+
+        /* Contenedor del botón de filtro con badge */
+        .filter-button-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0;
+            background: var(--ubits-button-badge) !important;
+            color: #ffffff !important;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 18px;
+            flex-shrink: 0;
+            z-index: 1;
+            box-shadow: 0 0 0 2px var(--ubits-bg-1);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Para números de un solo dígito - perfectamente circular */
+        .filter-badge:not(.badge-double-digit) {
+            width: 18px;
+            padding: 0;
+        }
+
+        /* Para números de dos dígitos - mantener circular */
+        .filter-badge.badge-double-digit {
+            min-width: 18px;
+            width: 18px;
+            padding: 0;
+            border-radius: 50% !important;
+        }
+
+        /* Asegurar que el texto siempre sea blanco - máxima especificidad */
+        .filter-button-container .filter-badge,
+        .filter-button-container .filter-badge *,
+        #filterButton .filter-badge,
+        #filterButton .filter-badge *,
+        .filter-badge,
+        .filter-badge *,
+        .filter-badge::before,
+        .filter-badge::after {
+            color: #ffffff !important;
+        }
+
+        /* Sobrescribir cualquier color heredado del botón */
+        .ubits-button .filter-badge,
+        .ubits-button--active .filter-badge,
+        .ubits-button--secondary .filter-badge {
+            color: #ffffff !important;
+        }
+
+        /* Estado activo del botón de filtro */
+        #filterButton.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+
+        #filterButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        /* Estado activo del botón "Ver seleccionados" (igual que filtros pero sin badge) */
+        #viewSelectedButton.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+
+        #viewSelectedButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        #viewSelectedButton.ubits-button--active span {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        /* Estado activo del botón "Ver seleccionados" (igual que filtros pero sin badge) */
+        #viewSelectedButton.ubits-button--active {
+            background: var(--ubits-button-active-bg) !important;
+            color: var(--ubits-accent-brand) !important;
+            border: 1px solid transparent !important;
+        }
+
+        #viewSelectedButton.ubits-button--active i {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        #viewSelectedButton.ubits-button--active span {
+            color: var(--ubits-accent-brand) !important;
+        }
+
+        /* Drawer de filtros */
+        .templates-filter-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: none;
+        }
+
+        .templates-filter-drawer.active {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        .drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+        }
+
+        .drawer-content {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 400px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--ubits-bg-1);
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            z-index: 10001;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ubits-border-1);
+        }
+
+        .drawer-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--ubits-border-1);
+            background: var(--ubits-bg-1);
+        }
+
+        .drawer-footer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Secciones de filtro */
+        .filter-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .filter-section-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--ubits-fg-1-medium);
+            user-select: none;
+        }
+
+        .filter-option-item:hover {
+            background: var(--ubits-bg-2);
+        }
+
+        .filter-option-item:hover .filter-option-label {
+            color: var(--ubits-fg-1-high);
+        }
+
+        .filter-option-item input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 4px;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .filter-option-item input[type="checkbox"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .filter-option-item input[type="checkbox"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+
+        .filter-option-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 8px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            border-radius: 0;
+        }
+
+        .filter-option-item input[type="checkbox"]:checked + .filter-option-label {
+            color: var(--ubits-fg-1-high);
+        }
+
+        .filter-option-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            color: var(--ubits-fg-1-medium);
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .filter-option-label span {
+            color: inherit;
+        }
+
+        /* Badges de estado en filtros */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Noto Sans', sans-serif;
+        }
+
+        .status-badge--available {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+
+        .status-badge--draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Rango de fecha */
+        .filter-date-range {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .filter-date-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-date-label {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .filter-date-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-date-input-wrapper .ubits-input {
+            width: 100%;
+        }
+
+        /* Dropdown de columnas */
+        .columns-toggle-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .columns-dropdown-menu {
+            position: fixed;
+            min-width: 200px;
+            max-width: 250px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            padding: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .columns-dropdown-menu.show {
+            display: flex;
+        }
+
+        .columns-dropdown-header {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--ubits-border-1);
+            margin-bottom: 4px;
+        }
+
+        .columns-dropdown-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+
+        .columns-dropdown-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .column-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--ubits-fg-1-high);
+            user-select: none;
+        }
+
+        .column-filter-item:hover {
+            background: var(--ubits-bg-2);
+        }
+
+        .column-filter-item input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 4px;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .column-filter-item input[type="checkbox"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+
+        .column-filter-item input[type="checkbox"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+
+        .column-filter-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 8px;
+            border: solid var(--ubits-bg-1);
+            border-width: 0 2px 2px 0;
+            border-radius: 0;
+        }
+
+        .column-filter-item input[type="checkbox"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .column-filter-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Ocultar columnas de la tabla */
+        .ubits-table th[data-column].hidden,
+        .ubits-table td[data-column].hidden {
+            display: none;
+        }
+
+        /* Controles de plantillas */
+        .templates-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .templates-count {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .templates-count-number {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Sort container */
+        .sort-container {
+            position: relative;
+        }
+
+        /* Grid de plantillas */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            min-height: 400px;
+            align-items: start;
+        }
+
+        .templates-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            padding: 16px 0;
+        }
+
+        .view-container {
+            width: 100%;
+            min-height: 200px;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que el view-container dentro de templates-table-container respete el padding */
+        .templates-table-container .view-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        #cardsViewContainer {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 200px !important;
+        }
+        
+        #cardsViewContainer[style*="display: none"] {
+            display: none !important;
+        }
+        
+        #cardsViewContainer[style*="display: block"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        #templatesCardsGrid {
+            display: grid !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Asegurar que las cards sean visibles */
+        #templatesCardsGrid .template-card {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Template card usando estructura UBITS */
+        .template-card,
+        .templates-grid .template-card,
+        .dashboard-plantillas .template-card,
+        #templatesCardsGrid .template-card {
+            background: var(--ubits-bg-1) !important;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative;
+            overflow: hidden;
+            box-shadow: none !important;
+        }
+
+        .template-card:hover,
+        .templates-grid .template-card:hover,
+        .dashboard-plantillas .template-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+        }
+
+        .template-card.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--ubits-feedback-accent-success);
+        }
+
+        /* Template header */
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .template-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .template-status.active {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+
+        .template-status.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        .template-status.draft span {
+            color: #20335f !important;
+        }
+        
+        [data-theme="dark"] .template-status.draft {
+            background: #3B3B70;
+            color: #E0E0E0;
+            border: 1.5px solid #C0C0F0;
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
+        }
+        
+        [data-theme="dark"] .template-status.draft span {
+            color: #E0E0E0 !important;
+            font-weight: 500;
+        }
+        
+        [data-theme="dark"] .template-status.active {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .template-status.active span {
+            color: #E8F8E4 !important;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Botones de activar/editar eliminados - ya no se usan */
+
+        /* Botón eliminar con color de error */
+        .template-actions .ubits-button--tertiary[onclick*="deleteTemplate"] i {
+            color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        /* Template content */
+        .template-content {
+            margin-bottom: 12px;
+        }
+
+        .template-name {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            line-height: 1.4;
+            margin: 0 0 8px 0;
+        }
+
+        .template-meta,
+        .template-content .template-meta,
+        .dashboard-plantillas .template-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .meta-item,
+        .template-meta .meta-item,
+        .dashboard-plantillas .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--ubits-fg-1-medium);
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 1.3;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .meta-item i {
+            width: 12px;
+            height: 12px;
+            font-size: 12px;
+            color: var(--ubits-fg-1-low);
+        }
+
+        .meta-item .author-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Template stats */
+        .template-stats,
+        .template-card .template-stats,
+        .dashboard-plantillas .template-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--ubits-bg-2);
+            border-radius: 6px;
+            margin-top: 12px;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 1.2;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            font-family: 'Noto Sans', sans-serif;
+            line-height: 1.2;
+        }
+
+        /* Empty states */
+        .empty-state-container {
+            width: 100%;
+            display: none;
+        }
+
+        .board-empty-state-full {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            min-height: 400px;
+        }
+
+        .empty-icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .empty-icon-circle i {
+            font-size: 32px;
+            color: var(--ubits-fg-1-medium);
+        }
+
+        .empty-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .empty-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+            max-width: 320px;
+        }
+
+        /* No results state */
+        .no-results-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 8px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .no-results-state img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .no-results-state h3 {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin-bottom: 8px;
+        }
+
+        .no-results-state p {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin-bottom: 16px;
+        }
+        
+        /* Empty state para tabla - NUEVO CÓDIGO SIMPLE */
+        .table-empty-row {
+            border: none !important;
+        }
+        
+        .table-empty-cell {
+            padding: 0 !important;
+            border: none !important;
+        }
+        
+        .table-empty-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            text-align: center;
+            min-height: 400px;
+        }
+        
+        /* Eliminar hover del div table-empty-content - MÁXIMA ESPECIFICIDAD */
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:hover,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:active,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:focus,
+        .table-empty-content,
+        .table-empty-content:hover,
+        .table-empty-content:active,
+        .table-empty-content:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            box-shadow: none !important;
+            -webkit-box-shadow: none !important;
+            -moz-box-shadow: none !important;
+            transform: none !important;
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+            backdrop-filter: none !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Eliminar hover de todos los elementos hijos */
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content *,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content *:hover,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content *:active,
+        .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content *:focus,
+        .table-empty-content *,
+        .table-empty-content *:hover,
+        .table-empty-content *:active,
+        .table-empty-content *:focus {
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+        }
+        
+        .table-empty-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--ubits-bg-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .table-empty-icon i {
+            font-size: 32px;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .table-empty-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+        
+        .table-empty-description {
+            font-family: 'Noto Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ubits-fg-1-medium);
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+        
+        /* Contenedor de botones en empty state */
+        .table-empty-content > div {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Botones en empty state - SIN HOVER - NUEVO CÓDIGO SIMPLE */
+        .table-empty-content .ubits-button,
+        .table-empty-content .ubits-button:hover,
+        .table-empty-content .ubits-button:active,
+        .table-empty-content .ubits-button:focus,
+        .table-empty-content .ubits-button:focus-visible {
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+            -webkit-box-shadow: none !important;
+            -moz-box-shadow: none !important;
+        }
+        
+        .table-empty-content .ubits-button--secondary,
+        .table-empty-content .ubits-button--secondary:hover,
+        .table-empty-content .ubits-button--secondary:active,
+        .table-empty-content .ubits-button--secondary:focus,
+        .table-empty-content .ubits-button--secondary:focus-visible {
+            background: var(--ubits-btn-secondary-bg-default) !important;
+            background-color: var(--ubits-btn-secondary-bg-default) !important;
+            background-image: none !important;
+            border-color: var(--ubits-btn-secondary-border) !important;
+            border: 1px solid var(--ubits-btn-secondary-border) !important;
+            color: var(--ubits-btn-secondary-fg-default) !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+        
+        .table-empty-content .ubits-button--primary,
+        .table-empty-content .ubits-button--primary:hover,
+        .table-empty-content .ubits-button--primary:active,
+        .table-empty-content .ubits-button--primary:focus,
+        .table-empty-content .ubits-button--primary:focus-visible {
+            background: var(--ubits-button-primary-bg-default) !important;
+            background-color: var(--ubits-button-primary-bg-default) !important;
+            background-image: none !important;
+            border-color: var(--ubits-button-primary-bg-default) !important;
+            border: 1px solid var(--ubits-button-primary-bg-default) !important;
+            color: var(--ubits-btn-primary-fg) !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+        
+        /* Iconos en botones del empty state */
+        .table-empty-content .ubits-button i {
+            color: inherit !important;
+            font-size: inherit !important;
+            display: inline-block !important;
+        }
+        
+        .table-empty-content .ubits-button--secondary i {
+            color: var(--ubits-btn-secondary-fg-default) !important;
+        }
+        
+        .table-empty-content .ubits-button--primary i {
+            color: var(--ubits-btn-primary-fg) !important;
+        }
+        
+        
+        @media (max-width: 768px) {
+            .table-empty-content {
+                padding: 40px 20px;
+                min-height: 300px;
+            }
+            
+            .table-empty-icon {
+                width: 64px;
+                height: 64px;
+                margin-bottom: 20px;
+            }
+            
+            .table-empty-icon i {
+                font-size: 24px;
+            }
+            
+            .table-empty-title {
+                font-size: 16px;
+            }
+            
+            .table-empty-description {
+                font-size: 13px;
+                max-width: 100%;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .templates-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .board-empty-state-full {
+                padding: 40px 20px;
+            }
+
+            .empty-icon-circle {
+                width: 64px;
+                height: 64px;
+                margin-bottom: 20px;
+            }
+
+            .empty-icon-circle i {
+                font-size: 24px;
+            }
+
+            .empty-title {
+                font-size: 18px;
+            }
+
+            .empty-description {
+                font-size: 13px;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .header-title-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .header-controls-section {
+                flex-wrap: wrap;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .header-controls-section .ubits-button {
+                flex: 1;
+                min-width: auto;
+            }
+
+            .header-controls-section .ubits-button--md {
+                width: 100%;
+                order: 1;
+            }
+
+            .header-controls-section .ubits-button--sm {
+                order: 2;
+            }
+
+            .control-button {
+                order: 2;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .templates-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .template-card {
+                padding: 12px;
+            }
+
+            .template-stats {
+                padding: 6px 8px;
+            }
+        }
+        
+        /* Tabla de vacantes UBITS */
+        .vacantes-table-container {
+            width: 100%;
+            max-width: 100%;
+            margin-top: 0;
+            margin-left: 0;
+            margin-right: 0;
+            background: var(--ubits-bg-1);
+            border-radius: 8px;
+            overflow: hidden;
+            border: none;
+            padding: 16px !important;
+            box-sizing: border-box;
+        }
+        
+        /* Estilos específicos para el dashboard de vacantes */
+        .dashboard-vacantes {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow: visible;
+            max-height: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Ajustar espaciado desde el subnav - 24px */
+        #top-nav-container + .content-area {
+            margin-top: 24px;
+        }
+        
+        /* Asegurar que dashboard-vacantes no agregue espacio extra */
+        .content-area .dashboard-vacantes {
+            margin-top: 0;
+            padding-top: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        /* Asegurar que content-area ocupe todo el ancho disponible */
+        .content-area {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que main-content no limite el ancho */
+        .main-content {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Header dentro del contenedor de la tabla */
+        .templates-table-container .dashboard-header {
+            margin-bottom: 16px;
+            padding-bottom: 0;
+        }
+
+        /* Barra de acciones */
+        .action-bar {
+            margin-top: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Botón activo en la barra de acciones */
+        .action-bar .ubits-button.active {
+            background: var(--ubits-accent-brand) !important;
+            color: var(--ubits-bg-1) !important;
+            border-color: var(--ubits-accent-brand) !important;
+        }
+
+        .action-bar .ubits-button.active i {
+            color: var(--ubits-bg-1) !important;
+        }
+
+        .action-bar .ubits-button.active span {
+            color: var(--ubits-bg-1) !important;
+        }
+
+        /* Botones de icono en la barra de acciones - cuadrados con bordes redondeados */
+        .action-bar .ubits-button--icon-only {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+        }
+
+        .action-button-delete {
+            border: 1px solid var(--ubits-feedback-accent-error) !important;
+            background: var(--ubits-feedback-bg-error-subtle) !important;
+        }
+
+        .action-button-delete:hover {
+            background: var(--ubits-feedback-bg-error-subtle-hover) !important;
+            border-color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        .action-button-delete i {
+            color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        .action-button-delete:hover i {
+            color: var(--ubits-feedback-accent-error) !important;
+        }
+
+        /* Modo oscuro para botón de eliminar */
+        [data-theme="dark"] .action-button-delete {
+            border: 1px solid var(--ubits-feedback-accent-error-inverted) !important;
+            background: var(--ubits-feedback-bg-error-subtle-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete:hover {
+            background: var(--ubits-feedback-bg-error-subtle-inverted-hover) !important;
+            border-color: var(--ubits-feedback-accent-error-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete i {
+            color: var(--ubits-feedback-accent-error-inverted) !important;
+        }
+
+        [data-theme="dark"] .action-button-delete:hover i {
+            color: var(--ubits-feedback-accent-error-inverted) !important;
+        }
+
+        /* Barra de búsqueda dentro del contenedor de la tabla */
+        .templates-table-container .search-bar-container {
+            margin-bottom: 16px;
+        }
+        
+        .ubits-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Noto Sans', sans-serif;
+            border: none;
+            table-layout: auto;
+            box-sizing: border-box;
+        }
+        
+        /* Asegurar que la tabla y su contenedor respeten el padding */
+        .vacantes-table-container .view-container {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .vacantes-table-container .ubits-table {
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .ubits-table thead {
+            background: var(--ubits-bg-1);
+            border-bottom: 1px solid var(--ubits-border-1);
+        }
+        
+        .ubits-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+            white-space: nowrap;
+        }
+        
+        .ubits-table th.table-checkbox {
+            width: 48px;
+            text-align: center;
+        }
+        
+        .table-header-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .table-header-content span {
+            flex: 1;
+            user-select: none;
+        }
+        
+        .table-sort-btn {
+            flex-shrink: 0;
+        }
+        
+        .table-sort-btn.active {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .table-sort-btn.active i {
+            color: var(--ubits-accent-brand);
+        }
+        
+        .ubits-table tbody tr {
+            border-bottom: 1px solid var(--ubits-border-1);
+            transition: background 0.2s ease;
+        }
+        
+        /* Hover solo para filas normales, NO para empty state */
+        .ubits-table tbody tr:hover:not(.table-empty-row) {
+            background: var(--ubits-bg-2);
+        }
+        
+        /* Eliminar hover de la fila del empty state */
+        .ubits-table tbody tr.table-empty-row,
+        .ubits-table tbody tr.table-empty-row:hover,
+        .ubits-table tbody tr.table-empty-row:active,
+        .ubits-table tbody tr.table-empty-row:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+        }
+        
+        /* Eliminar hover de la celda del empty state */
+        .ubits-table tbody tr.table-empty-row td,
+        .ubits-table tbody tr.table-empty-row td:hover,
+        .ubits-table tbody tr.table-empty-row td:active,
+        .ubits-table tbody tr.table-empty-row td:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: none !important;
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+        }
+        
+        .ubits-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .ubits-table td {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: var(--ubits-fg-1-high);
+            vertical-align: middle;
+        }
+        
+        .ubits-table td.table-checkbox {
+            text-align: center;
+            width: 48px;
+        }
+        
+        /* Checkbox UBITS */
+        .ubits-table td.table-checkbox input[type="checkbox"],
+        .ubits-table th.table-checkbox input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 2px solid var(--ubits-border-1);
+            border-radius: 4px;
+            background: var(--ubits-bg-1);
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:hover,
+        .ubits-table th.table-checkbox input[type="checkbox"]:hover {
+            border-color: var(--ubits-accent-brand);
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:checked,
+        .ubits-table th.table-checkbox input[type="checkbox"]:checked {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:checked::after,
+        .ubits-table th.table-checkbox input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 8px;
+            border: solid var(--ubits-bg-1);
+            border-width: 0 2px 2px 0;
+            border-radius: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Estado indeterminado - línea horizontal */
+        .ubits-table td.table-checkbox input[type="checkbox"]:indeterminate,
+        .ubits-table th.table-checkbox input[type="checkbox"]:indeterminate {
+            border-color: var(--ubits-accent-brand);
+            background: var(--ubits-accent-brand);
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:indeterminate::after,
+        .ubits-table th.table-checkbox input[type="checkbox"]:indeterminate::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 2px;
+            background: var(--ubits-bg-1);
+            border-radius: 1px;
+            box-sizing: border-box;
+        }
+        
+        .ubits-table td.table-checkbox input[type="checkbox"]:focus,
+        .ubits-table th.table-checkbox input[type="checkbox"]:focus {
+            outline: 2px solid var(--ubits-accent-brand-subtle);
+            outline-offset: 2px;
+        }
+        
+        .ubits-table td.table-name {
+            font-weight: 500;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .ubits-table td.table-type {
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        .ubits-table td.table-status {
+            padding: 4px 0;
+        }
+        
+        .table-status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            gap: 6px;
+        }
+        
+        .table-status-badge i {
+            transition: transform 0.2s ease;
+        }
+        
+        .table-status-badge:hover i {
+            opacity: 1;
+        }
+        
+        .table-status-badge[data-template-id] {
+            cursor: pointer;
+        }
+        
+        .table-status-badge[data-template-id]:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        
+        .table-status-badge[data-template-id]:active {
+            transform: scale(0.95);
+        }
+        
+        /* Dropdown de estado */
+        .status-dropdown-menu {
+            position: fixed;
+            min-width: 140px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            overflow: hidden;
+        }
+        
+        .status-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+        }
+        
+        .status-dropdown-item:hover {
+            background: var(--ubits-bg-2);
+        }
+        
+        .status-dropdown-item.active {
+            background: var(--ubits-bg-2);
+        }
+        
+        .status-dropdown-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .status-dropdown-badge.available {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        .status-dropdown-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        [data-theme="dark"] .status-dropdown-badge.available {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1.5px solid var(--ubits-feedback-accent-success);
+        }
+        
+        [data-theme="dark"] .status-dropdown-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        .table-status-badge.available {
+            background: #E8F8E4;
+            color: #2D5A2D;
+            border: 1px solid var(--ubits-feedback-accent-success);
+        }
+        
+        .table-status-badge.draft {
+            background: var(--ubits-feedback-bg-info-subtle);
+            color: #20335f;
+            border: 1px solid var(--ubits-feedback-accent-info);
+        }
+        
+        .table-status-badge.draft span {
+            color: #20335f !important;
+        }
+        
+        /* Estilos para dropdown de categoría */
+        .category-dropdown-menu {
+            position: fixed;
+            min-width: 180px;
+            background: var(--ubits-bg-1);
+            border: 1px solid var(--ubits-border-1);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            overflow: hidden;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .category-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+            color: var(--ubits-fg-1-medium);
+            font-size: 14px;
+        }
+        
+        .category-dropdown-item:hover {
+            background: var(--ubits-bg-2);
+            color: var(--ubits-fg-1-high);
+        }
+        
+        .category-dropdown-item.active {
+            background: var(--ubits-bg-2);
+            font-weight: 600;
+            color: var(--ubits-fg-1-high);
+        }
+        
+        [data-theme="dark"] .category-dropdown-item {
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        [data-theme="dark"] .category-dropdown-item:hover {
+            color: var(--ubits-fg-1-low);
+        }
+        
+        [data-theme="dark"] .category-dropdown-item.active {
+            color: var(--ubits-fg-1-low);
+        }
+        
+        .table-category-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ubits-fg-1-medium);
+        }
+        
+        [data-theme="dark"] .table-status-badge.available {
+            background: #2D5A2D;
+            color: #E8F8E4;
+            border: 1.5px solid var(--ubits-feedback-accent-success);
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
+        }
+        
+        [data-theme="dark"] .table-status-badge.available span {
+            color: #E8F8E4 !important;
+            font-weight: 500;
+        }
+        
+        [data-theme="dark"] .table-status-badge.draft {
+            background: #3B3B70;
+            color: #E0E0E0;
+            border: 1.5px solid #C0C0F0;
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 6px 14px;
+        }
+        
+        [data-theme="dark"] .table-status-badge.draft span {
+            color: #E0E0E0 !important;
+            font-weight: 500;
+        }
+        
+        .ubits-table td.table-date {
+            color: var(--ubits-fg-1-medium);
+            font-size: 13px;
+        }
+        
+        .ubits-table td.table-agents {
+            color: var(--ubits-fg-1-high);
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .ubits-table td.table-stages {
+            color: var(--ubits-fg-1-high);
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        /* Modo oscuro para la tabla */
+        [data-theme="dark"] .vacantes-table-container {
+            background: var(--ubits-bg-1);
+            border: none;
+            padding: 16px !important;
+        }
+
+        [data-theme="dark"] .vacantes-table-container .dashboard-header {
+            margin-bottom: 16px;
+        }
+
+        [data-theme="dark"] .vacantes-table-container .search-bar-container {
+            margin-bottom: 16px;
+        }
+        
+        [data-theme="dark"] .ubits-table thead {
+            background: var(--ubits-bg-2);
+        }
+        
+        /* Hover solo para filas normales en modo oscuro, NO para empty state */
+        [data-theme="dark"] .ubits-table tbody tr:hover:not(.table-empty-row) {
+            background: var(--ubits-bg-2);
+        }
+        
+        /* Eliminar hover de la fila del empty state en modo oscuro */
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row:hover,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row:active,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: none !important;
+        }
+        
+        /* Eliminar hover de la celda del empty state en modo oscuro */
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td:hover,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td:active,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: none !important;
+        }
+        
+        /* Eliminar hover del contenido del empty state en modo oscuro */
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:hover,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:active,
+        [data-theme="dark"] .ubits-table tbody tr.table-empty-row td.table-empty-cell .table-empty-content:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            transform: none !important;
+            transition: none !important;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="dashboard-container">
+        <div class="tooltip" id="tooltip"></div>
+        
+        <!-- Sidebar Container -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <div id="top-nav-container"></div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Dashboard de Vacantes -->
+                <div class="dashboard-vacantes">
+                    <!-- Tabla de vacantes -->
+                    <div id="vacantesTableContainer" class="vacantes-table-container">
+                        <!-- Header del dashboard dentro del contenedor de la tabla -->
+                        <div class="dashboard-header">
+                            <div class="header-title-section">
+                                <h1 class="dashboard-title">Lista de vacantes</h1>
+                                <span class="vacantes-count-number"><span id="vacantesCount">0</span> vacantes</span>
+                            </div>
+                            <div class="header-controls-section">
+                                <!-- Contenedor de búsqueda que alterna entre botón e input -->
+                                <div class="search-toggle-container">
+                                    <!-- Botón de búsqueda (visible por defecto) -->
+                                    <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="searchButton" onclick="toggleSearch()" title="Buscar">
+                                        <i class="far fa-search"></i>
+                                    </button>
+                                    <!-- Input de búsqueda (oculto por defecto) -->
+                                    <div class="search-input-wrapper" id="searchInputWrapper" style="display: none;">
+                                        <i class="far fa-search search-input-icon"></i>
+                                        <input type="text" id="searchTemplates" class="ubits-input ubits-input--sm search-input-field" placeholder="Buscar plantillas" autocomplete="off">
+                                        <i class="far fa-times search-input-clear" id="clearSearchTemplates" style="display: none; cursor: pointer;" onclick="if(typeof clearSearch === 'function') { clearSearch(); } else { closeSearch(); }"></i>
+                                    </div>
+                                </div>
+                                <!-- Botón de filtro con badge -->
+                                <div class="filter-button-container">
+                                    <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="filterButton" onclick="toggleFilterDrawer()" title="Filtrar">
+                                        <i class="far fa-filter"></i>
+                                        <span class="filter-badge" id="filterBadge" style="display: none;">0</span>
+                                    </button>
+                                </div>
+                                <!-- Botón de mostrar/ocultar columnas -->
+                                <div class="columns-toggle-container">
+                                    <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="columnsButton" onclick="toggleColumnsDropdown(event)" title="Mostrar/ocultar columnas">
+                                        <wa-icon name="columns-3" variant="light"></wa-icon>
+                                    </button>
+                                    <div class="columns-dropdown-menu" id="columnsDropdownMenu">
+                                        <div class="columns-dropdown-header">
+                                            <span class="columns-dropdown-title">Mostrar columnas</span>
+                                        </div>
+                                        <div class="columns-dropdown-items">
+                                            <label class="column-filter-item" for="column-name">
+                                                <input type="checkbox" id="column-name" data-column="name" checked onchange="toggleColumnVisibility('name', this.checked)">
+                                                <span class="column-filter-label">Nombre</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-category">
+                                                <input type="checkbox" id="column-category" data-column="category" checked onchange="toggleColumnVisibility('category', this.checked)">
+                                                <span class="column-filter-label">Categoría</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-status">
+                                                <input type="checkbox" id="column-status" data-column="status" checked onchange="toggleColumnVisibility('status', this.checked)">
+                                                <span class="column-filter-label">Estado</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-modified">
+                                                <input type="checkbox" id="column-modified" data-column="modified" checked onchange="toggleColumnVisibility('modified', this.checked)">
+                                                <span class="column-filter-label">Modificado</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-agents">
+                                                <input type="checkbox" id="column-agents" data-column="agents" checked onchange="toggleColumnVisibility('agents', this.checked)">
+                                                <span class="column-filter-label">Agentes IA</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-stages">
+                                                <input type="checkbox" id="column-stages" data-column="stages" checked onchange="toggleColumnVisibility('stages', this.checked)">
+                                                <span class="column-filter-label">Etapas</span>
+                                            </label>
+                                            <label class="column-filter-item" for="column-created">
+                                                <input type="checkbox" id="column-created" data-column="created" checked onchange="toggleColumnVisibility('created', this.checked)">
+                                                <span class="column-filter-label">Creado</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Botón primario crear vacante -->
+                                <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="createVacante()">
+                                    <i class="far fa-plus"></i>
+                                    <span>Crear vacante</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Barra de acciones (visible cuando hay items seleccionados) -->
+                        <div id="actionBar" class="action-bar" style="display: none;">
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm" id="viewSelectedButton" onclick="viewSelectedTemplates()">
+                                <i class="far fa-eye"></i>
+                                <span>Ver seleccionados (<span id="selectedCount">0</span>)</span>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="duplicateButton" onclick="duplicateSelectedTemplates()" title="Duplicar">
+                                <i class="far fa-copy"></i>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button" id="editButton" onclick="editSelectedTemplate()" title="Editar">
+                                <i class="far fa-pencil"></i>
+                            </button>
+                            <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm control-button action-button-delete" id="deleteButton" onclick="deleteSelectedTemplates()" title="Eliminar">
+                                <i class="far fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <!-- Contenedor de tabla (vista por defecto) -->
+                        <div id="tableViewContainer" class="view-container">
+                            <table class="ubits-table" id="vacantesTable">
+                            <thead>
+                                <tr>
+                                    <th class="table-checkbox">
+                                        <input type="checkbox" id="selectAllVacantes" title="Seleccionar todas">
+                                    </th>
+                                    <th data-column="name" class="column-name">
+                                        <div class="table-header-content">
+                                            <span>Nombre</span>
+                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="name" title="Ordenar por nombre">
+                                                <i class="far fa-arrow-down-arrow-up"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th data-column="template" class="column-template">
+                                        <div class="table-header-content">
+                                            <span>Plantilla</span>
+                                        </div>
+                                    </th>
+                                    <th data-column="status" class="column-status">
+                                        <div class="table-header-content">
+                                            <span>Estado</span>
+                                        </div>
+                                    </th>
+                                    <th data-column="created" class="column-created">
+                                        <div class="table-header-content">
+                                            <span>Creado</span>
+                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="createdAt" title="Ordenar por fecha de creación">
+                                                <i class="far fa-arrow-down-arrow-up"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th data-column="modified" class="column-modified">
+                                        <div class="table-header-content">
+                                            <span>Modificado</span>
+                                            <button class="ubits-button ubits-button--tertiary ubits-button--icon-only ubits-button--sm table-sort-btn" data-sort="lastModified" title="Ordenar por fecha de modificación">
+                                                <i class="far fa-arrow-down-arrow-up"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th data-column="actions" class="column-actions">
+                                        <div class="table-header-content">
+                                            <span>Acciones</span>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="vacantesTableBody">
+                                <!-- Las filas se cargarán dinámicamente aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Tab Bar Container -->
+    <div id="tab-bar-container"></div>
+
+    <!-- Floating Menu Container -->
+    <!-- Floating Menu Reclutamiento -->
+    <div id="floating-menu-reclutamiento-container"></div>
+    
+    <!-- Profile Menu Container -->
+    <div id="profile-menu-container"></div>
+
+    <!-- Toast Container -->
+    <div id="ubits-toast-container"></div>
+
+    <!-- Drawer de Filtros -->
+    <div class="templates-filter-drawer" id="templatesFilterDrawer">
+        <div class="drawer-overlay" onclick="closeFilterDrawer()"></div>
+        <div class="drawer-content" onclick="if(event.target === this) event.stopPropagation();">
+            <div class="drawer-header">
+                <h3 class="drawer-title">Filtros</h3>
+                <button class="ubits-button ubits-button--secondary ubits-button--icon-only ubits-button--sm" onclick="closeFilterDrawer()" title="Cerrar">
+                    <i class="far fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <!-- Filtro de Estado -->
+                <div class="filter-section">
+                    <div id="filterStatusSelectContainer"></div>
+                </div>
+
+                <!-- Filtro de Rango de Fecha -->
+                <div class="filter-section">
+                    <label class="filter-section-label">Rango de fecha</label>
+                    <div class="filter-date-range">
+                        <div id="filterDateFromContainer"></div>
+                        <div id="filterDateToContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Filtro de Agentes -->
+                <div class="filter-section">
+                    <label class="filter-section-label">Agentes IA</label>
+                    <div class="filter-options">
+                        <label class="filter-option-item" for="filter-agents-yes">
+                            <input type="checkbox" id="filter-agents-yes" value="yes">
+                            <span class="filter-option-label">
+                                <span>Con agentes</span>
+                            </span>
+                        </label>
+                        <label class="filter-option-item" for="filter-agents-no">
+                            <input type="checkbox" id="filter-agents-no" value="no">
+                            <span class="filter-option-label">
+                                <span>Sin agentes</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <div class="drawer-footer-actions">
+                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="clearAllFilters()">
+                        <span>Limpiar filtros</span>
+                    </button>
+                    <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="applyFilters()">
+                        <span>Aplicar filtros</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts UBITS -->
+    <script src="components/sidebar-reclutamiento.js"></script>
+    <script src="components/sub-nav.js"></script>
+    <script src="components/tab-bar-reclutamiento.js"></script>
+    <script src="components/floating-menu.js"></script>
+    <script src="components/profile-menu.js"></script>
+    <script src="components/input.js"></script>
+    <script src="components/modal.js"></script>
+    <script src="components/toast.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Scripts del dashboard de vacantes -->
+    <script src="dashboard-vacantes.js"></script>
+    
+    <script>
+        // Funciones para los controles del header
+        function toggleSearch() {
+            const searchButton = document.getElementById('searchButton');
+            const searchInputWrapper = document.getElementById('searchInputWrapper');
+            const searchInput = document.getElementById('searchTemplates');
+            
+            // Ocultar botón y mostrar input
+            if (searchButton && searchInputWrapper) {
+                searchButton.style.display = 'none';
+                searchInputWrapper.style.display = 'flex';
+                
+                // Asegurar que el event listener esté configurado
+                if (searchInput && !searchInput.hasAttribute('data-listener-attached')) {
+                    searchInput.addEventListener('input', function(event) {
+                        if (typeof handleSearchEvent === 'function') {
+                            handleSearchEvent(event);
+                        }
+                    });
+                    searchInput.setAttribute('data-listener-attached', 'true');
+                }
+                
+                // Enfocar el input después de mostrarlo
+                setTimeout(() => {
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }, 100);
+            }
+        }
+
+        function closeSearch() {
+            const searchButton = document.getElementById('searchButton');
+            const searchInputWrapper = document.getElementById('searchInputWrapper');
+            const searchInput = document.getElementById('searchTemplates');
+            const clearBtn = document.getElementById('clearSearchTemplates');
+            
+            // Limpiar búsqueda
+            if (typeof clearSearch === 'function') {
+                clearSearch();
+            } else if (searchInput) {
+                searchInput.value = '';
+                if (typeof handleSearch === 'function') {
+                    handleSearch('');
+                }
+            }
+            
+            // Ocultar botón limpiar
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+            
+            // Ocultar input y mostrar botón
+            if (searchInputWrapper && searchButton) {
+                searchInputWrapper.style.display = 'none';
+                searchButton.style.display = 'flex';
+            }
+        }
+
+        // Cerrar búsqueda al presionar Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const searchInputWrapper = document.getElementById('searchInputWrapper');
+                if (searchInputWrapper && searchInputWrapper.style.display !== 'none') {
+                    closeSearch();
+                }
+            }
+        });
+
+        // Cerrar búsqueda al hacer clic fuera (si el input está vacío)
+        document.addEventListener('click', function(event) {
+            const searchInputWrapper = document.getElementById('searchInputWrapper');
+            const searchInput = document.getElementById('searchTemplates');
+            
+            if (searchInputWrapper && searchInputWrapper.style.display !== 'none') {
+                // Si el clic fue fuera del contenedor de búsqueda
+                if (!searchInputWrapper.contains(event.target) && 
+                    event.target.id !== 'searchButton' &&
+                    event.target.closest('#searchButton') === null) {
+                    
+                    // Solo cerrar si el input está vacío
+                    if (searchInput && !searchInput.value.trim()) {
+                        closeSearch();
+                    }
+                }
+            }
+        });
+
+        // Funciones del drawer de filtros
+        function toggleFilterDrawer() {
+            const drawer = document.getElementById('templatesFilterDrawer');
+            if (drawer) {
+                const isOpening = !drawer.classList.contains('active');
+                drawer.classList.toggle('active');
+                
+                // Inicializar componentes cuando se abre el drawer
+                if (isOpening) {
+                    setTimeout(() => {
+                        initializeFilterDrawerComponents();
+                    }, 100);
+                }
+            }
+        }
+
+        function closeFilterDrawer() {
+            const drawer = document.getElementById('templatesFilterDrawer');
+            if (drawer) {
+                drawer.classList.remove('active');
+            }
+        }
+
+        // Función para aplicar los filtros configurados
+        function applyFilters() {
+            // Obtener filtro de estado (select UBITS)
+            let statusFilters = [];
+            if (window.filterStatusSelectInstance) {
+                const selectedValue = window.filterStatusSelectInstance.getValue();
+                console.log('🔍 [applyFilters] Valor obtenido del select:', selectedValue);
+                
+                // El getValue() devuelve el valor real ('available' o 'draft'), no el texto
+                if (selectedValue && selectedValue !== '' && selectedValue !== 'Todos los estados') {
+                    // Usar el valor directamente (ya es 'available' o 'draft')
+                    statusFilters.push(selectedValue);
+                    console.log('✅ [applyFilters] Filtro de estado agregado:', selectedValue);
+                } else {
+                    console.log('⚠️ [applyFilters] No se agregó filtro de estado - valor:', selectedValue);
+                }
+            } else {
+                console.log('❌ [applyFilters] filterStatusSelectInstance no existe');
+            }
+
+            // Obtener filtros de fecha (calendar UBITS)
+            let dateFrom = null;
+            let dateTo = null;
+            if (window.filterDateFromInstance) {
+                const fromValue = window.filterDateFromInstance.getValue();
+                // Convertir formato de fecha si es necesario
+                if (fromValue) {
+                    dateFrom = fromValue;
+                }
+            }
+            if (window.filterDateToInstance) {
+                const toValue = window.filterDateToInstance.getValue();
+                if (toValue) {
+                    dateTo = toValue;
+                }
+            }
+
+            // Obtener filtro de agentes
+            let hasAgents = null;
+            const agentsYes = document.getElementById('filter-agents-yes');
+            const agentsNo = document.getElementById('filter-agents-no');
+            
+            if (agentsYes && agentsYes.checked && agentsNo && !agentsNo.checked) {
+                hasAgents = true;
+            } else if (agentsNo && agentsNo.checked && agentsYes && !agentsYes.checked) {
+                hasAgents = false;
+            }
+
+            // Actualizar estado global
+            if (typeof window.activeFilters !== 'undefined') {
+                window.activeFilters.status = statusFilters;
+                window.activeFilters.dateFrom = dateFrom;
+                window.activeFilters.dateTo = dateTo;
+                window.activeFilters.hasAgents = hasAgents;
+            } else {
+                // Inicializar si no existe
+                window.activeFilters = {
+                    status: statusFilters,
+                    dateFrom: dateFrom,
+                    dateTo: dateTo,
+                    hasAgents: hasAgents
+                };
+            }
+
+            // Debug: verificar valores
+            console.log('🔍 [applyFilters] Filtros aplicados:', {
+                statusFilters: statusFilters,
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+                hasAgents: hasAgents,
+                activeFilters: window.activeFilters
+            });
+
+            // Aplicar filtros
+            if (typeof applyTemplateFilters === 'function') {
+                applyTemplateFilters();
+            }
+
+            // Actualizar badge
+            updateFilterBadge();
+            
+            // Cerrar drawer
+            closeFilterDrawer();
+        }
+
+        // Función para actualizar los filtros (sin aplicar, solo para mantener compatibilidad)
+        function updateTemplateFilters() {
+            // Esta función ya no se usa, pero se mantiene por compatibilidad
+            // Los filtros ahora se aplican solo con el botón "Aplicar filtros"
+        }
+
+        function updateFilterBadge() {
+            const badge = document.getElementById('filterBadge');
+            const filterButton = document.getElementById('filterButton');
+            
+            if (!badge || !filterButton) return;
+
+            let filterCount = 0;
+            
+            if (typeof window.activeFilters !== 'undefined') {
+                const filters = window.activeFilters;
+                
+                // Contar filtros de estado
+                if (filters.status && filters.status.length > 0) {
+                    filterCount += filters.status.length;
+                }
+                
+                // Contar filtros de fecha
+                if (filters.dateFrom) filterCount++;
+                if (filters.dateTo) filterCount++;
+                
+                // Contar filtro de agentes
+                if (filters.hasAgents !== null) filterCount++;
+            }
+
+            if (filterCount > 0) {
+                badge.textContent = filterCount > 9 ? '9+' : filterCount.toString();
+                badge.style.display = 'inline-flex';
+                badge.style.color = '#ffffff !important';
+                badge.style.setProperty('color', '#ffffff', 'important');
+                badge.style.background = 'var(--ubits-button-badge)';
+                
+                // Forzar color blanco en todos los elementos hijos
+                const badgeText = badge.querySelector('*');
+                if (badgeText) {
+                    badgeText.style.color = '#ffffff';
+                    badgeText.style.setProperty('color', '#ffffff', 'important');
+                }
+                
+                // Para números de dos dígitos, ajustar el ancho pero mantener circular
+                if (filterCount > 9) {
+                    badge.style.minWidth = '20px';
+                    badge.style.width = '20px';
+                    badge.style.height = '18px';
+                    badge.style.lineHeight = '18px';
+                    badge.classList.add('badge-double-digit');
+                } else {
+                    badge.style.minWidth = '18px';
+                    badge.style.width = '18px';
+                    badge.style.height = '18px';
+                    badge.style.lineHeight = '18px';
+                    badge.classList.remove('badge-double-digit');
+                }
+                
+                filterButton.classList.add('ubits-button--active');
+            } else {
+                badge.style.display = 'none';
+                badge.textContent = '0';
+                filterButton.classList.remove('ubits-button--active');
+            }
+        }
+
+        function clearAllFilters() {
+            // Usar la función de dashboard-vacantes.js si existe (evita duplicación)
+            if (typeof window.clearAllFiltersFromDashboard === 'function') {
+                window.clearAllFiltersFromDashboard();
+                return;
+            }
+            
+            // Fallback: limpiar manualmente
+            // Limpiar búsqueda
+            const searchInput = document.getElementById('searchTemplates');
+            if (searchInput) {
+                searchInput.value = '';
+                if (typeof isSearching !== 'undefined') {
+                    isSearching = false;
+                }
+                const clearBtn = document.getElementById('clearSearchTemplates');
+                if (clearBtn) {
+                    clearBtn.style.display = 'none';
+                }
+            }
+            
+            // Limpiar select de estado (UBITS)
+            if (window.filterStatusSelectInstance) {
+                try {
+                    window.filterStatusSelectInstance.setValue('Todos los estados');
+                } catch (e) {
+                    console.warn('Error limpiando select de estado:', e);
+                }
+            }
+            
+            // Limpiar checkboxes de agentes
+            const agentsYes = document.getElementById('filter-agents-yes');
+            const agentsNo = document.getElementById('filter-agents-no');
+            if (agentsYes) agentsYes.checked = false;
+            if (agentsNo) agentsNo.checked = false;
+            
+            // Limpiar fechas (UBITS calendar)
+            if (window.filterDateFromInstance) {
+                try {
+                    window.filterDateFromInstance.setValue('');
+                } catch (e) {
+                    console.warn('Error limpiando fecha desde:', e);
+                }
+            }
+            if (window.filterDateToInstance) {
+                try {
+                    window.filterDateToInstance.setValue('');
+                } catch (e) {
+                    console.warn('Error limpiando fecha hasta:', e);
+                }
+            }
+            
+            // Limpiar estado global
+            if (typeof window.activeFilters !== 'undefined') {
+                window.activeFilters = {
+                    status: [],
+                    dateFrom: null,
+                    dateTo: null,
+                    hasAgents: null
+                };
+            }
+            
+            // Actualizar badge
+            if (typeof updateFilterBadge === 'function') {
+                updateFilterBadge();
+            }
+            
+            // Aplicar filtros (sin filtros) - solo una vez
+            if (typeof applyTemplateFilters === 'function') {
+                applyTemplateFilters();
+            }
+            
+            // Cerrar drawer si está abierto
+            if (typeof closeFilterDrawer === 'function') {
+                closeFilterDrawer();
+            }
+        }
+
+        function toggleColumnsDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const menu = document.getElementById('columnsDropdownMenu');
+            const button = document.getElementById('columnsButton');
+            
+            if (menu && button) {
+                const isOpen = menu.classList.contains('show');
+                
+                // Cerrar otros dropdowns
+                document.querySelectorAll('.columns-dropdown-menu.show').forEach(m => {
+                    if (m !== menu) m.classList.remove('show');
+                });
+                
+                if (isOpen) {
+                    menu.classList.remove('show');
+                    button.classList.remove('active');
+                } else {
+                    // Calcular posición del dropdown
+                    const rect = button.getBoundingClientRect();
+                    menu.style.top = (rect.bottom + 4) + 'px';
+                    menu.style.left = rect.left + 'px';
+                    
+                    menu.classList.add('show');
+                    button.classList.add('active');
+                }
+            }
+        }
+
+        function toggleColumnVisibility(columnName, isVisible) {
+            // Ocultar/mostrar columnas en el header
+            const headerCells = document.querySelectorAll(`th[data-column="${columnName}"]`);
+            headerCells.forEach(cell => {
+                if (isVisible) {
+                    cell.classList.remove('hidden');
+                } else {
+                    cell.classList.add('hidden');
+                }
+            });
+            
+            // Ocultar/mostrar columnas en el body
+            const bodyCells = document.querySelectorAll(`td[data-column="${columnName}"]`);
+            bodyCells.forEach(cell => {
+                if (isVisible) {
+                    cell.classList.remove('hidden');
+                } else {
+                    cell.classList.add('hidden');
+                }
+            });
+            
+            // Guardar preferencia en localStorage
+            const columnPreferences = JSON.parse(localStorage.getItem('tableColumnPreferences') || '{}');
+            columnPreferences[columnName] = isVisible;
+            localStorage.setItem('tableColumnPreferences', JSON.stringify(columnPreferences));
+        }
+
+        // Cargar preferencias de columnas al inicializar
+        function loadColumnPreferences() {
+            const preferences = JSON.parse(localStorage.getItem('tableColumnPreferences') || '{}');
+            const columns = ['name', 'type', 'status', 'created', 'modified', 'agents', 'stages'];
+            
+            columns.forEach(columnName => {
+                const checkbox = document.getElementById(`column-${columnName}`);
+                if (checkbox) {
+                    const isVisible = preferences[columnName] !== undefined ? preferences[columnName] : true;
+                    checkbox.checked = isVisible;
+                    toggleColumnVisibility(columnName, isVisible);
+                }
+            });
+        }
+
+        // Componente wa-icon - convierte a icono FontAwesome
+        class WAIcon extends HTMLElement {
+            connectedCallback() {
+                const name = this.getAttribute('name');
+                const variant = this.getAttribute('variant') || 'regular';
+                
+                // Mapear variant a clase FontAwesome
+                let faClass = 'far'; // regular por defecto
+                if (variant === 'solid' || variant === 'filled') {
+                    faClass = 'fas';
+                } else if (variant === 'light') {
+                    faClass = 'far'; // light usa outline
+                }
+                
+                // Crear icono FontAwesome
+                const icon = document.createElement('i');
+                icon.className = `${faClass} fa-${name}`;
+                
+                // Reemplazar el contenido
+                this.innerHTML = '';
+                this.appendChild(icon);
+            }
+        }
+        
+        // Registrar el componente personalizado
+        if (!customElements.get('wa-icon')) {
+            customElements.define('wa-icon', WAIcon);
+        }
+
+        // Inicializar componentes UBITS del drawer de filtros
+        function initializeFilterDrawerComponents() {
+            // Verificar que los contenedores existan
+            const statusContainer = document.getElementById('filterStatusSelectContainer');
+            const dateFromContainer = document.getElementById('filterDateFromContainer');
+            const dateToContainer = document.getElementById('filterDateToContainer');
+            
+            if (!statusContainer || !dateFromContainer || !dateToContainer) {
+                console.error('Contenedores del drawer no encontrados');
+                return;
+            }
+            
+            // Obtener valores guardados de filtros activos
+            let savedStatusValue = '';
+            if (typeof window.activeFilters !== 'undefined' && window.activeFilters && window.activeFilters.status && window.activeFilters.status.length > 0) {
+                savedStatusValue = window.activeFilters.status[0]; // Tomar el primer estado si hay múltiples
+            }
+            
+            // Solo inicializar si los contenedores están vacíos o no tienen el componente
+            if (typeof createInput === 'function') {
+                // Select de Estado - solo crear si no existe
+                if (!statusContainer.querySelector('.ubits-input-wrapper')) {
+                    statusContainer.innerHTML = ''; // Limpiar antes de crear
+                    window.filterStatusSelectInstance = createInput({
+                        containerId: 'filterStatusSelectContainer',
+                        type: 'select',
+                        label: 'Estado',
+                        placeholder: 'Todos los estados',
+                        size: 'sm',
+                        showLabel: true,
+                        value: savedStatusValue, // Restaurar valor guardado
+                        selectOptions: [
+                            {value: '', text: 'Todos los estados'},
+                            {value: 'available', text: 'Disponible'},
+                            {value: 'draft', text: 'Borrador'}
+                        ],
+                        onChange: function(value) {
+                            // El onChange se manejará en applyFilters
+                        }
+                    });
+                } else {
+                    // Si ya existe, restaurar el valor guardado
+                    if (window.filterStatusSelectInstance && savedStatusValue) {
+                        setTimeout(() => {
+                            window.filterStatusSelectInstance.setValue(savedStatusValue);
+                            console.log('✅ [initializeFilterDrawerComponents] Valor de estado restaurado:', savedStatusValue);
+                        }, 50);
+                    }
+                }
+                
+                // Obtener valores guardados de fechas
+                let savedDateFrom = null;
+                let savedDateTo = null;
+                if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
+                    savedDateFrom = window.activeFilters.dateFrom || null;
+                    savedDateTo = window.activeFilters.dateTo || null;
+                }
+                
+                // Inputs de fecha (calendar) - solo crear si no existen
+                if (!dateFromContainer.querySelector('.ubits-input-wrapper')) {
+                    dateFromContainer.innerHTML = ''; // Limpiar antes de crear
+                    window.filterDateFromInstance = createInput({
+                        containerId: 'filterDateFromContainer',
+                        type: 'calendar',
+                        label: 'Desde',
+                        placeholder: 'Selecciona una fecha...',
+                        size: 'sm',
+                        showLabel: true,
+                        value: savedDateFrom || '', // Restaurar valor guardado
+                        onChange: function(value) {
+                            // El onChange se manejará en applyFilters
+                        }
+                    });
+                } else {
+                    // Si ya existe, restaurar el valor guardado
+                    if (window.filterDateFromInstance && savedDateFrom) {
+                        setTimeout(() => {
+                            window.filterDateFromInstance.setValue(savedDateFrom);
+                            console.log('✅ [initializeFilterDrawerComponents] Fecha desde restaurada:', savedDateFrom);
+                        }, 50);
+                    }
+                }
+                
+                if (!dateToContainer.querySelector('.ubits-input-wrapper')) {
+                    dateToContainer.innerHTML = ''; // Limpiar antes de crear
+                    window.filterDateToInstance = createInput({
+                        containerId: 'filterDateToContainer',
+                        type: 'calendar',
+                        label: 'Hasta',
+                        placeholder: 'Selecciona una fecha...',
+                        size: 'sm',
+                        showLabel: true,
+                        value: savedDateTo || '', // Restaurar valor guardado
+                        onChange: function(value) {
+                            // El onChange se manejará en applyFilters
+                        }
+                    });
+                } else {
+                    // Si ya existe, restaurar el valor guardado
+                    if (window.filterDateToInstance && savedDateTo) {
+                        setTimeout(() => {
+                            window.filterDateToInstance.setValue(savedDateTo);
+                            console.log('✅ [initializeFilterDrawerComponents] Fecha hasta restaurada:', savedDateTo);
+                        }, 50);
+                    }
+                }
+                
+                // Restaurar checkboxes de agentes
+                const agentsYes = document.getElementById('filter-agents-yes');
+                const agentsNo = document.getElementById('filter-agents-no');
+                if (typeof window.activeFilters !== 'undefined' && window.activeFilters) {
+                    const savedHasAgents = window.activeFilters.hasAgents;
+                    if (savedHasAgents !== null && savedHasAgents !== undefined) {
+                        if (agentsYes && agentsNo) {
+                            if (savedHasAgents === true) {
+                                agentsYes.checked = true;
+                                agentsNo.checked = false;
+                            } else if (savedHasAgents === false) {
+                                agentsYes.checked = false;
+                                agentsNo.checked = true;
+                            }
+                            console.log('✅ [initializeFilterDrawerComponents] Checkboxes de agentes restaurados:', savedHasAgents);
+                        }
+                    }
+                }
+            } else {
+                console.error('createInput no está disponible');
+            }
+        }
+
+        // Funciones de vista de cards eliminadas - solo se usa tabla
+
+        // Exponer funciones de la barra de acciones globalmente después de cargar dashboard-vacantes.js
+        setTimeout(() => {
+            if (typeof viewSelectedTemplates === 'function') {
+                window.viewSelectedTemplates = viewSelectedTemplates;
+            }
+            if (typeof duplicateSelectedTemplates === 'function') {
+                window.duplicateSelectedTemplates = duplicateSelectedTemplates;
+            }
+            if (typeof editSelectedTemplate === 'function') {
+                window.editSelectedTemplate = editSelectedTemplate;
+            }
+            if (typeof deleteSelectedTemplates === 'function') {
+                window.deleteSelectedTemplates = deleteSelectedTemplates;
+            }
+        }, 500);
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const columnsContainer = document.querySelector('.columns-toggle-container');
+            const columnsMenu = document.getElementById('columnsDropdownMenu');
+            const columnsButton = document.getElementById('columnsButton');
+            
+            if (columnsMenu && columnsButton && !columnsContainer.contains(event.target)) {
+                columnsMenu.classList.remove('show');
+                columnsButton.classList.remove('active');
+            }
+        });
+
+        function openCreateFromTemplateModal() {
+            // TODO: Implementar modal para crear desde plantilla
+            if (typeof showToast === 'function') {
+                showToast('info', 'Crear desde plantilla próximamente');
+            }
+        }
+
+        // Función para abrir modal de creación de plantilla
+        function openCreateTemplateModal() {
+            // Configurar callback global
+            window.modalFormCallback = function(formData) {
+                const { templateName, templateCategory } = formData;
+                
+                // Crear la plantilla
+                const nuevaPlantilla = {
+                    id: 'template-' + Date.now(),
+                    name: templateName.trim(),
+                    category: templateCategory,
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'María Alexandra Patiño Castillo',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Guardar en localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                templates.push(nuevaPlantilla);
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Mostrar confirmación con toast UBITS
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Plantilla creada exitosamente!');
+                }
+                
+                // Redirigir al editor de plantillas con el ID de la nueva plantilla
+                setTimeout(() => {
+                    window.location.href = `editor-plantillas.html?id=${nuevaPlantilla.id}`;
+                }, 1000);
+            };
+            
+            // Mostrar modal UBITS oficial con inputs oficiales
+            showFormModal({
+                title: 'Crear nueva plantilla',
+                message: 'Completa los datos para crear una nueva plantilla de flujo de selección',
+                fields: [
+                    {
+                        id: 'templateName',
+                        label: 'Nombre de la plantilla',
+                        type: 'text',
+                        placeholder: 'Ej: Selección de desarrolladores',
+                        required: true
+                    },
+                    {
+                        id: 'templateCategory',
+                        label: 'Categoría',
+                        type: 'select',
+                        options: [
+                            { value: 'tecnologia', text: 'Tecnología' },
+                            { value: 'ventas', text: 'Ventas' },
+                            { value: 'marketing', text: 'Marketing' },
+                            { value: 'recursos-humanos', text: 'Recursos Humanos' },
+                            { value: 'operaciones', text: 'Operaciones' }
+                        ],
+                        required: true
+                    }
+                ],
+                submitText: 'Crear plantilla',
+                cancelText: 'Cancelar'
+            });
+        }
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const columnsContainer = document.querySelector('.columns-toggle-container');
+            const columnsMenu = document.getElementById('columnsDropdownMenu');
+            const columnsButton = document.getElementById('columnsButton');
+            
+            if (columnsMenu && columnsButton && !columnsContainer.contains(event.target)) {
+                columnsMenu.classList.remove('show');
+                columnsButton.classList.remove('active');
+            }
+        });
+
+        function openCreateFromTemplateModal() {
+            // TODO: Implementar modal para crear desde plantilla
+            if (typeof showToast === 'function') {
+                showToast('info', 'Crear desde plantilla próximamente');
+            }
+        }
+
+        // Función para abrir modal de creación de plantilla
+        function openCreateTemplateModal() {
+            // Configurar callback global
+            window.modalFormCallback = function(formData) {
+                const { templateName, templateCategory } = formData;
+                
+                // Crear la plantilla
+                const nuevaPlantilla = {
+                    id: 'template-' + Date.now(),
+                    name: templateName.trim(),
+                    category: templateCategory,
+                    status: 'draft',
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString().split('T')[0],
+                    author: 'María Alexandra Patiño Castillo',
+                    avatar: 'images/Profile-image.jpg',
+                    version: 1,
+                    stages: 0,
+                    agents: 0,
+                    realContent: {
+                        stages: []
+                    }
+                };
+                
+                // Guardar en localStorage
+                let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+                templates.push(nuevaPlantilla);
+                localStorage.setItem('templates', JSON.stringify(templates));
+                
+                // Mostrar confirmación con toast UBITS
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Plantilla creada exitosamente!');
+                }
+                
+                // Redirigir al editor de plantillas con el ID de la nueva plantilla
+                setTimeout(() => {
+                    window.location.href = `editor-plantillas.html?id=${nuevaPlantilla.id}`;
+                }, 1000);
+            };
+            
+            // Mostrar modal UBITS oficial con inputs oficiales
+            showFormModal({
+                title: 'Crear nueva plantilla',
+                message: 'Completa los datos para crear una nueva plantilla de flujo de selección',
+                fields: [
+                    {
+                        id: 'templateName',
+                        label: 'Nombre de la plantilla',
+                        type: 'text',
+                        placeholder: 'Ej: flujo de contratación general',
+                        required: true,
+                        maxLength: 100,
+                        size: 'md'
+                    },
+                    {
+                        id: 'templateCategory',
+                        label: 'Categoría',
+                        type: 'select',
+                        placeholder: 'Selecciona una categoría',
+                        required: true,
+                        size: 'md',
+                        selectOptions: [
+                            {value: 'administracion', text: 'Administración'},
+                            {value: 'atencion-cliente', text: 'Atención al cliente'},
+                            {value: 'contratacion-general', text: 'Contratación general'},
+                            {value: 'diseno-creatividad', text: 'Diseño y creatividad'},
+                            {value: 'finanzas-contabilidad', text: 'Finanzas y contabilidad'},
+                            {value: 'ingenieria', text: 'Ingeniería'},
+                            {value: 'operaciones', text: 'Operaciones'},
+                            {value: 'recursos-humanos', text: 'Recursos humanos'},
+                            {value: 'tecnologia-desarrollo', text: 'Tecnología / Desarrollo'},
+                            {value: 'ventas-marketing', text: 'Ventas y marketing'}
+                        ]
+                    }
+                ],
+                submitText: 'Crear plantilla',
+                cancelText: 'Cancelar',
+                onSubmit: function(formData) {
+                    window.modalFormCallback(formData);
+                },
+                onCancel: function() {
+                    // No hacer nada
+                }
+            });
+        }
+        
+        // Cargar componentes UBITS dinámicamente
+        // Log inicial
+        console.log('📄 Script de vista cargado');
+        console.log('🔍 Funciones disponibles:', {
+            toggleView: typeof toggleView,
+            renderTemplatesCards: typeof renderTemplatesCards,
+            loadViewPreference: typeof loadViewPreference
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🚀 Inicializando dashboard de plantillas...');
+                console.log('🔍 Verificando botón de vista:', {
+                    viewToggleButton: !!document.getElementById('viewToggleButton'),
+                    viewToggleIcon: !!document.getElementById('viewToggleIcon'),
+                    tableViewContainer: !!document.getElementById('tableViewContainer'),
+                    cardsViewContainer: !!document.getElementById('cardsViewContainer'),
+                    templatesCardsGrid: !!document.getElementById('templatesCardsGrid')
+                });
+                
+                // Cargar componentes con manejo de errores individual
+                try {
+                    if (typeof loadSidebarReclutamiento === 'function') {
+                        loadSidebarReclutamiento('vacantes');
+                        console.log('✅ Sidebar cargado con activeButton: vacantes');
+                        
+                        // Asegurar que el botón se active después de un pequeño delay
+                        setTimeout(() => {
+                            const vacantesButton = document.querySelector('[data-section="vacantes"]');
+                            const plantillasButton = document.querySelector('[data-section="plantillas"]');
+                            
+                            if (vacantesButton) {
+                                // Remover active de todos los botones
+                                document.querySelectorAll('.nav-button').forEach(btn => {
+                                    btn.classList.remove('active');
+                                });
+                                // Activar solo el botón de vacantes
+                                vacantesButton.classList.add('active');
+                                console.log('✅ Botón vacantes activado manualmente');
+                            } else {
+                                console.error('❌ No se encontró el botón de vacantes');
+                            }
+                        }, 100);
+                    } else {
+                        console.error('❌ loadSidebarReclutamiento no está definido');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al cargar sidebar:', error);
+                }
+                
+                // Configurar SubNav con sección "Plantillas"
+                try {
+                    if (typeof loadSubNav === 'function') {
+                        // Logs después de cargar SubNav
+                        setTimeout(() => {
+                            if (typeof debugSpacing === 'function') {
+                                debugSpacing();
+                            }
+                        }, 100);
+                        
+                        const plantillasTabs = [
+                            { id: 'plantillas', label: 'Plantillas', active: true }
+                        ];
+                        loadSubNav('top-nav-container', 'vacantes');
+                        console.log('✅ SubNav cargado');
+                    } else {
+                        console.error('❌ loadSubNav no está definido');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al cargar SubNav:', error);
+                }
+                
+                try {
+                    if (typeof loadTabBarReclutamiento === 'function') {
+                        loadTabBarReclutamiento('tab-bar-container');
+                        console.log('✅ TabBar cargado');
+                    } else {
+                        console.error('❌ loadTabBarReclutamiento no está definido');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al cargar TabBar:', error);
+                }
+                
+                try {
+                    if (typeof loadFloatingMenuReclutamiento === 'function') {
+                        loadFloatingMenuReclutamiento('floating-menu-reclutamiento-container');
+                        console.log('✅ Floating Menu cargado');
+                    } else {
+                        console.error('❌ loadFloatingMenuReclutamiento no está definido');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al cargar Floating Menu:', error);
+                }
+                
+                try {
+                    if (typeof loadProfileMenu === 'function') {
+                        loadProfileMenu('profile-menu-container');
+                        console.log('✅ Profile Menu cargado');
+                    } else {
+                        console.error('❌ loadProfileMenu no está definido');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al cargar Profile Menu:', error);
+                }
+                
+                // Activar vacantes en el floating menu
+                setTimeout(() => {
+                    try {
+                        if (typeof setActiveDirectLinkReclutamiento === 'function') {
+                            setActiveDirectLinkReclutamiento('vacantes');
+                            console.log('✅ Floating menu activado');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error al activar floating menu:', error);
+                    }
+                }, 500);
+                
+                // Inicializar dashboard de vacantes
+                try {
+                    if (typeof initializeVacantesDashboard === 'function') {
+                        initializeVacantesDashboard();
+                        console.log('✅ Dashboard inicializado');
+                    } else {
+                        console.error('❌ initializeVacantesDashboard no está definido');
+                    }
+                    
+                    // Inicializar badge de filtros
+                    setTimeout(() => {
+                        if (typeof updateFilterBadge === 'function') {
+                            updateFilterBadge();
+                        }
+                    }, 500);
+                    
+                    // Cargar preferencias de columnas
+                    setTimeout(() => {
+                        if (typeof loadColumnPreferences === 'function') {
+                            loadColumnPreferences();
+                        }
+                    }, 500);
+                    
+                    // Vista de cards eliminada - solo se usa tabla
+                    
+                    // Inicializar componentes UBITS del drawer
+                    setTimeout(() => {
+                        if (typeof initializeFilterDrawerComponents === 'function') {
+                            initializeFilterDrawerComponents();
+                        }
+                    }, 600);
+                } catch (error) {
+                    console.error('❌ Error al inicializar dashboard:', error);
+                }
+                
+                console.log('✅ Inicialización completa');
+            } catch (error) {
+                console.error('❌ Error crítico en inicialización:', error);
+                // Mostrar mensaje al usuario si es posible
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Error al cargar la página. Revisa la consola para más detalles.');
+                }
+            }
+        });
+        
+        // Función para crear vacante - redirige a configurar-vacante.html
+        function createVacante() {
+            window.location.href = 'configurar-vacante.html';
+        }
+    </script>
+</body>
+</html>
