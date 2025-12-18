@@ -3014,6 +3014,7 @@
         let isEditMode = true; // Modo edición activo por defecto
         let isEditingVacanteWithIATemplate = false; // Indica si estamos editando una vacante con plantilla IA (solo desde home-vacantes.html)
         let isEditingVacanteWithDefaultTemplate = false; // Indica si estamos editando una vacante con plantilla por defecto (IA o estándar) desde home-vacantes.html
+        let isEditingSpecificVacante = false; // Indica si estamos editando la vacante específica "Desarrollador Frontend React" (vacante-1)
 
         // Agentes disponibles (mismo que en editor-plantillas.js)
         const AGENTS = [
@@ -3633,19 +3634,22 @@
                 });
             }
             
-            // Si estamos editando una vacante con plantilla por defecto, mantener modo edición
-            // De lo contrario, cargar en modo vista (no edición)
-            if (!isEditingVacanteWithDefaultTemplate) {
+            // Si es la vacante específica, forzar modo vista (no edición)
+            if (isEditingSpecificVacante) {
                 isEditMode = false;
-            } else {
+            } else if (isEditingVacanteWithDefaultTemplate) {
+                // Si estamos editando una vacante con plantilla por defecto (pero no la específica), mantener modo edición
                 isEditMode = true;
+            } else {
+                // De lo contrario, cargar en modo vista (no edición)
+                isEditMode = false;
             }
             
             const libraryWidget = document.getElementById('library-widget');
             const flowSection = document.getElementById('template-flow-section');
             
             if (libraryWidget) {
-                if (isEditingVacanteWithDefaultTemplate) {
+                if (isEditingVacanteWithDefaultTemplate && !isEditingSpecificVacante) {
                     libraryWidget.style.display = 'flex'; // Mostrar biblioteca en modo edición
                 } else {
                     libraryWidget.style.display = 'none'; // Ocultar biblioteca en modo vista
@@ -3653,7 +3657,7 @@
             }
             
             if (flowSection) {
-                if (isEditingVacanteWithDefaultTemplate) {
+                if (isEditingVacanteWithDefaultTemplate && !isEditingSpecificVacante) {
                     flowSection.className = 'section-dual'; // Mostrar biblioteca y flujo en modo edición
                 } else {
                     flowSection.className = 'section-single'; // Solo mostrar el flujo en modo vista
@@ -3665,8 +3669,8 @@
             // Aplicar modo edición/vista después de renderizar
             applyEditMode();
             
-            // Si estamos en modo edición, renderizar contenido de la biblioteca
-            if (isEditingVacanteWithDefaultTemplate) {
+            // Si estamos en modo edición (pero no es la vacante específica), renderizar contenido de la biblioteca
+            if (isEditingVacanteWithDefaultTemplate && !isEditingSpecificVacante) {
                 setTimeout(() => {
                     const activeTab = document.querySelector('#agents-sidebar .tab-button.active');
                     if (activeTab) {
@@ -3891,13 +3895,18 @@
                 
                 // Solo mostrar alerta si hay etapas con IA
                 if (hasAgentStages) {
+                    // Mensaje diferente para la vacante específica
+                    const alertMessage = isEditingSpecificVacante
+                        ? 'Este flujo contiene etapas con IA. Por el momento no es posible editarlo porque afectaría todos los datos ya recolectados en el proceso de selección.'
+                        : 'Las etapas con IA no se pueden editar, configurar ni eliminar. Solo puedes cambiar su orden arrastrándolas.';
+                    
                     defaultTemplateAlertHTML = `
                         <div class="ubits-alert ubits-alert--info ubits-alert--no-close" style="margin-top: 16px;">
                             <div class="ubits-alert__icon">
                                 <i class="far fa-circle-info"></i>
                             </div>
                             <div class="ubits-alert__content">
-                                <div class="ubits-alert__text">Las etapas con IA no se pueden editar, configurar ni eliminar. Solo puedes cambiar su orden arrastrándolas.</div>
+                                <div class="ubits-alert__text">${alertMessage}</div>
                             </div>
                         </div>
                     `;
@@ -3915,11 +3924,13 @@
                                 ${isEditMode ? '<p class="board-header-description">Arrastra aquí las etapas y etapas con IA en el orden en que el candidato las irá completando.</p>' : ''}
                             </div>
                             <div class="board-header-actions">
-                                <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()">
-                                    <i class="far fa-external-link"></i>
-                                    <span>Ir a la plantilla</span>
-                                </button>
-                                ${!isEditingVacanteWithIATemplate ? `
+                                ${!isEditingSpecificVacante ? `
+                                    <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()">
+                                        <i class="far fa-external-link"></i>
+                                        <span>Ir a la plantilla</span>
+                                    </button>
+                                ` : ''}
+                                ${!isEditingVacanteWithIATemplate && !isEditingSpecificVacante ? `
                                     <button class="ubits-button ubits-button--primary ubits-button--sm" id="editFlowBtn" onclick="toggleEditMode()">
                                         <i class="far fa-edit"></i>
                                         <span>Editar flujo</span>
@@ -3994,11 +4005,13 @@
                 // NO mostrar botón "Editar flujo" si estamos editando una vacante con plantilla IA (ya está en modo edición)
                 headerActionsHTML = `
                     <div class="flow-header-actions">
-                        <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
-                            <i class="far fa-external-link"></i>
-                            <span>Ir a la plantilla</span>
-                        </button>
-                        ${!isEditingVacanteWithDefaultTemplate ? `
+                        ${!isEditingSpecificVacante ? `
+                            <button class="ubits-button ubits-button--secondary ubits-button--sm" onclick="goToTemplate()" id="goToTemplateBtn">
+                                <i class="far fa-external-link"></i>
+                                <span>Ir a la plantilla</span>
+                            </button>
+                        ` : ''}
+                        ${!isEditingVacanteWithDefaultTemplate && !isEditingSpecificVacante ? `
                             <button class="ubits-button ubits-button--primary ubits-button--sm" onclick="toggleEditMode()" id="editFlowBtn">
                                 <i class="far fa-edit"></i>
                                 <span>Editar flujo</span>
@@ -4170,8 +4183,11 @@
 
         // Aplicar modo edición/vista
         function applyEditMode() {
-            // Si estamos editando una vacante con plantilla por defecto, forzar modo edición
-            if (isEditingVacanteWithDefaultTemplate) {
+            // Si es la vacante específica, forzar modo vista (no edición)
+            if (isEditingSpecificVacante) {
+                isEditMode = false;
+            } else if (isEditingVacanteWithDefaultTemplate) {
+                // Si estamos editando una vacante con plantilla por defecto (pero no la específica), forzar modo edición
                 isEditMode = true;
             }
             
@@ -4232,8 +4248,8 @@
 
         // Toggle modo edición
         window.toggleEditMode = function() {
-            // Prevenir cambiar modo si estamos editando una vacante con plantilla por defecto
-            if (isEditingVacanteWithDefaultTemplate) {
+            // Prevenir cambiar modo si estamos editando una vacante con plantilla por defecto o la vacante específica
+            if (isEditingVacanteWithDefaultTemplate || isEditingSpecificVacante) {
                 return;
             }
             
@@ -5313,6 +5329,9 @@
                 
                 console.log('✅ [loadVacanteFromStorage] Vacante encontrada:', vacante);
                 
+                // Detectar si es la vacante específica "Desarrollador Frontend React" (vacante-1)
+                isEditingSpecificVacante = (vacanteId === 'vacante-1');
+                
                 // Obtener el templateId de la vacante (puede ser null o un ID de plantilla)
                 const templateId = vacante.templateId || 'custom';
                 const daysValue = vacante.days || '3';
@@ -5323,8 +5342,11 @@
                 // Detectar si estamos editando una vacante con plantilla por defecto (IA o estándar)
                 isEditingVacanteWithDefaultTemplate = (templateId === 'default-template-ia' || templateId === 'default-template-standard');
                 
-                // Si estamos editando una vacante con plantilla por defecto, forzar modo edición
-                if (isEditingVacanteWithDefaultTemplate) {
+                // Si es la vacante específica, forzar modo vista (no edición)
+                if (isEditingSpecificVacante) {
+                    isEditMode = false;
+                } else if (isEditingVacanteWithDefaultTemplate) {
+                    // Si estamos editando una vacante con plantilla por defecto (pero no la específica), forzar modo edición
                     isEditMode = true;
                 }
                 
@@ -5332,6 +5354,7 @@
                 console.log('📋 [loadVacanteFromStorage] Days:', daysValue);
                 console.log('📋 [loadVacanteFromStorage] Is editing vacante with IA template:', isEditingVacanteWithIATemplate);
                 console.log('📋 [loadVacanteFromStorage] Is editing vacante with default template:', isEditingVacanteWithDefaultTemplate);
+                console.log('📋 [loadVacanteFromStorage] Is editing specific vacante (vacante-1):', isEditingSpecificVacante);
                 console.log('📋 [loadVacanteFromStorage] Edit mode:', isEditMode);
                 
                 // Crear input de plantillas con el templateId de la vacante
